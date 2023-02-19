@@ -4,6 +4,7 @@ use 5.012; # //, strict, say
 use warnings;
 use autodie;
 use GD::Simple;
+use Maze::Algorithm::PrimsRandom;
 
 sub n { $_[0]->{n} }
 sub sideLen { $_[0]->{sideLen} }
@@ -101,6 +102,19 @@ sub dbg_grid
             $t->moveTo($x0+$dx,$y0+$dy);
         }
     }
+    return $self;
 }
 
+sub generate_maze
+{
+    my ($self) = @_;
+    my $dx = - ($self->sideLen * $self->n) / 2;
+    my $dy = $dx;
+
+    use Data::Dump qw/dd/;
+    dd my $pr  = Maze::Algorithm::PrimsRandom::->new( $self->n );
+    dd my $mst = $pr->prims_mst();
+
+    return $self;
+}
 1;
