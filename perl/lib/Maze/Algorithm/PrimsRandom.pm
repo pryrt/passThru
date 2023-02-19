@@ -35,36 +35,27 @@ sub prims_mst
     my $node = splice @to_visit, 0, 1;  # take the first node out of @to_visit and put it in $node instead
     my $visited = [$node];              # this is the only node visited so far
 
-printf "__%04d__ to_visit = (%s)\n", __LINE__, join(",", @to_visit);
-printf "__%04d__ visited = (%s)\n", __LINE__, join(",", @$visited);
-
     # for all the nodes in visited, pick an outgoing edge
     # at random, connecting to a new node that isn't already visited
     while(@to_visit) {
         my @edges_pool = $self->edges_to_unvisited_nodes($visited);
-printf "__%04d__ pool = %s\n", __LINE__, pp(\@edges_pool);
 
         # pick a random edge
         my $edge = $edges_pool[rand @edges_pool];
         ($node, my $next_node) = @$edge;
-printf "__%04d__ edge = %s => <%s, %s>\n", __LINE__, pp($edge), $node, $next_node;
 
         # connect these two nodes in the minimum spanning tree
         my $direction = $self->get_neighbor_dir($node, $next_node);
         $mst->[$node]{$direction} = 1;
-printf "__%04d__ dir = %s => mst[%s] = %s\n", __LINE__, $direction, $node, pp($mst->[$node]);
 
         # also set it for the neighbor
         my $neighbor_dir = $self->get_neighbor_dir($next_node, $node);
         $mst->[$next_node]{$neighbor_dir} = 1;
-printf "__%04d__ neighbor_dir = %s => mst[%s] = %s\n", __LINE__, $neighbor_dir, $next_node, pp($mst->[$next_node]);
 
         # now remove this next_node from unvisited and add it to visited
         push @$visited, $next_node;
         #splice @to_visit, $next_node; # this isn't right... it is deleting the nth element, not the element with value n. :-(
         @to_visit = grep { $_ != $next_node } @to_visit;
-printf "__%04d__ visited = (%s)\n", __LINE__, join(",", @$visited);
-printf "__%04d__ to_visit = (%s)\n", __LINE__, join(",", @to_visit);
     }
 
     # return the minimum spanning tree

@@ -95,13 +95,13 @@ sub dbg_grid
                 for(1..4) {
                     $t->line($d);
                     $t->right(90);
-                }
+                } # /square
                 $t->move($d);
-            }
+            } # /col
             $dy += $self->sideLen;
             $t->moveTo($x0+$dx,$y0+$dy);
-        }
-    }
+        } # /row
+    } # /turtle
     return $self;
 }
 
@@ -110,10 +110,48 @@ sub generate_maze
     my ($self) = @_;
     my $dx = - ($self->sideLen * $self->n) / 2;
     my $dy = $dx;
+    my $s = $self->sideLen;
+    my $n1 = $self->n - 1;
 
     use Data::Dump qw/dd/;
-    dd my $pr  = Maze::Algorithm::PrimsRandom::->new( $self->n );
-    dd my $mst = $pr->prims_mst();
+    my $pr  = Maze::Algorithm::PrimsRandom::->new( $self->n );
+    my $mst = $pr->prims_mst();
+
+    my $LASTNODE = $self->n ** 2 - 1;
+    my $FIRSTNODE = 0;
+
+    for my $t ($self->turtle) {
+        my ($x0,$y0) = $t->curPos();
+        $t->moveTo($x0+$dx,$y0+$dy);
+        for my $row ( 0 .. $n1 ) {
+            for my $col ( 0 .. $n1 ) {
+                my $node = $row * $self->n + $col;
+
+                # if node is connected to the node in TOP direction, don't draw; else do
+                ($mst->[$node]{TOP}) ? $t->move($s) : $t->line($s);
+                $t->right(90);
+
+                # if node is connected to the node in RIGHT direction, or last cell (exit), don't draw; else do
+                ($mst->[$node]{RIGHT} || ($node == $LASTNODE)) ? $t->move($s) : $t->line($s);
+                $t->right(90);
+
+                # if node is connected to the node in BOTTOM direction, don't draw; else do
+                ($mst->[$node]{BOTTOM}) ? $t->move($s) : $t->line($s);
+                $t->right(90);
+
+                # if node is connected to the node in LEFT direction, or first cell (entrance), don't draw; else do
+                ($mst->[$node]{LEFT} || ($node == $FIRSTNODE)) ? $t->move($s) : $t->line($s);
+                $t->right(90);
+
+                # move to next square in line
+                $t->move($s);
+            } # /col
+
+            # move to next row
+            $dy += $self->sideLen;
+            $t->moveTo($x0+$dx,$y0+$dy);
+        } # /row
+    } # /turtle
 
     return $self;
 }

@@ -9,8 +9,8 @@ use warnings;
 use lib './lib';
 use Maze::Rectangle;
 
-my $rectMaze = Maze::Rectangle::->new(n => 5, sideLen => 25);
+my $rectMaze = Maze::Rectangle::->new(n => 21, sideLen => 25);
 #$rectMaze->dbg_square;
 #$rectMaze->dbg_grid;
 $rectMaze->generate_maze();
-#$rectMaze->save('rect.png');
+$rectMaze->save('rect.png');
