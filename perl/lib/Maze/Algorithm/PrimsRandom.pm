@@ -4,8 +4,9 @@ use 5.012; # //, strict, say
 use warnings;
 use autodie;
 use Maze::Algorithm::PrimsRandom;
+use List::Util qw/any none/;
 
-use Data::Dump qw/dd/;
+use Data::Dump qw/dd pp/;
 
 sub total_nodes { $_[0]->{total_nodes} }
 sub row_len { $_[0]->{row_len} }
@@ -34,28 +35,36 @@ sub prims_mst
     my $node = splice @to_visit, 0, 1;  # take the first node out of @to_visit and put it in $node instead
     my $visited = [$node];              # this is the only node visited so far
 
+printf "__%04d__ to_visit = (%s)\n", __LINE__, join(",", @to_visit);
+printf "__%04d__ visited = (%s)\n", __LINE__, join(",", @$visited);
+
     # for all the nodes in visited, pick an outgoing edge
     # at random, connecting to a new node that isn't already visited
     while(@to_visit) {
         my @edges_pool = $self->edges_to_unvisited_nodes($visited);
+printf "__%04d__ pool = %s\n", __LINE__, pp(\@edges_pool);
 
         # pick a random edge
         my $edge = $edges_pool[rand @edges_pool];
         ($node, my $next_node) = @$edge;
+printf "__%04d__ edge = %s => <%s, %s>\n", __LINE__, pp($edge), $node, $next_node;
 
         # connect these two nodes in the minimum spanning tree
         my $direction = $self->get_neighbor_dir($node, $next_node);
         $mst->[$node]{$direction} = 1;
+printf "__%04d__ dir = %s => mst[%s] = %s\n", __LINE__, $direction, $node, pp($mst->[$node]);
 
         # also set it for the neighbor
         my $neighbor_dir = $self->get_neighbor_dir($next_node, $node);
-        $mst->[$node]{$neighbor_dir} = 1;
+        $mst->[$next_node]{$neighbor_dir} = 1;
+printf "__%04d__ neighbor_dir = %s => mst[%s] = %s\n", __LINE__, $neighbor_dir, $next_node, pp($mst->[$next_node]);
 
         # now remove this next_node from unvisited and add it to visited
         push @$visited, $next_node;
-        splice @to_visit, $next_node; # this isn't right... it is deleting the nth element, not the element with value n. :-(
-            # TODO = revisit data structures
-            last;# temporarily stop after first
+        #splice @to_visit, $next_node; # this isn't right... it is deleting the nth element, not the element with value n. :-(
+        @to_visit = grep { $_ != $next_node } @to_visit;
+printf "__%04d__ visited = (%s)\n", __LINE__, join(",", @$visited);
+printf "__%04d__ to_visit = (%s)\n", __LINE__, join(",", @to_visit);
     }
 
     # return the minimum spanning tree
@@ -66,7 +75,51 @@ sub prims_mst
 # towards unvisited nodes
 sub edges_to_unvisited_nodes
 {
-    return [1,2];
+    my ($self, $visited) = @_;
+
+    my @edges_pool;
+
+    for my $node (@$visited) {
+        my $row = int($node / $self->row_len);
+        my $col = $node % $self->row_len;
+
+        if($row>0) {
+            # all rows except top one has top neighbours
+            # add the edge between node<>top_node to edges pool
+            # if top_node is not already visited
+            my $top_node = $node - $self->row_len;
+            if( none { $_ == $top_node } @$visited ) {
+                push @edges_pool, [$node, $top_node];
+            }
+        }
+
+        if($col > 0) {
+            # all columns except first have left neighbours
+            my $left_node = $node - 1;
+            if( none { $_ == $left_node } @$visited ) {
+                push @edges_pool, [$node, $left_node];
+            }
+        }
+
+        if($row < $self->row_len - 1) {
+            # all rows except last have bottom neighbours
+            my $bottom_node = $node + $self->row_len;
+            if( none { $_ == $bottom_node } @$visited ) {
+                push @edges_pool, [$node, $bottom_node];
+            }
+        }
+
+        if($col < $self->row_len - 1) {
+            # all columns except last have right neighbours
+            my $right_node = $node + 1;
+            if( none { $_ == $right_node } @$visited ) {
+                push @edges_pool, [$node, $right_node];
+            }
+        }
+
+    }   # /visited nodes
+
+    return @edges_pool;
 }
 
 # returns the direction in which next_node
