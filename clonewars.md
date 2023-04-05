@@ -14,132 +14,130 @@ Tracking the Clone Wars episodes that are useful for watching before upcoming "A
 # Chronology
 <https://www.starwarsunderworld.com/p/the-clone-wars-chronology.html>
 
-- S2 E16 - Cat And Mouse = Obi-Wan and Anakin must deliver supplies to Christophsis while the planet is under Separatist control. They encounter Separatist Commander Admiral Trench and get more than they bargained for.
-- S1 E16 - The Hidden Enemy = Anakin and Obi-Wan discover evidence of a traitor amongst their ranks while attempting to lead Republic forces to liberate the planet of Christophsis from a Separatist siege. When the Republic is ambushed on Christophsis, it becomes clear that someone has set them up. The Jedi suspect the Sith, while Rex and Cody uncover information that points to a spy amongst them.
+- S2 E16 - Cat And Mouse => Obi-Wan and Anakin must deliver supplies to Christophsis while the planet is under Separatist control. They encounter Separatist Commander Admiral Trench and get more than they bargained for.
+- S1 E16 - The Hidden Enemy => Anakin and Obi-Wan discover evidence of a traitor amongst their ranks while attempting to lead Republic forces to liberate the planet of Christophsis from a Separatist siege. When the Republic is ambushed on Christophsis, it becomes clear that someone has set them up. The Jedi suspect the Sith, while Rex and Cody uncover information that points to a spy amongst them.
 - The Clone Wars Film
-- S3 E01 - Clone Cadets = Five headstrong clones struggle to complete their training on Kamino. These cadets – Hevy, Cutup, Droidbait, Fives, and Echo – seem to be a "bad batch" and are unable to work as a team. As Shaak Ti and drill instructors Bric and El-Les debate the cadets' fate, the clones learn to work together and accept their destiny as soldiers.
-- S3 E03 - Supply Lines = Ryloth is under siege. Trapped on the surface, Jedi Master Di rallies the local forces with the help of Cham Syndulla. Desperate to save them, the Jedi Council dispatches Senator Bail Organa and Representative Jar Jar Binks to the planet Toydaria, where they are to convince the neutral regent, King Katuunko, to send aid to Ryloth. Bail and Jar Jar must convince Toydaria that their cause is just -- before it's too late. Trade Federation envoy Lott Dod attempts to prevent the Toydarians from giving up their neutrality. Katuunko follows his conscience and secretly aids the Republic, which Jar Jar is able to keep secret from the snooping Trade Federation agents with his inimitable distractions.
-- S1 E01 - Ambush = Jedi Master Yoda is on a secret mission to forge a treaty with the King of the strategic system of Toydaria when his ship is ambushed by Count Dooku. Yoda and three Clone troopers must face off against Count Dooku's dreaded assassin Ventress and her massive droid army to prove the Jedi are strong enough to protect the king and his people from the forces of the war.
-- S1 E02 - Rising Malevolence = Creating panic throughout the galaxy, a devastating Separatist mystery weapon terrorizes the clone starfleet. Anakin and Ahsoka race to save Jedi Master Plo Koon and his clone troopers in time. Jedi Master Plo Koon and his squad barely survive an attack from a mysterious Separatist warship called the Malevolence. Can they stay alive long enough for Anakin and Ahsoka to find them?
-- S1 E03 - Shadow Of Malevolence = With the help of his Padawan Ahsoka and Jedi Master Plo Koon, Anakin utilizes new long-range Y-wing bombers to lead a bold strike on General Grievous' warship the Malevolence and its destructive weapon. As General Grievous uses the Malevolence to terrorize medical bases, the Jedi rush to defend Republic space. With help from his Padawan and Master Plo Koon, Anakin leads a bold strike mission into enemy territory.
-- S1 E04 - Destroy Malevolence = Padmé Amidala and C-3PO are taken hostage by General Grievous, leaving Anakin and Obi-Wan to save the Senator and complete the destruction of the Malevolence. Anakin and Obi-Wan chase down the Malevolence, hoping to destroy it before it can escape. But when Padmé and C-3PO are captured and held hostage aboard, the Jedi are forced to hatch a new plan.
-- S1 E05 - Rookies
-- S1 E06 - Downfall Of A Droid
-- S1 E07 - Duel Of The Droids
-- S1 E08 - Bombad Jedi
-- S1 E09 - Cloak Of Darkness
-- S1 E10 - Lair Of Grievous
-- S1 E11 - Dooku Captured
-- S1 E12 - The Gungan General
-- S1 E13 - Jedi Crash
-- S1 E14 - Defenders Of Peace
-- S1 E15 - Trespass 
-- S1 E17 - Blue Shadow Virus
-- S1 E18 - Mystery Of A Thousand Moons
-- S1 E19 - Storm Of Ryloth
-- S1 E20 - Innocents Of Ryloth
-- S1 E21 - Liberty On Ryloth
+- S3 E01 - Clone Cadets => Five headstrong clones struggle to complete their training on Kamino. These cadets – Hevy, Cutup, Droidbait, Fives, and Echo – seem to be a "bad batch" and are unable to work as a team. As Shaak Ti and drill instructors Bric and El-Les debate the cadets' fate, the clones learn to work together and accept their destiny as soldiers.
+- S3 E03 - Supply Lines => Ryloth is under siege. Trapped on the surface, Jedi Master Di rallies the local forces with the help of Cham Syndulla. Desperate to save them, the Jedi Council dispatches Senator Bail Organa and Representative Jar Jar Binks to the planet Toydaria, where they are to convince the neutral regent, King Katuunko, to send aid to Ryloth. Bail and Jar Jar must convince Toydaria that their cause is just -- before it's too late. Trade Federation envoy Lott Dod attempts to prevent the Toydarians from giving up their neutrality. Katuunko follows his conscience and secretly aids the Republic, which Jar Jar is able to keep secret from the snooping Trade Federation agents with his inimitable distractions.
+- S1 E01 - Ambush => Jedi Master Yoda is on a secret mission to forge a treaty with the King of the strategic system of Toydaria when his ship is ambushed by Count Dooku. Yoda and three Clone troopers must face off against Count Dooku's dreaded assassin Ventress and her massive droid army to prove the Jedi are strong enough to protect the king and his people from the forces of the war.
+- S1 E02 - Rising Malevolence => Creating panic throughout the galaxy, a devastating Separatist mystery weapon terrorizes the clone starfleet. Anakin and Ahsoka race to save Jedi Master Plo Koon and his clone troopers in time. Jedi Master Plo Koon and his squad barely survive an attack from a mysterious Separatist warship called the Malevolence. Can they stay alive long enough for Anakin and Ahsoka to find them?
+- S1 E03 - Shadow Of Malevolence => With the help of his Padawan Ahsoka and Jedi Master Plo Koon, Anakin utilizes new long-range Y-wing bombers to lead a bold strike on General Grievous' warship the Malevolence and its destructive weapon. As General Grievous uses the Malevolence to terrorize medical bases, the Jedi rush to defend Republic space. With help from his Padawan and Master Plo Koon, Anakin leads a bold strike mission into enemy territory.
+- S1 E04 - Destroy Malevolence => Padmé Amidala and C-3PO are taken hostage by General Grievous, leaving Anakin and Obi-Wan to save the Senator and complete the destruction of the Malevolence. Anakin and Obi-Wan chase down the Malevolence, hoping to destroy it before it can escape. But when Padmé and C-3PO are captured and held hostage aboard, the Jedi are forced to hatch a new plan.
+- S1 E05 - Rookies => Alone on a distant outpost, Clone Commander Cody and Clone Captain Rex must inspire the rookie clones to believe in themselves to stave off a Commando droid invasion.
+- S1 E06 - Downfall of a Droid => R2-D2 is lost during a fierce space battle - and Anakin, along with Ahsoka and a replacement droid, R3-S6, must find him before the Separatists discover the Jedi military secrets locked in his memory banks.
+- S1 E07 - Duel of the Droids => Anakin, Ahsoka and replacement droid R3-S6 embark on a dual rescue/sabotage mission when they discover R2-D2 is being held at General Grievous' secret enemy listening post.
+- S1 E08 - Bombad Jedi => On a diplomatic mission to the planet Rodia, Padmé discovers that her old friend and fellow Republic senator Onaconda Farr has allied his planet with the Separatists. In exchange for food and resources for his people, Onaconda captures Padmé and promises to deliver her to Nute Gunray. Sensing Padmé is in trouble, Jar Jar Binks disguises himself as a Jedi, and with the help of C-3PO, courageously fights to rescue his friend and fellow senator.
+- S1 E09 - Cloak of Darkness => Ahsoka and Jedi Master Luminara escort captured Viceroy Nute Gunray to trial, unaware that Count Dooku has dispatched his deadly apprentice assassin Asajj Ventress to free the prisoner and eliminate the Jedi.
+- S1 E10 - Lair of Grievous => General Grievous must prove himself worthy of the Separatists when Count Dooku leads Jedi Master Kit Fisto and his former Padawan, the Mon Calamari Jedi Nahdar Vebb to Grievous' villainous enclave.
+- S1 E11 - Dooku Captured => During their own attempt to kidnap Count Dooku, Anakin and Obi-Wan discover that the Sith Lord has already been captured by pirates.
+- S1 E12 - The Gungan General => While negotiating Count Dooku's ransom, Anakin and Obi-Wan are taken prisoner. The Jedi and Sith form an unlikely alliance in a bid to escape, with Jar Jar Binks as their only hope.
+- S1 E13 - Jedi Crash => When Anakin Skywalker is gravely injured in battle, Jedi General Aayla Secura must teach Ahsoka the Jedi philosophy of having no personal attachments -- while they brave a hostile planet in search of medical help for the Jedi Knight.
+- S1 E14 - Defenders of Peace => While the Jedi combat a new Separatist weapon, the pacifist Lurmen must decide whether they will lay down to the oppressive Separatists or fight with Anakin, Ahsoka and Jedi General Aayla Secura.
+- S1 E15 - Trespass => While investigating the disappearance of a clone security force, Anakin and Obi-Wan get caught in the middle of an escalating conflict between the furry territorial inhabitants of a desolate ice world and the greedy representatives of a nearby moon.
+- S1 E17 - Blue Shadow Virus (episode) => Padmé and Jar Jar are captured while searching for a secret Separatist bio-weapons lab, sparking Anakin, Obi-Wan and Ahsoka to try and save their friends and halt the release of a deadly virus.
+- S1 E18 - Mystery of a Thousand Moons => The fatal Blue Shadow Virus is released, infecting Ahsoka, Padmé and many Clone Troopers - and giving Anakin and Obi-Wan just 48 hours to find the antidote on a mysterious planet from which no visitor has ever returned.
+- S1 E19 - Storm Over Ryloth => Ahsoka disobeys Anakin's orders and loses most of her squadron - prompting Anakin to help give his Padawan a lesson in a respect for authority, and the opportunity for redemption.
+- S1 E20 - Innocents of Ryloth => To sabotage a powerful Separatist weapon, Obi-Wan and a small clone force enter an occupied town, and discover that its residents are being used as a living shield.
+- S1 E21 - Liberty on Ryloth => With his forces stretched thin, Mace Windu must convince Twi'lek freedom fighter Cham Syndulla to help him save the capital city from the droids' destruction.
 
+- S2 E01 - Holocron Heist => Cad Bane infiltrates the Jedi Temple and attempts to steal an ancient Jedi Holocron. It's up to Ahsoka, Anakin, and Obi-Wan to stop the bounty hunter from escaping with the valuable Jedi artifact.
+- S2 E02 - Cargo of Doom => Anakin and Ahsoka intercept Cad Bane's warship, hoping to recover the stolen Jedi Holocron, but the Jedi underestimate the bounty hunter's cunning tactics.
+- S2 E03 - Children of the Force => Darth Sidious has a new dark assignment for bounty hunter Cad Bane: kidnap Force-sensitive children from across the galaxy and bring them to Mustafar.
+- S2 E17 - Bounty Hunters (episode) => Anakin Skywalker, Obi-Wan Kenobi, and Ahsoka Tano form an uneasy partnership with four deadly Bounty hunters to help protect a local farmer from Hondo Ohnaka and his band of pirates.- The Zillo Beast => The Republic's new super-weapon awakens the fearsome Zillo Beast of Malastare. Now the Jedi must devise a way to contain the deadly creature.
+- S2 E18 - The Zillo Beast => The Republic's new super-weapon awakens the fearsome Zillo Beast of Malastare. Now the Jedi must devise a way to contain the deadly creature.
+- S2 E19 - The Zillo Beast Strikes Back => Republic forces bring the Zillo Beast back to Coruscant for study. When it escapes, the Jedi must choose between saving millions of lives and destroying the Zillo Beast, the last of its kind.
+- S2 E04 - Senate Spy => At the Jedi High Council's request, Padmé investigates a Separatist conspiracy in the Senate.
+- S2 E05 - Landing At Point Rain => Anakin, Ahsoka, Obi-Wan, and Ki-Adi-Mundi lead a landing party to destroy a droid factory on Geonosis.
+- S2 E06 - Weapons Factory => Luminara and Anakin act as decoys to divert new enemy super-tanks, while Padawans Barriss Offee and Ahsoka attempt to destroy a Separatist droid factory.
+- S2 E07 - Legacy of Terror => "When Luminara goes missing, Obi-Wan and Anakin lead a platoon of clones in search of her. When the search leads to a mysterious lair, the Jedi are faced with a horde of undead warriors."
+- S2 E08 - Brain Invaders => "When Geonosian brain worms take control of their supply ship, Ahsoka and Barriss must battle to stop the vessel from unleashing the deadly plague upon the galaxy."
+- S2 E09 - Grievous Intrigue => A Jedi Master is taken hostage and tortured by General Grievous. Anakin, Obi-Wan, and Adi Gallia devise a daring rescue plan, but they soon realize the General has a plan of his own.
+- S2 E10 - The Deserter => While searching for General Grievous on a distant planet, Rex encounters a deserter.
+- S2 E11 - Lightsaber Lost => When a wily pickpocket steals Ahsoka's lightsaber, she enlists the help of an ancient Jedi to track down her weapon and reclaim her honor.
+- S2 E12 - The Mandalore Plot => While investigating rumors of conspiracy surrounding Duchess Satine of Mandalore, Obi-Wan uncovers the truth about a mysterious Mandalorian plot.
+- S2 E13 - Voyage of Temptation => As the Jedi and their clones defend Duchess Satine from assassination attempts, Anakin discovers that Obi-Wan and the duchess have a history together.
+- S2 E14 - Duchess of Mandalore => On Coruscant, word reaches Duchess Satine that Death Watch is mobilizing, sparking a pre-emptive Republic invasion. On the run from Republic authorities, Satine and Obi-Wan set off to discover the group's true motives.
+- S2 E20 - Death Trap => A young boy wages war against the Jedi Knights who left him orphaned, bitter, and alone.
+- S2 E21 - R2 Come Home => When a band of bounty hunters leads Anakin and Mace into a deadly trap on Vanqor, it's up to R2-D2 to battle his way back to Coruscant and warn the Jedi.
+- S2 E22 - Lethal Trackdown => After combing the Coruscant Underworld for a young fugitive, Plo Koon and Ahsoka pursue him to Florrum for a climactic confrontation.
 
-- S2 E01 - Holocron Heist
-- S2 E02 - Cargo Of Doom
-- S2 E03 - Children Of The Force
-- S2 E17 - Bounty Hunter
-- S2 E18 - The Zillo Beast
-- S2 E19 - The Zillo Beast Strikes Back
-- S2 E04 - Senate Spy
-- S2 E05 - Landing At Point Rain
-- S2 E06 - Weapons Factory
-- S2 E07 - Legacy Of Terror
-- S2 E08 - Brain Invaders
-- S2 E09 - Grievous Intrigue
-- S2 E10 - The Deserter
-- S2 E11 - Lightsaber Lost
-- S2 E12 - The Mandalore Plot
-- S2 E13 - Voyage Of Temptation
-- S2 E14 - Duchess Of Mandalore
-- S2 E20 - Death Trap
-- S2 E21 - R2 Come Home
-- S2 E22 - Lethal Trackdown
+- S3 E05 - Corruption (episode) => Padmé, on a diplomatic mission to Mandalore, guarantees the pacifist planet the Republic's full protection, but she and Duchess Satine soon find something sinister lurking beneath the planet's serene façade. Moogan smugglers have been sneaking in supplies, including bottled tea destined for the Mandalorian schools. To increase their profits, they have been diluting the tea with a hazardous chemical.
+- S3 E06 - The Academy => Ahsoka Tano is assigned to teach a class at a leadership academy on Mandalore. Soon after she arrives, Duchess Satine's zealous nephew -- Korkie Kryze -- and his classmates uncover a nefarious plot. Prime Minister Almec is revealed to be an active part of the Mandalorian black market conspiracy on Mandalore, and he attempts to permanently silence Duchess Satine and the cadets before they expose his corruption. Ahsoka and the cadets defeat Almec before he can succeed.&#91;1&#93;
+- S3 E07 - Assassin (episode) => Tasked to protect Senator Padmé Amidala during a political mission to Alderaan, Padawan Ahsoka Tano is plagued by recurring visions of the recently-deceased bounty hunter, Aurra Sing. Unable to clear her mind, Ahsoka worries that the stress of conflict is finally getting to her until her visions indeed prove prophetic. Padmé narrowly avoids death when Aurra Sing attempts to assassinate her. Together, Padmé and Ahsoka trap the hunter, and Ahsoka discovers the true villain behind the plot to kill Padmé: the incarcerated gangster, Ziro the Hutt.&#91;1&#93;
+- S3 E02 - ARC Troopers => The Republic learns of an impending Separatist attack on Kamino, and Anakin and Obi-Wan hurry to the planet. After the Republic repulses the Separatists' diversionary assault, the real attack begins. Asajj Ventress, General Grievous and an army of droids rise out of the oceans, bent on destroying Kamino's clone production facilities. Rex, Cody, Fives, and Echo lead the clones in a desperate defense of their home planet.
+- S3 E04 - Sphere of Influence => Chi Eekway and Che Amanwe, Chairman Papanoida's daughters, are kidnapped and held for ransom. Ahsoka Tano teams up with the Senator from Pantora, Riyo Chuchi, to aid the new chairman in recovering his family before the Trade Federation can unduly influence the future of his planet.
+- S3 E08 - Evil Plans => In the middle of a routine shopping trip on Coruscant, C-3PO is abducted by the bounty hunter Cad Bane. Bane is looking for information about the Senate Building on behalf of Jabba the Hutt. Finding C-3PO devoid of useful information, Bane and his accomplices kidnap R2-D2 and extract the vital data, before memory wiping the droids of the incident, and letting them on their way. The floor-plans and security details of the Senate building are part of a plot engineered by the Hutt families to free their imprisoned brother, Ziro the Hutt, who holds potentially damaging information about Hutt activities.&#91;1&#93;
+- S1 E22 - Hostage Crisis => To free crime lord Ziro Hutt, bounty hunters seize control of the Senate Building and take hostages&#8212;completely unaware at first that Jedi Knight Anakin Skywalker is still inside.
+- S3 E09 - Hunt for Ziro => Cad Bane has broken Ziro the Hutt out of prison and the Hutt Council demands that Ziro tell them where he's hidden vital -- and incriminating -- information: a journal detailing the criminal activities of the five Hutt families. Ziro makes another daring escape with the help of his estranged (and strange) lover, Sy Snootles. Bane is back on the Hutt's trail -- but he's not the only one. The Jedi Obi-Wan Kenobi and Quinlan Vos need to find him too.&#91;1&#93;
+- S3 E10 - Heroes on Both Sides => "When the Senate begins debating a bill that would eliminate government oversight of the Banking Clan's activities in order to fund the war, Padmé and Ahsoka travel in secret to the capital of the Confederacy of Independent Systems. Amidala attempts to forge a peace agreement with the Separatists, while Ahsoka sees, for the first time, the people of the Confederacy. Padmé's friend, Mina Bonteri, spearheads the peace initiative, and convinces the Separatist Congress to sue for peace.
+- S3 E11 - Pursuit of Peace => "Padmé Amidala, Bail Organa and Onaconda Farr attempt to rally Senators in opposition to a bill that would appropriate funds for millions of new clone troops and have disastrous financial consequences for the Republic. Their opposition to the measure, however, soon makes them targets for intimidation and attacks by hired guns. After escaping two hired thugs — Chata Hyoki and Robonino — in a harrowing speeder bike chase, Padmé, is able to sway the Senate with a stirring account of how the war has affected an everyday civilian, her handmaiden Teckla Minnau."
+- S2 E15 - Senate Murders => "When Senator Onaconda Farr dies under suspicious circumstances, Padmé sets out to find the person responsible for the death of her favorite &#39;uncle.'"
+- S3 E12 - Nightsisters (episode) => "Troubled by Asajj Ventress' growing prowess with the dark side of the Force, Darth Sidious commands Count Dooku to eliminate her. But Ventress survives Dooku's assassination attempt, and the jilted former apprentice vows to take revenge, enlisting the aid of her kinswomen -- the mystical Nightsisters -- in her sinister scheme.
+- S3 E13 - Monster => "When Count Dooku calls upon the Nightsisters seeking a replacement for Ventress, she and her kin seize the opportunity to exact revenge. Ventress visits the far side of Dathomir and the males of the planet seeking the most brutal and powerful warrior among them. Talzin has Asajj secretly select a warrior from the distant Nightbrother village: Savage Opress. With the power of dark magic, Talzin transforms Savage into a hulking warrior ultimately loyal to Asajj. She then delivers Opress to Dooku, where he will serve as his secret Sith apprentice in a plot to overthrow Darth Sidious."
+- S3 E14 - Witches of the Mist => "Anakin and Obi-Wan, sent to track down the mysterious figure behind the deaths of several Jedi, soon find themselves on the trail of the monstrous apprentice that Ventress has created: Savage Opress, who has been trained in the ways of the Sith by Dooku.  Dooku sends Opress to Toydaria to capture King Katuunko. The monstrous apprentice clashes with the Jedi, and in the course of the battle he kills the king. Opress returns to Dooku's flagship having failed his Master. It is then that Ventress strikes, with Opress at her side, against Dooku. A three-way battle for dark side supremacy ends with Dooku triumphant, Ventress fleeing, and a disillusioned Savage abandoning his loyalties to the Sith. He returns to Mother Talzin, who gives him a new task. To seek the Outer Rim for his long-lost brother...."
+- S3 E15 - Overlords => "A mysterious force draws Anakin, Obi-Wan, and Ahsoka to a distant planet, and its inhabitants -- a family of exceptionally powerful Force-wielders -- in an attempt to determine whether Anakin is truly the Chosen One. The patriarch of this family, known only as the Father, has spent ages maintaining the balance between his Daughter, who is strong with the light side of the Force, and his Son, who aligns with the dark. The Father reveals his days are numbered, and he seeks Anakin to take his place as the fulcrum of this balance. A test proves that Anakin is capable of controlling both offspring, as the Father does, but Skywalker refuses to take the Father's place."
+- S3 E16 - Altar of Mortis (episode) => "Before the Jedi can leave Mortis, the Son takes Ahsoka captive in an attempt to entice Anakin into joining him to use their combined strength to overpower his Father and Sister. To this end, the Son casts Ahsoka under the spell of the dark side.
+- S3 E17 - Ghosts of Mortis => "The Jedi remain stranded on Mortis, and the Son, aligned with the dark side of the Force, renews his efforts to convert Anakin as the Jedi prepare for a decisive confrontation. Anakin is stunned by images of his dark future. The Son promises him the power to avert this destiny.
+- S3 E18 - The Citadel => "With help from R2-D2 and a squad of captured battle droids, an elite team of Jedi and clone troopers led by Obi-Wan and Anakin attempt to free a captive Jedi General, Even Piell, from an impenetrable prison. Despite orders to the contrary, Ahsoka Tano tags along, though she proves indispensable when the infiltration mission begins to evolve. Piell and his fleet officer, Captain Tarkin, are liberated from their cells, but now the fugitives must escape the Citadel itself."
+- S3 E19 - Counterattack => "With freed prisoners in their possession and the brutal warden attempting desperately to thwart them, Obi-Wan and Anakin search for a way out of the Citadel and back to Coruscant. The prison, however, has more traps, perils, and pitfalls in store for them than they had imagined and they must work past their differences if they are to escape. Their bid to board their shuttle fails when heavy weapons fire destroys the escape craft. ARC trooper Echo dies in the blast. The escapees then flee to the caves and call for rescue from the Jedi Temple on Coruscant."&#91;1&#93;
+- S3 E20 - Citadel Rescue => "After their ship and only way off the planet is destroyed, Anakin and Obi-Wan must lead the escaped prisoners across Lola Sayu's perilous landscape as Plo Koon commands a task force of four cruisers and their fighters through the Separatist defenses in a daring rescue. Even Piell is ravaged by anooba tracking beasts, but before he dies, he passes on his Nexus Routes coordinates to Ahsoka. When the survivors return to Coruscant, Ahsoka knows half the intel, and refuses to disclose it to anyone but the Jedi Council, while Tarkin refuses to hand over his half to anyone other than the Chancellor."
+- S3 E21 - Padawan Lost => "Ahsoka and a group of abducted younglings find themselves trapped on a Trandoshan moon, prey in an elaborate and cruel hunt. The forlorn younglings have lost all hope, despite the best efforts of their spirited leader, Kalifa. Ahsoka rallies them to defend themselves and strike back against the Trandoshan, an effort with deadly consequences. "&#91;1&#93;
+- S3 E22 - Wookiee Hunt => "As Ahsoka and her youngling allies struggle to evade the Trandoshan hunters, their efforts receive an unexpected boost when a new captive -- Chewbacca the Wookiee -- arrives. Chewie scrounges parts from a wrecked Trandoshan slave ship, assembling a communicator to send out a distress signal. Help arrives in the towering, shaggy form of Wookiee warriors led by General Tarfful. Freed from captivity, Ahsoka returns to the Jedi Temple and is reunited with Anakin Skywalker."&#91;1&#93;
 
+- S4 E01 - Water War => "When the king of Mon Cala is assassinated, talks break down between the Mon Calamari people and the Quarren, co-inhabitants of the aquatic world. To stop a civil war, the Republic sends Padmé Amidala and Anakin Skywalker, but unbeknownst to them, the Quarren are already being backed by the Separatists. Now the Jedi must protect Mon Cala's new leader, the young Prince Lee-Char, from the attack."&#91;1&#93;
+- S4 E02 - Gungan Attack => "Anakin Skywalker and the rest of his Jedi team have been overrun by the Separatist surprise attacks led by Riff Tamson while Prince Lee-Char and Ahsoka must evade capture on their own. Unable to summon more Republic aid, Yoda calls upon the help of the powerful and amphibious Gungan Grand Army, but whether they will be enough to stop the Separatist siege is uncertain. An incensed Tamson doubles his efforts in tracking down Prince Lee-Char, unleashing the reinforcements given to him by Count Dooku in an assault that churns the oceans."&#91;1&#93;
+- S4 E03 - Prisoners => "The Republic and Gungan forces have been captured by Riff Tamson and his Karkarodon enforcers. Now, it is up to Ahsoka and the young Prince Lee-Char to unite the fractured people of Mon Cala and drive out the Separatist invaders."&#91;1&#93;
+- S4 E04 - Shadow Warrior => "When the leader of the Gungans, Boss Lyonie, is injured it's discovered there is an uncanny resemblance between the Boss and Jar Jar Binks. Binks must sway his people from rising against the Naboo and stopping a Separatist invasion led by General Grievous."&#91;1&#93;
+- S4 E05 - Mercy Mission (episode) => "After groundquakes have devastated the planet Aleen, a Republic relief effort arrives, including the droids R2-D2 and C-3PO. When the native Aleena's pleas go unheard, it becomes the duty of the droids to embark on a surreal journey through Aleen's subterranean world to save the planet."&#91;1&#93;
+- S4 E06 - Nomad Droids => C-3PO and R2-D2's bizarre caper continues. Forced to escape a Separatist attack in a Y-wing fighter, the droids visit the world of the Patitites, the odd planet Balnab, and the inside of a pirate warship where they are forced to fight in a gladiatorial arena.&#91;1&#93;
+- S4 E07 - Darkness on Umbara => "When Anakin is forced to temporarily turn over command of his clone troopers to a new commander, the Jedi Pong Krell, tensions begin to run high as the clones are assigned with a very deadly mission to take the capital of Umbara."&#91;1&#93;
+- S4 E08 - The General (episode) => "General Krell orders Captain Rex and the clone troopers of the 501st Legion to conquer a heavily fortified Umbaran airbase, and will not accept anything less than victory. It is an almost certain suicide mission, unless the clones can use their ingenuity to defeat their new enemy."&#91;1&#93;
+- S4 E09 - Plan of Dissent => "After the Republic conquers an Umbaran airbase, General Krell orders Rex and his men on towards the heavily fortified capital. Realizing there's a better plan, several clone troopers disobey orders to carry out a rogue, covert operation."&#91;1&#93;
+- S4 E10 - Carnage of Krell => "With two of his men facing execution for disobeying orders, Captain Rex must confront his overly aggressive commander, General Krell. Risking charges of mutiny, Rex must make a dark choice as the true face of the enemy emerges."&#91;1&#93;
+- S4 E11 - Kidnapped => "Zygerrian slavers are behind the sudden disappearance of an entire colony of people on the planet Kiros. As Anakin and Ahsoka rush to defuse a series of bombs planted by the slavers, Obi-Wan must fight with their imposing leader."&#91;1&#93;
+- S4 E12 - Slaves of the Republic => "To locate the missing colonists, Anakin, Obi-Wan, and Ahsoka go undercover to infiltrate the slavers on Zygerria. Anakin struggles with his emotions as a wily Zygerrian queen forces him to take questionable actions in order to carry out his mission."&#91;1&#93;
+- S4 E13 - Escape from Kadavo => "Anakin tries to convince the Zygerrian Queen that she too is a slave and pawn in an evil Separatist plot. Meanwhile, Obi-Wan toils in the slave camps of Kadavo, a grim situation that grows increasingly bleak."&#91;1&#93;
+- S4 E14 - A Friend in Need => "A peace conference between Separatists and Republic delegates is interrupted by Lux Bonteri, the son of a late Separatist Senator, who involves Ahsoka in his dangerous search to find justice for his mother's death."&#91;1&#93;
+- S4 E15 - Deception => "When the Jedi learn of a Separatist plot to kidnap Chancellor Palpatine, one of them must go deep undercover as a hardened criminal to extract information from the conspirators."&#91;1&#93;
+- S4 E16 - Friends and Enemies => "Fleeing across the galaxy with criminal fugitives, a disguised Obi-Wan, Cad Bane, and Moralo Eval are tenaciously pursued by Anakin and Ahsoka, who have no idea they're chasing their friend."&#91;1&#93;
+- S4 E17 - The Box => "The disguised Obi-Wan accompanies Cad Bane and Moralo Eval to Serenno, where they enlist in a brutal competition with other bounty hunters from around the galaxy to determine who will participate in a plot to kidnap the Chancellor."&#91;1&#93;
+- S4 E18 - Crisis on Naboo => "The Chancellor travels to Naboo to preside over a public ceremony, guarded by Jedi Knights. Dooku and his bounty hunters&#8212;including an undercover Obi-Wan Kenobi&#8212;launch their kidnapping plot."&#91;1&#93;
+- S4 E19 - Massacre => "Count Dooku is determined to have revenge against the Nightsisters of Dathomir after their betrayal. General Grievous launches an all-out droid attack against the magic-wielding witches, and Mother Talzin and Asajj Ventress lead the defense with all the dark powers at their command."&#91;1&#93;
+- S4 E20 - Bounty (episode) => "An aimless Asajj Ventress joins a team of bounty hunters under the leadership of young Boba Fett. On an alien world, they undertake a dangerous but profitable mission that tests the limits of their skills, and the strength of Asajj's character."&#91;1&#93;
+- S4 E21 - Brothers => "The dark warrior Savage Opress is on a quest to find his long-lost brother. Could Darth Maul truly be alive, after more than a decade since his gruesome bisection at the blade of Obi-Wan Kenobi? Savage voyages into the depths of a twisted planet to find whatever became of the fallen Sith Lord."&#91;1&#93;
+- S4 E22 - Revenge (episode) => "Savage and Maul, now reunited, pursue Obi-Wan Kenobi in search of revenge, and the Jedi Knight finds himself forced to unite with a surprising ally to defend against the deadly siblings."&#91;1&#93;
 
-- S3 E05 - Corruption
-- S3 E06 - The Academy
-- S3 E07 - Assassin
-- S3 E02 - Arc Troopers
-- S3 E04 - Sphere Of Influence 
-- S3 E08 - Evil Plans 
-- S1 E22 - Hostage Crisis
-- S3 E09 - Hunt For Ziro
-- S3 E10 - Heroes On Both Sides
-- S3 E11 - Pursuit Of Peace
-- S2 E15 - Senate Murders 
-- S3 E12 - Nightsisters
-- S3 E13 - Monster
-- S3 E14 - Witches Of The Mist
-- S3 E15 - Overlords
-- S3 E16 - Altar Of Mortis
-- S3 E17 - Ghosts Of Mortis
-- S3 E18 - The Citadel
-- S3 E19 - Counterattack
-- S3 E20 - Citadel Rescue
-- S3 E21 - Padawan Lost
-- S3 E22 - Wookiee Hunt
+- S5 E02 - A War on Two Fronts => "Anakin, Obi-Wan, Ahsoka, and Rex travel to Onderon, a world under Separatist control. There, they will train a group of insurgent rebels&#8212;including Lux Bonteri&#8212;to help take back the capital city of Iziz from the rule of a duplicitous king."&#91;1&#93;
+- S5 E03 - Front Runners => "Supervised by Ahsoka, the Onderon rebels infiltrate the capital and carry out a series of strikes on targets throughout the city. As the Separatist-aligned king comes under increasing pressure to deal with the growing rebellion, the rebels choose a new leader."&#91;1&#93;
+- S5 E04 - The Soft War => "After a rebel attempt to rescue Onderon's true king, Ramsis Dendup, an unexpected ally steps forward to halt Dendup's execution and aid the rebel cause."&#91;1&#93;
+- S5 E05 - Tipping Points => "As a full-scale revolt embroils Onderon, the rebels strike a decisive blow against the planet's Separatist-aligned king. Unfortunately for the rebels, such victory comes at a high price."&#91;1&#93;
+- S5 E06 - The Gathering (episode) => "Ahsoka escorts a group of younglings to Ilum, where they will learn from Yoda and undergo a crucial rite of passage: the construction of their lightsabers. They grapple with both physical and inner challenges as they face the dangerous task ahead of them."&#91;1&#93;
+- S5 E07 - A Test of Strength => "As the younglings return from Ilum with Ahsoka, their ship comes under attack by Hondo's gang of pirates. The children must use ingenious and improvised traps to thwart the brigands."&#91;1&#93;
+- S5 E08 - Bound for Rescue => "With Ahsoka captured by Hondo's pirates, the younglings work together to infiltrate the pirates' den, using their wits and courage to deceive Hondo Ohnaka and launch a daring rescue."&#91;1&#93;
+- S5 E09 - A Necessary Bond => "When General Grievous launches a full-scale attack on the pirate base on Florrum, Ahsoka and the younglings fight side-by-side with Hondo and his pirates to turn back the Separatist forces."&#91;1&#93;
+- S5 E10 - Secret Weapons => "R2-D2 is part of a team of Republic droids chosen for an important mission led by the diminutive Colonel Gascon to obtain an encryption module from a Separatist dreadnought. The droids must overcome numerous challenging obstacles to succeed in this crucial assignment."&#91;1&#93;
+- S5 E11 - A Sunny Day in the Void => "After a comet damages their shuttle, R2-D2, Colonel Gascon, and the other droids crash on a desolate planet where they must make their way across a bewildering expanse of emptiness to carry out their mission."&#91;1&#93;
+- S5 E12 - Missing in Action => "In a nearly vacant town, R2-D2 and his team find a clone commando suffering from amnesia."&#91;1&#93;
+- S5 E13 - Point of No Return => "R2-D2 and his team must stop a sabotaged Jedi cruiser from destroying a crucial Republic conference."&#91;1&#93;
+- S5 E01 - Revival (episode) => "Fueled by vengeance and rage, the newly reunited brothers Savage Opress and Maul spread terror and violence across the galaxy. As the Sith brothers forcibly recruit Hondo Ohnaka and his pirates, Obi-Wan Kenobi and Adi Gallia chase them down, leading to a deadly confrontation."&#91;2&#93;
+- S5 E14 - Eminence (episode) => "Savage and Maul form an alliance with the Death Watch to target a common enemy: Obi-Wan Kenobi."&#91;1&#93;
+- S5 E15 - Shades of Reason => "Backed by the criminal underworld, the Sith and Death Watch launch an attack on Mandalore."&#91;1&#93;
+- S5 E16 - The Lawless => "Using Duchess Satine as bait, Darth Maul lures Obi-Wan into a trap."&#91;1&#93;
+- S5 E17 - Sabotage (episode) => "Anakin and Ahsoka investigate a deadly bombing at the Jedi Temple."&#91;1&#93;
+- S5 E18 - The Jedi Who Knew Too Much => "As the Republic military takes over the Temple bombing case, Ahsoka finds herself at odds with Admiral Tarkin."&#91;1&#93;
+- S5 E19 - To Catch a Jedi => "The fugitive Ahsoka escapes to the criminal depths of Coruscant."&#91;1&#93;
+- S5 E20 - The Wrong Jedi => "On trial for murder, Ahsoka faces her greatest challenge."&#91;1&#93;
 
-- S4 E01 - Water War
-- S4 E02 - Gungan Attack
-- S4 E03 - Prisoners
-- S4 E04 - Shadow Warrior
-- S4 E05 - Mercy Mission
-- S4 E06 - Nomad Droids
-- S4 E07 - Darkness On Umbara
-- S4 E08 - The General
-- S4 E09 - Plan Of Dissent
-- S4 E10 - Carnage Of Krell
-- S4 E11 - Kidnapped
-- S4 E12 - Slaves Of The Republic
-- S4 E13 - Escape From Kadavo
-- S4 E14 - A Friend In Need
-- S4 E15 - Deception
-- S4 E16 - Friends And Enemies
-- S4 E17 - The Box
-- S4 E18 - Crisis On Naboo
-- S4 E19 - Massacre
-- S4 E20 - Bounty
-- S4 E21 - Brothers
-- S4 E22 - Revenge
-
-- S5 E02 - A War On Two Fronts
-- S5 E03 - Front Runners
-- S5 E04 - The Soft War
-- S5 E05 - Tipping Points
-- S5 E06 - The Gathering
-- S5 E07 - A Test Of Strength
-- S5 E08 - Bound For Rescue
-- S5 E09 - A Necessary Bond
-- S5 E10 - Secret Weapons
-- S5 E11 - A Sunny Day In The Void
-- S5 E12 - Missing In Action
-- S5 E13 - Point Of No Return
-- S5 E01 - Revival
-- S5 E14 - Eminence
-- S5 E15 - Shades Of Reason
-- S5 E16 - The Lawless
-- S5 E17 - Sabotage
-- S5 E18 - The Jedi Who Knew Too Much
-- S5 E19 - To Catch A Jedi
-- S5 E20 - The Wrong Jedi
-
-- S6 E01 - The Unknown
-- S6 E02 - Conspiracy
-- S6 E03 - Fugitive
-- S6 E04 - Orders
-- S6 E05 - An Old Friend
-- S6 E06 - Rise Of Clovis
-- S6 E07 - Crisis At The Heart
-- S6 E08 - The Disappeared, Part I
-- S6 E09 - The Disappeared, Part II
-- S6 E10 - The Lost One
-- S6 E11 - Voices
-- S6 E12 - Destiny
-- S6 E13 - Sacrifice
+- S6 E01 - The Unknown => "Clone trooper Tup succumbs to a mysterious mental illness that results in the shocking death of a Jedi Master. Unable to account for his murderous actions, Tup is sedated and sent back to Kamino for examination. Anakin and ARC trooper Fives accompany Tup, but their return trip is ambushed by Separatists."&#91;1&#93;
+- S6 E02 - Conspiracy => "In the sterile laboratories of Kamino, the ailing clone trooper Tup and his friend Fives are quarantined for examination following Tup's shocking murder of a Jedi Master. With the help of medical droid AZI-3, Fives is determined to get to the bottom of Tup's condition and uncovers a secret deep within the Republic cloning program."&#91;1&#93;
+- S6 E03 - Fugitive => "Clone trooper Tup is scheduled for transport to Coruscant, where the Supreme Chancellor's own doctors will closely examine him. Fives breaks protocol and defies orders to dig up answers, and discovers that there is an organic construct of unknown purpose hidden in the brains of all clone troopers."&#91;1&#93;
+- S6 E04 - Orders => "Fives continues to push for answers regarding the mystery of the clone contamination and secures an audience with Supreme Chancellor Palpatine. But the situation quickly collapses when Fives is accused of attacking the chancellor, and he must flee deep into the Coruscant cityscape while pursued by his fellow clone troopers."&#91;1&#93;
+- S6 E05 - An Old Friend => "While on Scipio to fund a mercy mission, Padmé Amidala is called upon by an old friend, Rush Clovis, to help uncover corruption in the Banking Clan. They must evade the bounty hunter Embo to escape the planet with the incriminating information."&#91;1&#93;
+- S6 E06 - Rise of Clovis => "Back on Coruscant, Clovis&#8212;known traitor of the Republic&#8212;makes a dubious deal which puts him at the head of the Banking Clan. Anakin's increasing distrust and hatred of Clovis strains his relationship with Padmé to breaking point."&#91;1&#93;
+- S6 E07 - Crisis at the Heart => "After making a deal with Count Dooku to resuscitate the ailing Banking Clan, Clovis finds himself a pawn in Dooku's designs. Clovis has brought the war to Scipio, forcing the Republic to intervene."&#91;1&#93;
+- S6 E08 - The Disappeared, Part I => "The peaceful world of Bardotta and its mystic ways are threatened by an ancient prophecy, and its top spiritual leaders have vanished. Queen Julia of Bardotta calls for help from her most trusted friend in the Senate, Jar Jar Binks. Recognizing the importance of Bardotta's spiritual balance, the Jedi Council sends Mace Windu to accompany Binks and investigate."&#91;1&#93;
+- S6 E09 - The Disappeared, Part II => "Jar Jar Binks' beloved Queen Julia of the planet Bardotta has been abducted by the bloodthirsty Frangawl Cult to fulfill a dark and ancient prophecy. Representative Binks and Jedi Master Mace Windu must find the missing Queen before the cult can rise in power."&#91;1&#93;
+- S6 E10 - The Lost One => "A Jedi mission finds a lightsaber belonging to the long-dead Master Sifo-Dyas, prompting Yoda, Obi-Wan Kenobi, and Anakin Skywalker to begin an investigation into his decade-old disappearance. This sparks Darth Sidious to order Darth Tyranus to clean up any loose ends that may lead the Jedi to discover the truth of the Sith conspiracy."&#91;5&#93;
+- S6 E11 - Voices => "Yoda is deeply unsettled when he hears a voice from beyond the grave: the voice of Qui-Gon Jinn. Knowing that it is impossible for a Jedi to retain his identity after Death, the Jedi Council begins to worry that Yoda may be corrupted by the influence of the dark side. Determined to find answers, Yoda escapes the Jedi Temple to follow the disembodied voice."&#91;1&#93;
+- S6 E12 - Destiny (episode) => "Letting the Force guide him, Yoda voyages into the heart of the galaxy to an ancient world that is one of the wellsprings of the Force and the source of midi-chlorians. Yoda undergoes difficult trials administered by the Five Priestesses, mysterious Force-wielders who hold the secret to immortality."&#91;5&#93;
+- S6 E13 - Sacrifice => "After many grueling trials, Yoda next travels to the ancient Sith homeworld of Moraband, where he must face an ancient evil determined to rule the galaxy."&#91;5&#93;
