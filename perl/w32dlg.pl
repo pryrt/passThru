@@ -4,6 +4,7 @@ use warnings;
 use Win32::API;
 use Encode;
 use Data::Dump;
+use Win32::GuiTest();
 
 BEGIN {
     # https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-sendmessage
@@ -62,6 +63,7 @@ https://stackoverflow.com/questions/10406277/how-can-i-pass-a-pointer-to-a-perl-
 https://community.notepad-plus-plus.org/post/45891
     -- how did I not remember when Eko was flexing and showed FindWindowExW, complete with callback,
         showing that it works
+
 =cut
 
 # WinDialog\win_helper\__init__.py::Dialog::__create_dialog
@@ -140,4 +142,35 @@ print $w->Dump(''), "\nsize: ", $w->sizeof, "\n";
 #dd $w;
 
 # WinDialog\__init__.py::line132 next is GetModuleHandle(None)
+dd active_hWnd => Win32::GuiTest::GetActiveWindow(0);
+dd fg_hWnd =>  my $hWndParent = Win32::GuiTest::GetForegroundWindow();
 my $hMod = GetModuleHandleW("");        dd { hMod => $hMod };
+my $__default_dialog_proc;
+
+=begin exception
+
+dd [retval => DialogBoxIndirectParamW($hMod, $w, $hWndParent, $__default_dialog_proc, 0)];
+
+# unforunately, DialogBoxIndirectParamW() always seems to cause perl to crash with Exception Code c0000005
+
+        Faulting application name: perl.exe, version: 5.30.0.1, time stamp: 0x5ce675b5
+        Faulting module name: USER32.dll, version: 10.0.22621.1485, time stamp: 0x394fb7c7
+        Exception code: 0xc0000005
+        Fault offset: 0x000000000001edb9
+        Faulting process id: 0x0x3694
+        Faulting application start time: 0x0x1D97A2721A37743
+        Faulting application path: c:\usr\local\apps\berrybrew\perls\system\perl\bin\perl.exe
+        Faulting module path: C:\WINDOWS\System32\USER32.dll
+        Report Id: 1bfbafbe-aeeb-4228-908a-c1903aefb8d5
+        Faulting package full name:
+        Faulting package-relative application ID:
+
+My best bet as to what's going on is that I don't have a dialog proc, so it crashes because of that.
+
+=cut
+
+=begin URLs
+
+https://stackoverflow.com/questions/2270196/c-win32api-creating-a-dialog-box-without-resource => possible C example of manual dialog
+
+=cut
