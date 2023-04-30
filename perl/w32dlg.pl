@@ -213,3 +213,14 @@ Win32::API::Struct->typedef( 'DLGTEMPLATEEX' => qw/unsigned char bytes[$lb];/);
 my $w = Win32::API::Struct->new('DLGTEMPLATEEX');
 $w->{bytes} = $bytes;
 #dd [retval => DialogBoxIndirectParamW(0, $w, 0, 0, 0)]; # still gives the c0000005 error :-(
+
+=begin
+
+I think the problem is I used LPSTR above, 
+but I am passing it a DLGTEMPLATEEX.  I
+should try calling it LPDLGTEMPLATEEX in the
+prototype, and see if that fixes it -- because
+the examples all show it working with LPX in
+proto and X as the defined structure.
+
+=cut
