@@ -4,6 +4,7 @@ use 5.012; # strict, //
 use warnings;
 $|=1;
 
+#use Inline C => Config => CLEAN_AFTER_BUILD => 0;   # uncomment to keep the compiled version
 use Inline C => 'DATA';
 # hw();
 print wrapped("Hello, World"), "\n";
@@ -15,9 +16,10 @@ printf "lret        => 0x%016X\n", lret(undef);
 printf "lretiv      => 0x%016X\n", lreturn_iv(undef);
 printf "noarg_lret  => 0x%016X\n", noarg_lret();
 
-sub noarg_lret {
-    lreturn_iv(@_ ? @_ : undef); # maybe?
-}
+sub noarg_lret { lreturn_iv(@_ ? @_ : undef); }
+sub myDialog { c_myDialog(@_?@_:0) }
+
+myDialog(0);
 
 __DATA__
 
@@ -25,6 +27,7 @@ __C__
 
 void hw(void) {
     printf("Hello, World\n");
+    fflush(stdout);
 }
 
 SV* wrapped(char* msg) {
@@ -36,11 +39,13 @@ SV* wrapped(char* msg) {
 
 void noret(char* msg) {
     printf("%s\n", msg);
+    fflush(stdout);
     return;
 }
 
 void noarg(void) {
     printf("%s\n", "My Message");
+    fflush(stdout);
     return;
 }
 
@@ -51,8 +56,10 @@ int sizes(int input) {
     print_sizeof(long);
     print_sizeof(long long);
     print_sizeof(LRESULT);
+    print_sizeof(HWND);
     print_sizeof(IV);
     print_sizeof(SV);
+    fflush(stdout);
     return(0);
 }
 
@@ -84,7 +91,6 @@ IV lreturn_iv(SV* ignore) {
     return((IV)lr);
 }
 
-#if 0
 // https://stackoverflow.com/questions/2270196/c-win32api-creating-a-dialog-box-without-resource
 
 #define DLGTITLE  L"Debug"
@@ -231,6 +237,16 @@ INT_PTR CALLBACK Debug_DlgProc (
     return FALSE;
 }
 
+void printf_bytes(LPVOID ptr, size_t sz)
+{
+    char* cp = (char*)ptr;
+    for(size_t i=0; i<sz; i++) {
+        if(0==i%16) printf("%-8d", i);
+        printf("\\x%02X", cp[i]&0xFF);
+        if(15==i%16) printf("\n");
+    }
+    printf("\n");fflush(stdout);
+}
 
 LRESULT DoDebugDialog(HWND hwndApp, LPVOID pvData)
 {
@@ -240,14 +256,12 @@ LRESULT DoDebugDialog(HWND hwndApp, LPVOID pvData)
    printf_bytes(&g_DebugDlgTemplate, sizeof(g_DebugDlgTemplate));
    printf("%s\nHit ^C to exit...", "\x20\x21\x22");fflush(stdout);
 
-   return DialogBoxIndirectParamW (hinst, (LPCDLGTEMPLATEW)&g_DebugDlgTemplate, hwndApp,
-                                  NULL/*Debug_DlgProc*/, (LPARAM)pvData);
+   return DialogBoxIndirectParamW (hinst, (LPCDLGTEMPLATEW)&g_DebugDlgTemplate, hwndApp, NULL/*Debug_DlgProc*/, (LPARAM)pvData);
 }
 
-LRESULT myDialog(HWND hwndApp)
+IV c_myDialog(UV hwndApp)
 {
-    LRESULT r = DoDebugDialog(0, NULL);
-    printf("result = %d\n", r);
-    return(r);
+    LRESULT r = DoDebugDialog((HWND)hwndApp, NULL);
+    printf("result = %d\n", r);fflush(stdout);
+    return((IV)r);
 }
-#endif
