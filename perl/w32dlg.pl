@@ -17,11 +17,34 @@ LRESULT SendMessage(
 )
 ENDPROTO
 
+    # my structure
+    #Win32::API::Struct->typedef( 'MYSTRUCT' => qw/unsigned char bytes[$lb];/);
+    Win32::API::Struct->typedef( 'MYSTRUCT' => qw(
+    WORD      dlgVer;
+    WORD      signature;
+    DWORD     helpID;
+    DWORD     exStyle;
+    DWORD     style;
+    WORD      cDlgItems;
+    short     x;
+    short     y;
+    short     cx;
+    short     cy;
+    LPWSTR    menu;
+    LPWSTR    windowClass;
+    WCHAR     title[32];
+    WORD      pointsize;
+    WORD      weight;
+    BYTE      italic;
+    BYTE      charset;
+    WCHAR     typeface[32];
+    ));
+
     # https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-dialogboxindirectparamw
     Win32::API::->Import("user32", <<ENDPROTO) or die "Import DialogBoxIndirectParam FAILED: $^E";
 INT_PTR DialogBoxIndirectParamW(
     HINSTANCE       hInstance,
-    LPSTR           hDialogTemplate,
+    LPMYSTRUCT      hDialogTemplate,
     HWND            hWndParent,
     LPVOID          lpDialogFunc,
     LPARAM          dwInitParam
@@ -38,17 +61,6 @@ HMODULE GetModuleHandleW(
 ENDPROTO
 }
 
-# Try taking the bytearray output of a dead-simple dialog (title and OK button)
-#   from the PythonScript3 dialog builder, and see if I can pass it to
-#   Win32::API-based DialogBoxIndirectParam()
-####    my $bytearray = '\x01\x00\xff\xff\x00\x00\x00\x00\x80\x00\x00\x00C\x00\x08\x00\x01\x00\x00\x00\x00\x00\xbe\x00\xd2\x00\x00\x00\x00\x00M\x00y\x00T\x00i\x00t\x00l\x00e\x00\x00\x00\x08\x00\x90\x01\x00\x01M\x00S\x00 \x00S\x00h\x00e\x00l\x00l\x00 \x00D\x00l\x00g\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x93\x00P\n\x00\n\x002\x00\x16\x00\x01\x04\x00\x00B\x00u\x00t\x00t\x00o\x00n\x00\x00\x00O\x00K\x00\x00\x00\x00\x00\x00\x00';
-####    dd [bytearray => $bytearray];
-####    my $rv = DialogBoxIndirectParamW(0, $bytearray, 0, 0, 0);
-####    eval {
-####        print STDERR "DialogBoxIndirectParamW returned $rv\n";
-####        die "\tERR>> $^E" if $rv < 1;
-####    };
-####    print "StringAt: '$@'";
 =begin
 
 https://perlmonks.org/index.pl?node_id=1199451
@@ -209,14 +221,42 @@ my $bytes = "\xC4\x00\xC8\x90\x00\x00\x00\x00\x03\x00\x00\x00\x00\x00\x2C\x01"
         .   "\x63\x00\xFF\xFF\x82\x00\x00\x00\x00\x00\x00\x00";
 my $lb = length($bytes);
 
-Win32::API::Struct->typedef( 'DLGTEMPLATEEX' => qw/unsigned char bytes[$lb];/);
-my $w = Win32::API::Struct->new('DLGTEMPLATEEX');
-$w->{bytes} = $bytes;
-#dd [retval => DialogBoxIndirectParamW(0, $w, 0, 0, 0)]; # still gives the c0000005 error :-(
+# Win32::API::Struct->typedef( 'DLGTEMPLATEEX' => qw/unsigned char bytes[$lb];/);
+my $w = Win32::API::Struct->new('MYSTRUCT');
+#$w->{bytes} = $bytes;
+$w->{dlgVer} = 1;
+$w->{signature} = 0xFFFF;
+$w->{helpID} = 0;
+$w->{exStyle} = 0x00000080;
+$w->{style} = 0x00080000 | 0x0002 | 0x0001 | 0x40 | 0x00040000;   # WS.SYSMENU | CS.HREDRAW | CS.VREDRAW | DS.SETFONT | WS.SIZEBOX
+$w->{cDlgItems} = 0;
+$w->{x} = 0;
+$w->{y} = 0;
+$w->{cx} = 190;
+$w->{cy} = 210;
+$w->{menu} = 0;
+$w->{windowClass} = 0;
+$w->{title} = encode('UTF-16le',"MyDialogTitle");
+$w->{pointsize} = 8;
+$w->{weight} = 400;
+$w->{italic} = 0;
+$w->{charset} = 1;
+$w->{typeface} = encode('UTF-16le', "MS Shell Dlg");
+print "original size: ", $w->sizeof, "\n";
+$w->align('auto');
+print "aligned size: ", $w->sizeof, "\n";
+$w->Dump('');
 
+
+dd [retval => DialogBoxIndirectParamW(0, $w, 0, 0, 0)]; # okay, having the MYSTRUCT/LPMYSTRUCT pair has changed things...
+#### Argument "M-D\0M-HM-^P\0\0\0\0^C\0\0\0\0\0,^AM-4\0\0\0\0\0D\0e\0b\0..." isn't numeric in pack at c:/usr/local/apps/strawberry/perl/vendor/lib/Win32/API/Struct.pm line 347.
+#### Invalid type '$' in pack at c:/usr/local/apps/strawberry/perl/vendor/lib/Win32/API/Struct.pm line 347.
+
+printf "GetModuleHandle(%s)=0x%X ('%s')\n", $_, GetModuleHandleW($_), $^E for 0, qw/NULL NUL perl.exe user32.dll user32 conhost.exe conhost/;
+#sleep(60);
 =begin
 
-I think the problem is I used LPSTR above, 
+I think the problem is I used LPSTR above,
 but I am passing it a DLGTEMPLATEEX.  I
 should try calling it LPDLGTEMPLATEEX in the
 prototype, and see if that fixes it -- because
