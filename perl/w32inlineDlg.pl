@@ -91,7 +91,8 @@ IV lreturn_iv(SV* ignore) {
     return((IV)lr);
 }
 
-// https://stackoverflow.com/questions/2270196/c-win32api-creating-a-dialog-box-without-resource
+// https://app.assembla.com/spaces/pryrt/subversion/source/HEAD/trunk/c_cpp/misc/manualDialog.c
+// => https://stackoverflow.com/questions/2270196/c-win32api-creating-a-dialog-box-without-resource
 
 #define DLGTITLE  L"Debug"
 #define DLGFONT   L"MS Sans Serif"
@@ -254,6 +255,7 @@ LRESULT DoDebugDialog(HWND hwndApp, LPVOID pvData)
                              : (HINSTANCE)GetModuleHandle(NULL);
 
    printf_bytes(&g_DebugDlgTemplate, sizeof(g_DebugDlgTemplate));
+   printf("DialogBoxIndirectParamW(0x%X, %p, 0x%X, %p, 0x%X)\n", hinst, &g_DebugDlgTemplate, hwndApp, /*NULL*/Debug_DlgProc, (LPARAM)pvData);
    printf("%s\nHit ^C to exit...", "\x20\x21\x22");fflush(stdout);
 
    return DialogBoxIndirectParamW (hinst, (LPCDLGTEMPLATEW)&g_DebugDlgTemplate, hwndApp, /*NULL*/Debug_DlgProc, (LPARAM)pvData);
