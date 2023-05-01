@@ -9,9 +9,15 @@ use Inline C => 'DATA';
 print wrapped("Hello, World"), "\n";
 noret("Hello, World");
 #noarg();
-print "sizes   => ", sizes(5), "\n";
-print "list    => (", join(';', retlist(2)), ")\n";
-printf "lret    => 0x%08X\n", lret(undef);
+print  "sizes       => ", sizes(5), "\n";
+print  "list        => (", join(';', retlist(2)), ")\n";
+printf "lret        => 0x%016X\n", lret(undef);
+printf "lretiv      => 0x%016X\n", lreturn_iv(undef);
+printf "noarg_lret  => 0x%016X\n", noarg_lret();
+
+sub noarg_lret {
+    lreturn_iv(@_ ? @_ : undef); # maybe?
+}
 
 __DATA__
 
@@ -71,6 +77,11 @@ void retlist(int qty) {
 SV* lret(SV* ignore) {
     LRESULT lr = 0xdeadbeef;
     return(newSVuv(lr));
+}
+
+IV lreturn_iv(SV* ignore) {
+    LRESULT lr = 0x123456789abcdef0;
+    return((IV)lr);
 }
 
 #if 0
