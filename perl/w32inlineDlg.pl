@@ -256,7 +256,7 @@ LRESULT DoDebugDialog(HWND hwndApp, LPVOID pvData)
    printf_bytes(&g_DebugDlgTemplate, sizeof(g_DebugDlgTemplate));
    printf("%s\nHit ^C to exit...", "\x20\x21\x22");fflush(stdout);
 
-   return DialogBoxIndirectParamW (hinst, (LPCDLGTEMPLATEW)&g_DebugDlgTemplate, hwndApp, NULL/*Debug_DlgProc*/, (LPARAM)pvData);
+   return DialogBoxIndirectParamW (hinst, (LPCDLGTEMPLATEW)&g_DebugDlgTemplate, hwndApp, /*NULL*/Debug_DlgProc, (LPARAM)pvData);
 }
 
 IV c_myDialog(UV hwndApp)
