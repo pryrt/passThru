@@ -59,6 +59,13 @@ HMODULE GetModuleHandleW(
     LPCWSTR lpModuleName
 )
 ENDPROTO
+    # ASCII version
+    Win32::API::->Import("kernel32", <<ENDPROTO) or die "Import GetModuleHandleA FAILED: $^E";
+HMODULE GetModuleHandleA(
+    LPCWSTR lpModuleName
+)
+ENDPROTO
+
 }
 
 =begin
