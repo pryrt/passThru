@@ -252,8 +252,6 @@ dd [retval => DialogBoxIndirectParamW(0, $w, 0, 0, 0)]; # okay, having the MYSTR
 #### Argument "M-D\0M-HM-^P\0\0\0\0^C\0\0\0\0\0,^AM-4\0\0\0\0\0D\0e\0b\0..." isn't numeric in pack at c:/usr/local/apps/strawberry/perl/vendor/lib/Win32/API/Struct.pm line 347.
 #### Invalid type '$' in pack at c:/usr/local/apps/strawberry/perl/vendor/lib/Win32/API/Struct.pm line 347.
 
-printf "GetModuleHandle(%s)=0x%X ('%s')\n", $_, GetModuleHandleW($_), $^E for 0, qw/NULL NUL perl.exe user32.dll user32 conhost.exe conhost/;
-#sleep(60);
 =begin
 
 I think the problem is I used LPSTR above,
