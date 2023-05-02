@@ -67,11 +67,12 @@ INT_PTR CALLBACK cDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 }
 
 #include <wchar.h>
-#define NUMCHARS(x) (sizeof(x)/sizeof(x[0]))
-LRESULT dynamic_wdialog(void)
+LRESULT dynamic_wdialog(WCHAR my_title[])
 {
-    WCHAR my_title[] = L"TitleString";
-    WCHAR my_font[] = L"MS Shell Dlg";
+    printf("wcslen(my_title)=%d\n", wcslen(my_title));
+    WCHAR my_font[] = L"Segoe UI Symbol"; //L"MS Shell Dlg";
+    size_t title_strlen = wcslen(my_title);
+    size_t font_strlen = wcslen(my_font);
     #pragma pack(push, 4)
     struct {
         WORD      dlgVer;
@@ -86,12 +87,12 @@ LRESULT dynamic_wdialog(void)
         short     cy;
         WORD      menu;
         WORD      windowClass;
-        WCHAR     title[NUMCHARS(my_title)+1];
+        WCHAR     title[title_strlen+1];
         WORD      pointsize;
         WORD      weight;
         BYTE      italic;
         BYTE      charset;
-        WCHAR     typeface[NUMCHARS(my_font)+1];
+        WCHAR     typeface[font_strlen+1];
         BYTE      dialogs[0];
     } template;
     memset(&template, 0x00, sizeof(template));
@@ -101,10 +102,10 @@ LRESULT dynamic_wdialog(void)
     template.cDlgItems = 0; // TODO: get from param
     template.cx = 180;
     template.cy = 120;
-    wcsncpy(template.title, my_title, NUMCHARS(my_title));
+    wcsncpy(template.title, my_title, title_strlen);
     template.pointsize = 8;
     template.charset = 1;
-    wcsncpy(template.typeface, my_font, NUMCHARS(my_font));
+    wcsncpy(template.typeface, my_font, font_strlen);
 
     #pragma pack(pop)
     printf_bytes(&template, sizeof(template));
@@ -122,7 +123,7 @@ void c_wrapper(int ignore)
 {
     //dynamic_struct("This string is normal.");
     //dynamic_struct("quick");
-    dynamic_wdialog();
+    dynamic_wdialog(L"\x263A Title Parameter");
 }
 
 int main()

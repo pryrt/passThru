@@ -2,13 +2,18 @@
 
 use 5.012; # strict, //
 use warnings;
+use Encode;
 $|=1;
 
 #use Inline C => Config => CLEAN_AFTER_BUILD => 0;   # uncomment to keep the compiled version
 use Inline C => 'DATA';
 sub my_wrapper { c_wrapper(@_?@_:0) }
+#my_wrapper();
 
-my_wrapper();
+my $u16le = encode('UTF-16LE', my $str = "Trial Text \x{263A}");
+printf "from perl: str:'%s':%d vs u16le:'%s':%d\n", $str, length($str), $u16le, length($u16le);
+#c_wrapper_u16(length($str), $str);
+c_wrapper_u16(length($u16le), $u16le);
 
 __DATA__
 
@@ -72,11 +77,12 @@ INT_PTR CALLBACK cDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 }
 
 #include <wchar.h>
-#define NUMCHARS(x) (sizeof(x)/sizeof(x[0]))
-LRESULT dynamic_wdialog(void)
+LRESULT dynamic_wdialog(WCHAR my_title[])
 {
-    WCHAR my_title[] = L"TitleString";
+    printf("wcslen(my_title)=%d\n", wcslen(my_title));
     WCHAR my_font[] = L"MS Shell Dlg";
+    size_t title_strlen = wcslen(my_title);
+    size_t font_strlen = wcslen(my_font);
     #pragma pack(push, 4)
     struct {
         WORD      dlgVer;
@@ -91,12 +97,12 @@ LRESULT dynamic_wdialog(void)
         short     cy;
         WORD      menu;
         WORD      windowClass;
-        WCHAR     title[NUMCHARS(my_title)+1];
+        WCHAR     title[title_strlen+1];
         WORD      pointsize;
         WORD      weight;
         BYTE      italic;
         BYTE      charset;
-        WCHAR     typeface[NUMCHARS(my_font)+1];
+        WCHAR     typeface[font_strlen+1];
         BYTE      dialogs[0];
     } template;
     memset(&template, 0x00, sizeof(template));
@@ -106,10 +112,10 @@ LRESULT dynamic_wdialog(void)
     template.cDlgItems = 0; // TODO: get from param
     template.cx = 180;
     template.cy = 120;
-    wcsncpy(template.title, my_title, NUMCHARS(my_title));
+    wcsncpy(template.title, my_title, title_strlen);
     template.pointsize = 8;
     template.charset = 1;
-    wcsncpy(template.typeface, my_font, NUMCHARS(my_font));
+    wcsncpy(template.typeface, my_font, font_strlen);
 
     #pragma pack(pop)
     printf_bytes(&template, sizeof(template));
@@ -127,5 +133,16 @@ void c_wrapper(int ignore)
 {
     //dynamic_struct("This string is normal.");
     //dynamic_struct("quick");
-    dynamic_wdialog();
+    dynamic_wdialog(L"\x2713 Dynamic Title From Parameter");
+}
+
+void c_wrapper_u16(int n_bytes, SV* sv_u16le_title)
+{
+    char* bytes = SvPV(sv_u16le_title, n_bytes);
+    size_t lennul = n_bytes/2 + 1;
+    WCHAR* wstr = (WCHAR*)calloc(lennul, sizeof(WCHAR));
+    swprintf(wstr, lennul+1, L"%ls\0", (WCHAR*)bytes);
+    wprintf(L"wstr = '%ls'\n", wstr);
+    printf_bytes(wstr, lennul*sizeof(WCHAR));
+    dynamic_wdialog(wstr);
 }
