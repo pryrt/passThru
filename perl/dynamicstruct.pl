@@ -139,10 +139,11 @@ void c_wrapper(int ignore)
 void c_wrapper_u16(int n_bytes, SV* sv_u16le_title)
 {
     char* bytes = SvPV(sv_u16le_title, n_bytes);
+    printf_bytes(bytes, n_bytes);
     size_t lennul = n_bytes/2 + 1;
     WCHAR* wstr = (WCHAR*)calloc(lennul, sizeof(WCHAR));
-    swprintf(wstr, lennul+1, L"%ls\0", (WCHAR*)bytes);
-    wprintf(L"wstr = '%ls'\n", wstr);
+    swprintf(wstr, lennul, L"%ls", (WCHAR*)bytes);
+    wprintf(L"wstr = '%ls' lennul=%d wcslen=%d\n", wstr, lennul, wcslen(wstr));
     printf_bytes(wstr, lennul*sizeof(WCHAR));
     dynamic_wdialog(wstr);
 }
