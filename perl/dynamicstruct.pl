@@ -2,6 +2,8 @@
 
 use 5.012; # strict, //
 use warnings;
+use utf8;   # means the source code is formatted as UTF8
+use open ':std', ':encoding(UTF-8)';
 use Encode;
 $|=1;
 
@@ -12,11 +14,10 @@ sub my_wrapper { c_wrapper(@_?@_:0) }
 
 my $u16le = encode('UTF-16LE', my $str = "Trial Text \x{263A}");
 printf "from perl: str:'%s':%d vs u16le:'%s':%d\n", $str, length($str), $u16le, length($u16le);
-#c_wrapper_u16(length($str), $str);
-c_wrapper_u16(length($u16le), $u16le);
-c_wrapper_mbstowcs(encode('UTF-8', "\x{25B6}Between the Arrows\x{25C0}"));
-$u16le = encode('UTF-16LE', $str = "\x{25B6}Between the Arrows\x{25C0}");
-c_wrapper_u16(length($u16le), $u16le);
+#dialog_with_title_and_length(length($u16le), $u16le);
+
+sv_nolen("▶◀ Bow Ties ▶◀");
+dialog_with_perl_title("▶◀ Bow Ties ▶◀");
 
 __DATA__
 
@@ -139,28 +140,39 @@ void c_wrapper(int ignore)
     dynamic_wdialog(L"\x2713 Dynamic Title From Parameter");
 }
 
-void c_wrapper_u16(int n_bytes, SV* sv_u16le_title)
+void dialog_with_title_and_length(int n_bytes, SV* sv_u16le_title)
 {
     char* bytes = SvPV(sv_u16le_title, n_bytes);
     printf_bytes(bytes, n_bytes);
-    size_t lennul = n_bytes/2 + 1;
-    WCHAR* wstr = (WCHAR*)calloc(lennul, sizeof(WCHAR));
-    swprintf(wstr, lennul, L"%ls", (WCHAR*)bytes);
-    wprintf(L"wstr = '%ls' lennul=%d wcslen=%d\n", wstr, lennul, wcslen(wstr));
-    printf_bytes(wstr, lennul*sizeof(WCHAR));
+    size_t len_plus_null = n_bytes/2 + 1;
+    WCHAR* wstr = (WCHAR*)calloc(len_plus_null, sizeof(WCHAR));
+    swprintf(wstr, len_plus_null, L"%ls", (WCHAR*)bytes);
+    wprintf(L"wstr = '%ls' len_plus_null=%d wcslen=%d\n", wstr, len_plus_null, wcslen(wstr));
+    printf_bytes(wstr, len_plus_null*sizeof(WCHAR));
     dynamic_wdialog(wstr);
 }
 
-void c_wrapper_mbstowcs(char* utf8_string)
+void sv_nolen(SV* sv_utf8)
 {
-    size_t lennul = strlen(utf8_string) + 1;    // length including NULL
-    printf("orig = '%s' lennul=%d strlen=%d\n", utf8_string, lennul, strlen(utf8_string));
-    printf_bytes(utf8_string, lennul);
+    char* str = SvPVutf8_nolen(sv_utf8);
+    printf("sv_nolen(%s):\n", str);
+    printf_bytes(str, strlen(str)+1);
 
-    WCHAR* wstr = (WCHAR*) calloc(lennul, sizeof(WCHAR));
-    mbstowcs(wstr, utf8_string, lennul);
-    printf("wstr = '%ls' lennul=%d wcslen=%d\n", wstr, lennul, wcslen(wstr));
-    printf_bytes(wstr, lennul*sizeof(WCHAR));
 
-    dynamic_wdialog(wstr);
+    int nNeeded = MultiByteToWideChar(CP_UTF8, MB_PRECOMPOSED | MB_ERR_INVALID_CHARS, str, -1, NULL, 0);    // figure out chars needed
+    WCHAR* wstr = (WCHAR*) calloc(nNeeded, sizeof(WCHAR));
+    int nConverted = MultiByteToWideChar(CP_UTF8, MB_PRECOMPOSED | MB_ERR_INVALID_CHARS, str, -1, wstr, nNeeded);    // make use of it
+    printf("nNeeded=%d, nConverted=%d\n", nNeeded, nConverted);
+    printf("normal printf of wstr => '%ls'\n", wstr);
+    wprintf(L"wide printf of wstr => '%ls'\n", wstr);
+    printf_bytes(wstr, nNeeded*sizeof(WCHAR));
+}
+
+void dialog_with_perl_title(SV* sv_title_utf8)
+{
+    char* title_utf8 = SvPVutf8_nolen(sv_title_utf8);
+    int nNeeded = MultiByteToWideChar(CP_UTF8, MB_PRECOMPOSED | MB_ERR_INVALID_CHARS, title_utf8, -1, NULL, 0);    // figure out chars needed
+    WCHAR* wTitle = (WCHAR*) calloc(nNeeded, sizeof(WCHAR));
+    int nConverted = MultiByteToWideChar(CP_UTF8, MB_PRECOMPOSED | MB_ERR_INVALID_CHARS, title_utf8, -1, wTitle, nNeeded);    // make use of it
+    dynamic_wdialog(wTitle);
 }
