@@ -14,6 +14,9 @@ my $u16le = encode('UTF-16LE', my $str = "Trial Text \x{263A}");
 printf "from perl: str:'%s':%d vs u16le:'%s':%d\n", $str, length($str), $u16le, length($u16le);
 #c_wrapper_u16(length($str), $str);
 c_wrapper_u16(length($u16le), $u16le);
+c_wrapper_mbstowcs(encode('UTF-8', "\x{25B6}Between the Arrows\x{25C0}"));
+$u16le = encode('UTF-16LE', $str = "\x{25B6}Between the Arrows\x{25C0}");
+c_wrapper_u16(length($u16le), $u16le);
 
 __DATA__
 
@@ -145,5 +148,19 @@ void c_wrapper_u16(int n_bytes, SV* sv_u16le_title)
     swprintf(wstr, lennul, L"%ls", (WCHAR*)bytes);
     wprintf(L"wstr = '%ls' lennul=%d wcslen=%d\n", wstr, lennul, wcslen(wstr));
     printf_bytes(wstr, lennul*sizeof(WCHAR));
+    dynamic_wdialog(wstr);
+}
+
+void c_wrapper_mbstowcs(char* utf8_string)
+{
+    size_t lennul = strlen(utf8_string) + 1;    // length including NULL
+    printf("orig = '%s' lennul=%d strlen=%d\n", utf8_string, lennul, strlen(utf8_string));
+    printf_bytes(utf8_string, lennul);
+
+    WCHAR* wstr = (WCHAR*) calloc(lennul, sizeof(WCHAR));
+    mbstowcs(wstr, utf8_string, lennul);
+    printf("wstr = '%ls' lennul=%d wcslen=%d\n", wstr, lennul, wcslen(wstr));
+    printf_bytes(wstr, lennul*sizeof(WCHAR));
+
     dynamic_wdialog(wstr);
 }
