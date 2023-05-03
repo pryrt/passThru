@@ -176,3 +176,8 @@ void dialog_with_perl_title(SV* sv_title_utf8)
     int nConverted = MultiByteToWideChar(CP_UTF8, MB_PRECOMPOSED | MB_ERR_INVALID_CHARS, title_utf8, -1, wTitle, nNeeded);    // make use of it
     dynamic_wdialog(wTitle);
 }
+
+// https://perlmonks.org/index.pl?node_id=1213554 => stevieb asked about threads and callbacks, but it shows the call_sv() to call a coderef
+//      https://perldoc.perl.org/perlapi#call_sv
+// that answer also had BrowserUK point to https://perlmonks.org/index.pl?node_id=413556, which may have more on callbacks
+// see also pseudo-closures https://stackoverflow.com/a/41417121
