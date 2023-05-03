@@ -18,10 +18,16 @@ printf "from perl: str:'%s':%d vs u16le:'%s':%d\n", $str, length($str), $u16le, 
 
 sv_nolen("▶◀ Bow Ties ▶◀");
 dialog_with_perl_title("▶◀ Bow Ties ▶◀");
+dialog_store_cref("▶My Wrapper◀", \&my_wrapper);
+use Devel::Peek();
+print "\\&my_wrapper => "; Devel::Peek::Dump(\&my_wrapper);
+#print "sub{1} => "; Devel::Peek::Dump(sub{1});
 
 __DATA__
 
 __C__
+SV* _global_cref;
+
 void printf_bytes(LPVOID ptr, size_t sz)
 {
     char* cp = (char*)ptr;
@@ -62,6 +68,7 @@ void dynamic_struct(LPCSTR str)
     #pragma pack(pop)
     fflush(stdout);
 }
+
 INT_PTR CALLBACK cDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch(uMsg)
@@ -190,3 +197,16 @@ void dialog_with_perl_title(SV* sv_title_utf8)
 //  then the DlgProc will use `call_sv(global_cref, flags);` to call the perl function...
 //  this only allows one DlgProc to be active at a time, but since the DialogBoxIndirectParamW()
 //      is doing a non-interruptable (modal) dialog, you wouldn't need to have more than one, anyway
+
+void dialog_store_cref(SV* sv_title_utf8, SV* sv_cref)
+{
+    char* title_utf8 = SvPVutf8_nolen(sv_title_utf8);
+    int nNeeded = MultiByteToWideChar(CP_UTF8, MB_PRECOMPOSED | MB_ERR_INVALID_CHARS, title_utf8, -1, NULL, 0);    // figure out chars needed
+    WCHAR* wTitle = (WCHAR*) calloc(nNeeded, sizeof(WCHAR));
+    int nConverted = MultiByteToWideChar(CP_UTF8, MB_PRECOMPOSED | MB_ERR_INVALID_CHARS, title_utf8, -1, wTitle, nNeeded);    // make use of it
+    _global_cref = sv_cref;
+    printf("storing CREF:'%s' => type(SV)=%d vs type(SvRV)=%d vs type(coderef)=%d\n", SvPV_nolen(sv_cref), SvTYPE(sv_cref), SvTYPE(SvRV(sv_cref)), SVt_PVCV);
+        // stored the global; also confirmed that if SvTYPE(sv_cref)==1 and SVt_PVCV==SvTYPE(SvRV(sv_cref))), then it's a coderef;
+        //  I should probably do that check before assigning to the global, so that I don't try to call an SV that isn't a coderef
+    //dynamic_wdialog(wTitle);
+}
