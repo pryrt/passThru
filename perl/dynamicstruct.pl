@@ -181,3 +181,12 @@ void dialog_with_perl_title(SV* sv_title_utf8)
 //      https://perldoc.perl.org/perlapi#call_sv
 // that answer also had BrowserUK point to https://perlmonks.org/index.pl?node_id=413556, which may have more on callbacks
 // see also pseudo-closures https://stackoverflow.com/a/41417121
+// https://metacpan.org/dist/Inline-C/view/lib/Inline/C/Cookbook.pod#Calling-Perl-from-C
+// https://perldoc.perl.org/perlcall
+// Okay, so my idea:
+//  the DlgProc function will use call_sv to actually call the perl subroutine
+//  when I call the dialog creating function create_my_dialog($myTitleUTF8, \&perlfunc),
+//      it will store SV* global_cref = $_[1] into some global-to-c variable
+//  then the DlgProc will use `call_sv(global_cref, flags);` to call the perl function...
+//  this only allows one DlgProc to be active at a time, but since the DialogBoxIndirectParamW()
+//      is doing a non-interruptable (modal) dialog, you wouldn't need to have more than one, anyway
