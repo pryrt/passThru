@@ -17,16 +17,22 @@ printf "from perl: str:'%s':%d vs u16le:'%s':%d\n", $str, length($str), $u16le, 
 #dialog_with_title_and_length(length($u16le), $u16le);
 
 sv_nolen("▶◀ Bow Ties ▶◀");
-dialog_with_perl_title("▶◀ Bow Ties ▶◀");
-dialog_store_cref("▶My Wrapper◀", \&my_wrapper);
+# dialog_with_perl_title("▶◀ Bow Ties ▶◀");
+
+sub icanrun { print "I CAN RUN!\n"; }
+
+dialog_store_cref("▶Call I Can Run◀", \&icanrun);
+
 use Devel::Peek();
-print "\\&my_wrapper => "; Devel::Peek::Dump(\&my_wrapper);
-#print "sub{1} => "; Devel::Peek::Dump(sub{1});
+print "\\&icanrun=> "; Devel::Peek::Dump(\&icanrun);
+
+# dialog_store_cref("▶Quoted I Can Run◀", "icanrun");
+# dialog_store_cref("ZERO", 0);
 
 __DATA__
 
 __C__
-SV* _global_cref;
+static SV* _global_cref = (SV*)NULL;    // not thread safe, per https://perldoc.perl.org/perlcall#Using-call_sv
 
 void printf_bytes(LPVOID ptr, size_t sz)
 {
@@ -71,6 +77,32 @@ void dynamic_struct(LPCSTR str)
 
 INT_PTR CALLBACK cDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    printf("callback(cref:%d, hWnd:0x%016X, uMsg:0x%016X, wParam:0x%016X, lParam:0x%016X):\n", _global_cref, hwnd, uMsg, wParam, lParam);
+    if(_global_cref) {
+        dSP;    // local stack
+        int count;
+
+        ENTER;      // create boundary for any "mortal"/temporary SVs
+        SAVETMPS;
+
+        // EXTEND(SP, 2);   // says 2 arguments
+        // PUSHs(sv_2mortal(newSVpv(blah,blah)));   // push a new SvPV (string)
+        // PUSHs(sv_2mortal(newSViv(blah)));        // push a new SvIV (integer)
+        // PUTBACK;     // done adding arguments to
+
+        //count = call_sv(...);
+
+        SPAGAIN;     // call_sv may have affected the stack pointer, so need to go back to my local copy
+
+        // see https://perldoc.perl.org/perlcall#Returning-a-Scalar for returning a scalar, which will be needed fro getting the TRUE/FALSE back from perl
+        // use count (the retval from call_sv) to find out how many elements the perl function returned
+        // use POPi
+
+        FREETMPS;
+        LEAVE;      // exit boundary for any "mortal"/temporary SVs
+
+        //return FALSE;
+    }
     switch(uMsg)
     {
         case WM_INITDIALOG: {
@@ -198,15 +230,70 @@ void dialog_with_perl_title(SV* sv_title_utf8)
 //  this only allows one DlgProc to be active at a time, but since the DialogBoxIndirectParamW()
 //      is doing a non-interruptable (modal) dialog, you wouldn't need to have more than one, anyway
 
+char* map[] = {
+    "SVt_NULL",
+    "SVt_IV",
+    "SVt_NV",
+    "SVt_PV",
+    "SVt_INVLIST",
+    "SVt_PVIV",
+    "SVt_PVNV",
+    "SVt_PVMG",
+    "SVt_REGEXP",
+    "SVt_PVGV",
+    "SVt_PVLV",
+    "SVt_PVAV",
+    "SVt_PVHV",
+    "SVt_PVCV",
+    "SVt_PVFM",
+    "SVt_PVIO",
+    NULL
+};
+
 void dialog_store_cref(SV* sv_title_utf8, SV* sv_cref)
 {
     char* title_utf8 = SvPVutf8_nolen(sv_title_utf8);
     int nNeeded = MultiByteToWideChar(CP_UTF8, MB_PRECOMPOSED | MB_ERR_INVALID_CHARS, title_utf8, -1, NULL, 0);    // figure out chars needed
     WCHAR* wTitle = (WCHAR*) calloc(nNeeded, sizeof(WCHAR));
     int nConverted = MultiByteToWideChar(CP_UTF8, MB_PRECOMPOSED | MB_ERR_INVALID_CHARS, title_utf8, -1, wTitle, nNeeded);    // make use of it
-    _global_cref = sv_cref;
-    printf("storing CREF:'%s' => type(SV)=%d vs type(SvRV)=%d vs type(coderef)=%d\n", SvPV_nolen(sv_cref), SvTYPE(sv_cref), SvTYPE(SvRV(sv_cref)), SVt_PVCV);
-        // stored the global; also confirmed that if SvTYPE(sv_cref)==1 and SVt_PVCV==SvTYPE(SvRV(sv_cref))), then it's a coderef;
-        //  I should probably do that check before assigning to the global, so that I don't try to call an SV that isn't a coderef
-    //dynamic_wdialog(wTitle);
+
+    printf("\ndialog_store_cref(title:'%s', cref:'%s')\n", title_utf8, SvPVutf8_nolen(sv_cref)); fflush(stdout);
+
+    printf("type(sv_cref) = %d = '%s'\n", SvTYPE(sv_cref), map[SvTYPE(sv_cref)]);    fflush(stdout);
+
+    // #define ptype(t) printf("%-32.32s => %d\n", #t, t)
+    // ptype(SVt_NULL   );
+    // ptype(SVt_IV     );
+    // ptype(SVt_NV     );
+    // ptype(SVt_PV     );
+    // ptype(SVt_INVLIST);
+    // ptype(SVt_PVIV   );
+    // ptype(SVt_PVNV   );
+    // ptype(SVt_PVMG   );
+    // ptype(SVt_REGEXP );
+    // ptype(SVt_PVGV   );
+    // ptype(SVt_PVLV   );
+    // ptype(SVt_PVAV   );
+    // ptype(SVt_PVHV   );
+    // ptype(SVt_PVCV   );
+    // ptype(SVt_PVFM   );
+    // ptype(SVt_PVIO   );
+    // return;
+
+    if(SvROK(sv_cref)) {
+        printf("type(SvRV(sv_cref)) = %d = '%s'\n", SvTYPE(SvRV(sv_cref)), map[SvTYPE(SvRV(sv_cref))]);    fflush(stdout);
+    }
+
+    if((SvROK(sv_cref) && (SvTYPE(SvRV(sv_cref))==SVt_PVCV)) || (SvTYPE(sv_cref)==SVt_PV) )     // if it's a reference to a code, or if it's a string, save the SV
+    {
+        if(_global_cref == (SV*)NULL)
+            _global_cref = newSVsv(sv_cref);    // create a new SV and copy over sv_cref
+        else
+            SvSetSV(_global_cref, sv_cref);     // copy the values
+    } else {
+        _global_cref = (SV*)NULL;
+    }
+    printf("after the check, _global_cref = %d vs sv_cref = %d\n", _global_cref, sv_cref); fflush(stdout);
+
+    dynamic_wdialog(wTitle);
 }
