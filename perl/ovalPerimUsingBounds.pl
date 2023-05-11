@@ -7,9 +7,9 @@ use Math::Vector::Real::Intersect;
 use POSIX 'M_PI';
 $| = 1;
 
-my $A = 1;
+my $A = 4;
 my $B = 1;
-my $nPointsPerQuarter = 128;    # 128 is enough to match for A=B=10 (5digits); 512 matches 6 digits (A=B=100), 2048 for 7 digits, 4096 for 8 digits, 16k for 9 digits
+my $nPointsPerQuarter = 512;    # 128 is enough to match for A=B=10 (5digits); 512 matches 6 digits (A=B=100), 2048 for 7 digits, 4096 for 8 digits, 16k for 9 digits
 my @quarter = (undef) x ($nPointsPerQuarter + 1);
 my @tangent = @quarter;
 
@@ -43,6 +43,7 @@ for my $i ( 0 .. $nPointsPerQuarter ) {
         printf "%-6d %5.3f => %-40.40s tan:%-40.40s => in:%-9.3f, out:%-9.3f | in_d:%-9.3f | itc=%-40.40s => dp=%-9.3f + dt=%-9.3f = out_d=%-9.3f\n", $i, $t, $pt, $tn, $inner_len, $outer_len, $inner_dist, $itc, $odist_prev, $odist_this, $odist_prev + $odist_this;
     }
 }
+printf "Final: A=%s B=%s => in:%.6f out:%.6f\n", $A, $B, $inner_len, $outer_len;
 
 =begin output
 n:2      1.571 => {6.12303176911189e-17, 1}                tan:{-1, 6.12303176911189e-17}               => in:1.531    , out:1.657     | in_d:0.765     | itc={0.414213562373095, 1}                   => dp=0.414     + dt=0.414     = out_d=0.828
