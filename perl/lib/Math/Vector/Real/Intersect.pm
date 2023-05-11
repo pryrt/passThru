@@ -64,14 +64,14 @@ sub intersect_lines {
     if($DEBUG) { printf "[ %+010.6f %+010.6f ] [ %s ] = [ %+010.6f ]\n[ %+010.6f %+010.6f ] [ %s ] = [ %+010.6f ]\n\n", $a, $b, ($swap ? 't' : 's'), $e, $c, $d, ($swap ? 's' : 't'), $f; }
 
     # normalize abe to 1be
-    $_ /= $div for $a,$b,$c;
+    $_ /= $div for $a,$b,$e;
     if($DEBUG) { printf "[ %+010.6f %+010.6f ] [ %s ] = [ %+010.6f ]\n[ %+010.6f %+010.6f ] [ %s ] = [ %+010.6f ]\n\n", $a, $b, ($swap ? 't' : 's'), $e, $c, $d, ($swap ? 's' : 't'), $f; }
 
-    # subtract cdf - mul*(abe)
+    # subtract cdf - mul*(abe) (where mul is c) to get 0df
     $mul = $c;
     $c -= $mul*$a;
     $d -= $mul*$b;
-    $e -= $mul*$f;
+    $f -= $mul*$e;
     if($DEBUG) { printf "[ %+010.6f %+010.6f ] [ %s ] = [ %+010.6f ]\n[ %+010.6f %+010.6f ] [ %s ] = [ %+010.6f ]\n\n", $a, $b, ($swap ? 't' : 's'), $e, $c, $d, ($swap ? 's' : 't'), $f; }
 
     # normalize 0df to 01f
@@ -80,6 +80,12 @@ sub intersect_lines {
     } else { croak "could not solve ($p1,$d1, $p2,$d2) at the second step"; }
     $_ /= $div for $c,$d,$f;
     if($DEBUG) { printf "[ %+010.6f %+010.6f ] [ %s ] = [ %+010.6f ]\n[ %+010.6f %+010.6f ] [ %s ] = [ %+010.6f ]\n\n", $a, $b, ($swap ? 't' : 's'), $e, $c, $d, ($swap ? 's' : 't'), $f; }
+
+    # subtract 1be - mul*(01f) [where mul is b]
+    $mul = $b;
+    $a -= $mul*$c;
+    $b -= $mul*$d;
+    $e -= $mul*$f;
 
     my $s = $swap ? $f : $e;
     my $t = $swap ? $e : $f;
