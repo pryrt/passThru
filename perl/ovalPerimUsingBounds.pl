@@ -9,11 +9,12 @@ $| = 1;
 
 my $A = 1;
 my $B = 1;
-my $nPointsPerQuarter = 128;    # 128 is enough to be correct to three digits for A==B==1 => quarter=pi/2=1.571, or 10pi/2=15.708 for A=B=10; ah, A=B=100 => 157.079 vs 157.082 compared to 100*1.57079632679
+my $nPointsPerQuarter = 128;    # 128 is enough to match for A=B=10 (5digits); 512 matches 6 digits (A=B=100), 2048 for 7 digits, 4096 for 8 digits, 16k for 9 digits
 my @quarter = (undef) x ($nPointsPerQuarter + 1);
 my @tangent = @quarter;
 
-$Math::Vector::Real::Intersect::DEBUG=0;
+my $DEBUG = 0;
+$Math::Vector::Real::Intersect::DEBUG = ($DEBUG>1);
 
 my $inner_len = 0;
 my $outer_len = 0;
@@ -24,7 +25,6 @@ for my $i ( 0 .. $nPointsPerQuarter ) {
 
     # no distances calculated on the first point (nothing to have a distance from)
     if(0==$i) {
-        printf "%-6d %5.3f => %-40.40s tan:%-40.40s => in:%-9.3f, out:%-9.3f | in_d:%-9.3f | itc=%-40.40s => %-12.12s   %-12.12s   out_d=%-9.3f\n", $i, $t, $pt,$tn, $inner_len, $outer_len, 0, "", "", "", 0;
         next;
     }
 
@@ -39,7 +39,9 @@ for my $i ( 0 .. $nPointsPerQuarter ) {
     $outer_len += $odist_prev + $odist_this;
 
     # summary
-    printf "%-6d %5.3f => %-40.40s tan:%-40.40s => in:%-9.3f, out:%-9.3f | in_d:%-9.3f | itc=%-40.40s => dp=%-9.3f + dt=%-9.3f = out_d=%-9.3f\n", $i, $t, $pt, $tn, $inner_len, $outer_len, $inner_dist, $itc, $odist_prev, $odist_this, $odist_prev + $odist_this;
+    if($DEBUG) {
+        printf "%-6d %5.3f => %-40.40s tan:%-40.40s => in:%-9.3f, out:%-9.3f | in_d:%-9.3f | itc=%-40.40s => dp=%-9.3f + dt=%-9.3f = out_d=%-9.3f\n", $i, $t, $pt, $tn, $inner_len, $outer_len, $inner_dist, $itc, $odist_prev, $odist_this, $odist_prev + $odist_this;
+    }
 }
 
 =begin output
