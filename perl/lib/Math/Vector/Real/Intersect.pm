@@ -19,7 +19,7 @@ our @EXPORT = @EXPORT_OK;
 
 package Math::Vector::Real {
     sub mycross {
-        &_check_dim;
+        &_check_dim; # uncoverable pod # this is calling a private function to the MVR module; it is not my job to have POD for such
         my ($v0, $v1) = ($_[2] ? @_[1, 0] : @_);
         my $dim = @$v0;
         if ($dim == 2) {
@@ -31,6 +31,7 @@ package Math::Vector::Real {
 }
 
 our $DEBUG = 0;
+our $TOLERANCE = 1e-9;
 
 sub intersect_lines {
     my ($p1,$d1, $p2,$d2) = @_;
@@ -43,16 +44,40 @@ sub intersect_lines {
     my ($a,$b,$c,$d,$e,$f);
     my ($div, $mul);
     my $swap = 0;
+
+    # error checking
+    if( abs($d1) < $TOLERANCE ) { croak "d1=$d1 is the zero vector" }
+    if( abs($d2) < $TOLERANCE ) { croak "d2=$d2 is the zero vector" }
+
+    # (essentially) same point: intersects at that point
+    if( $p1->dist($p2)<$TOLERANCE) {
+        return $p1;
+    }
+
+    # if directions parallel to each other and to vector from p1 to p2, can just go partway between the two
+    #   originally I was going to go halfway, but decided to balance it so if |d1|>|d2|, then it will be proportionally farther from p1 than from p2
+    if( abs($d1 x $d2)<$TOLERANCE ) {
+        my $delta = $p2 - $p1;
+        if($DEBUG) {
+            printf "intersect_lines: checking for parallelism: %s x %s = %s => are they parallel to each other? also look at d# x delta=%s = %s as well\n", $d1, $d2, $d1 x $d2, $delta, $d1 x $delta;
+        }
+        if( abs($d1 x $delta)<$TOLERANCE ) {
+            my $m1 = abs($d1);
+            my $m2 = abs($d2);
+            my $f = $m1 / ($m1+$m2);    # divide-by-zero-check is in the error-checking zero-vector checks, above
+            return ($p2-$p1)*$f+$p1;
+        }
+    }
+
+    # use matrixes
     if( $d1->[0] ) {            # first row can be x's
-        $div = $d1->[0];
         $a = $d1->[0];
         $b = -$d2->[0];
         $c = $d1->[1];
         $d = -$d2->[1];
         $e = $p2->[0] - $p1->[0];
         $f = $p2->[1] - $p1->[1];
-    } elsif ( $d1->[1] ) {      # first row can be y's
-        $div = $d1->[1];
+    } else {                    # swap x and y (due to if-zero check above, it will never get here with the condition that both d1x and d1y are zero)
         $a = $d1->[1];
         $b = -$d2->[1];
         $c = $d1->[0];
@@ -60,10 +85,11 @@ sub intersect_lines {
         $e = $p2->[1] - $p1->[1];
         $f = $p2->[0] - $p1->[0];
         $swap = 1;
-    } else { croak "neither $d1 nor $d2 has non-zero x component"; }
+    }
     if($DEBUG) { printf "[ %+010.6f %+010.6f ] [ %s ] = [ %+010.6f ]\n[ %+010.6f %+010.6f ] [ %s ] = [ %+010.6f ]\n\n", $a, $b, ($swap ? 't' : 's'), $e, $c, $d, ($swap ? 's' : 't'), $f; }
 
     # normalize abe to 1be
+    $div = $a;
     $_ /= $div for $a,$b,$e;
     if($DEBUG) { printf "[ %+010.6f %+010.6f ] [ %s ] = [ %+010.6f ]\n[ %+010.6f %+010.6f ] [ %s ] = [ %+010.6f ]\n\n", $a, $b, ($swap ? 't' : 's'), $e, $c, $d, ($swap ? 's' : 't'), $f; }
 
@@ -77,7 +103,9 @@ sub intersect_lines {
     # normalize 0df to 01f
     if( $d ) {                  # first row can be x's
         $div = $d;
-    } else { croak "could not solve ($p1,$d1, $p2,$d2) at the second step"; }
+    } else {
+        croak "could not solve ($p1,$d1, $p2,$d2): parallel";
+    }
     $_ /= $div for $c,$d,$f;
     if($DEBUG) { printf "[ %+010.6f %+010.6f ] [ %s ] = [ %+010.6f ]\n[ %+010.6f %+010.6f ] [ %s ] = [ %+010.6f ]\n\n", $a, $b, ($swap ? 't' : 's'), $e, $c, $d, ($swap ? 's' : 't'), $f; }
 
@@ -108,7 +136,7 @@ sub intersect_circles {
     #       solve for e     e = (r2**2 - r1**2 - d**2) / (-2*d)
     #       solve for f     f = sqrt( r1**2 - e**2 )
     my $delta = $c2 - $c1;  # vector from c1 to c2
-    die "intersect_circles($c1,$r1,$c2,$r2) are too far apart" if abs($delta) > abs($r1)+abs($r2);
+    croak "intersect_circles($c1,$r1,$c2,$r2) are too far apart" if abs($delta) > abs($r1)+abs($r2);
     if($DEBUG) {
         printf "DEBUG intersect_circles($c1,$r1,$c2,$r2):\n";
         printf "\tdelta = %s: abs=%+010.6f, |r1|+|r2|=\%+010.6f\n", $delta, abs($delta), abs($r1)+abs($r2);
@@ -187,5 +215,16 @@ document, test, etc...
         1;
     } or warn $@;
 
+=head2 $DEBUG
+
+    $Math::Vector::Real::Intersect::DEBUG = 1;
+
+Turns on debug printing when set true.  Defaults to C<0>.
+
+=head2 $TOLERANCE
+
+    $Math::Vector::Real::Intersect::TOLERANCE = 1e-12;
+
+Since floating point math isn't exact, use this for tolerances for zero-checks.  Defaults to C<1e-9>.
 
 =cut
