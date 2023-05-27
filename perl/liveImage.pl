@@ -9,6 +9,9 @@ use Data::Dump;
 
 local $SIG{__WARN__} = sub { Win32::GUI::MessageBox(0, join("\n", @_), 'liveImage.wperl: WARNING', MB_ICONWARNING) };
 local $SIG{__DIE__} = sub { Win32::GUI::MessageBox(0, join("\n", @_), 'liveImage.wperl: FATAL ERROR', MB_ICONERROR) };
+use subs 'sleep';
+sub sleep { select(undef,undef,undef,$_[0]) }   # allows fractional sleep seconds
+
 
 my $gbmp = Win32::GUI::BitmapInline->new( q(
 Qk02MAAAAAAAADYAAAAoAAAAQAAAAEAAAAABABgAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAA////
@@ -477,11 +480,33 @@ my $bitmap    = $splash->AddLabel(
 $splash->Center();
 $splash->Show();
 Win32::GUI::DoEvents();
-sleep(2);
+sleep(1);
 $bitmap->Change(-bitmap => $rbmp);
-sleep(2);
+sleep(1);
+
+###
+use MIME::Base64();
+use GD 2.7601;  # my patched GD with gdImageBmp support brought out
+my $live = GD::Image::->new(64,64);
+my $bg = $live->colorAllocate(192,192,192);
+my $fg = $live->colorAllocate(0,127,0);
+my $cb = $live->colorAllocate(0,0,255);
+$live->fill(0,0,$bg);
+$live->rectangle(0,0,63,63,$cb);
+sub gd2bmp64 { Win32::GUI::BitmapInline->new(MIME::Base64::encode( $_[0]->bmp(1) )); }
+$bitmap->Change(-bitmap => gd2bmp64($live));
+sleep(1);
+# draws a diagonal and a square, with a 25ms refresh rate
+$live->line(16,16,23,23,$fg); $bitmap->Change(-bitmap => gd2bmp64($live)); sleep(.025);
+$live->line(23,23,23,39,$fg); $bitmap->Change(-bitmap => gd2bmp64($live)); sleep(.025);
+$live->line(23,39,39,39,$fg); $bitmap->Change(-bitmap => gd2bmp64($live)); sleep(.025);
+$live->line(39,39,39,23,$fg); $bitmap->Change(-bitmap => gd2bmp64($live)); sleep(.025);
+$live->line(39,23,23,23,$fg); $bitmap->Change(-bitmap => gd2bmp64($live)); sleep(.025);
+$live->fill(31,31,$fg); $bitmap->Change(-bitmap => gd2bmp64($live)); sleep(.025);
+sleep(1);
 $bitmap->Change(-bitmap => $gbmp);
-sleep(2);
+sleep(1);
+
 $splash->Hide();
 
 __END__
