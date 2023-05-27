@@ -504,9 +504,21 @@ $live->line(39,39,39,23,$fg); $bitmap->Change(-bitmap => gd2bmp64($live)); sleep
 $live->line(39,23,23,23,$fg); $bitmap->Change(-bitmap => gd2bmp64($live)); sleep(.025);
 $live->fill(31,31,$fg); $bitmap->Change(-bitmap => gd2bmp64($live)); sleep(.025);
 sleep(1);
-$bitmap->Change(-bitmap => $gbmp);
-sleep(1);
 
+# try drawing random dots
+$live->filledRectangle(1,1,62,62,$bg); $bitmap->Change(-bitmap => gd2bmp64($live)); sleep(.025);
+my $t0 = time;
+while(time - $t0 < 10.0) {
+    my $x = 1 + rand(62);   # 1..62
+    my $y = 1 + rand(62);
+    my $c = $live->colorResolve(rand 256, rand 256, rand 256);
+    $live->setPixel($x,$y,$c);
+    $bitmap->Change(-bitmap => gd2bmp64($live));
+}
+
+#### END
+$bitmap->Change(-bitmap => $gbmp);
+sleep(0.5);
 $splash->Hide();
 
 __END__
