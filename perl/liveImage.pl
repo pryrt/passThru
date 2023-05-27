@@ -486,14 +486,14 @@ sleep(1);
 
 ###
 use MIME::Base64();
-use GD 2.7601;  # my patched GD with gdImageBmp support brought out
+use GD 2.7602;  # my patched GD with gdImageBmp support brought out; add default for bmp()
 my $live = GD::Image::->new(64,64);
 my $bg = $live->colorAllocate(192,192,192);
 my $fg = $live->colorAllocate(0,127,0);
 my $cb = $live->colorAllocate(0,0,255);
 $live->fill(0,0,$bg);
 $live->rectangle(0,0,63,63,$cb);
-sub gd2bmp64 { Win32::GUI::BitmapInline->new(MIME::Base64::encode( $_[0]->bmp(1) )); }
+sub gd2bmp64 { Win32::GUI::BitmapInline->new(MIME::Base64::encode( $_[0]->bmp() )); }
 $bitmap->Change(-bitmap => gd2bmp64($live));
 sleep(1);
 # draws a diagonal and a square, with a 25ms refresh rate
