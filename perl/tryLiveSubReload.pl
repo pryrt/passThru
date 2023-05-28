@@ -4,9 +4,12 @@ use 5.012; # //, strict, say
 use warnings;
 use FindBin;
 use lib "$FindBin::Bin/lib";
+my $source; BEGIN { $source = $FindBin::Script; unless($source =~ m{/}) { $source = './' . $FindBin::Script; }; };
 BEGIN { printf STDERR "script: before use tryLiveSubReloadLib: INC has(%s)\n", join '; ', map {"$_ => $INC{$_}"} grep {/tryLiveSubReload/} sort keys (%INC); }
-use tryLiveSubReloadLib;
+use tryLiveSubReloadLib($source);
 BEGIN { printf STDERR "script: after  use tryLiveSubReloadLib: INC has(%s)\n", join '; ', map {"$_ => $INC{$_}"} grep {/tryLiveSubReload/} sort keys (%INC); }
+
+=begin debug#1
 
 print STDERR "script: before caller(n) check\n";
 my $c = 0;
@@ -26,6 +29,8 @@ if(caller(0)) {
     tryLiveSubReloadLib::recurse($source);
     print STDERR "script: after  tryLiveSubReloadLib::recurse()\n";
 }
+
+=cut
 
 {
     no warnings 'redefine';

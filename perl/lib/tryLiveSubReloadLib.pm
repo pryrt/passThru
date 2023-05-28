@@ -33,4 +33,25 @@ sub recurse
     eval { do $scriptPath; 1; } or do { print "tLSRL:  eval says \$@ = $@\n"; };
     printf STDERR "tLSRL:  after  second do('%s')\n", $scriptPath;
 }
+
+sub import
+{
+    printf STDERR "tLSRL:  import(@_)\n";
+    run_control_loop(@_);
+}
+
+sub run_control_loop
+{
+    printf STDERR "tLSRL:  0 start control loop (@_)\n";
+    printf STDERR "tLSRL:  0 sub setup = %s\n", \&setup // '<undef>';
+    sleep(1);
+    do
+    printf STDERR "tLSRL:  1 control loop 1\n";
+    printf STDERR "tLSRL:  1 sub setup = %s\n", \&setup // '<undef>';
+
+    sleep(1);
+    printf STDERR "tLSRL:  control loop 2\n";
+
+}
+
 1;
