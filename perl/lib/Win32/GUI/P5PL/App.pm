@@ -5,11 +5,13 @@ use Win32::GUI::Constants qw{/^MB_/};
 
 our $appWin;
 my $awTitleBase = "p5*pl v$VERSION";
+my $awSource = '';
 my $awTitle = $awTitleBase;
 
 sub launch
 {
-    $awTitle = (caller(0))[1] . " - $awTitleBase";
+    $awSource = (caller(0))[1];
+    $awTitle = "$awSource - $awTitleBase";
     $appWin = Win32::GUI::Window->new(
         -name => 'p5pl',
         -text => $awTitle,
@@ -36,6 +38,12 @@ sub launch
         -onClick    => \&push_stop,
         #-background => '#0000FF',
     );
+    $appWin->AddLabel(
+        -name   => 'p5plCANVAS',
+        -pos    => [10,70],
+        -size   => [50,50],
+        -sunken => 1,
+    );
     $appWin->Show();
     Win32::GUI::Dialog();
 }
@@ -45,14 +53,15 @@ sub push_play
 {
     if($playing) {return 0;} # don't restart
     $playing = 1;
-    $appWin->MessageBox("PLAY", $awTitle, MB_OK);
+    do $awSource;
+    setup();
 }
 
 sub push_stop
 {
     if(!$playing) {return 0;} # don't need to stop twice
     $playing = 0;
-    $appWin->MessageBox("STOP", $awTitle, MB_OK);
+    $appWin->Resize(1024,768);
 }
 
 1;
