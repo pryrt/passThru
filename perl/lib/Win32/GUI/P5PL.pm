@@ -12,6 +12,12 @@ our @EXPORT = qw/createCanvas background/;
 
 # the p5*js style functions get defined here
 
+# TODO:
+#   I want all the GD::Image stuff in P5PL, but the Win32::GUI stuff in App
+#   - ::App needs a way to requestResize(w,h), and I would call that App::requestResize from createCanvas()
+#   - ::App needs an setBmpFromB64, which takes as its input MIME::Base64::encode( $img->bmp() ), where $img = GD::Image
+#   - these P5PL functions will be what changes pixels in the GD::Image, and then they'll push the bmp to the ::App::setBmpFromB64()
+
 sub createCanvas
 {
     my ($w, $h) = @_;
