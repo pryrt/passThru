@@ -6,7 +6,7 @@ use Win32::GUI::P5PL;
 if(!caller){Win32::GUI::P5PL::App->launch();}
 
 sub setup() {
-  createCanvas(400, 400);
+  createCanvas(800, 400);
 }
 
 sub draw() {
