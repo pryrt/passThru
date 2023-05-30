@@ -71,7 +71,8 @@ sub push_stop
     $playing = 0;
 }
 
-sub _play_icons {
+sub _play_icons
+{
     my $play = Win32::GUI::BitmapInline->new( q(
     Qk3mHQAAAAAAADYAAAAoAAAAMgAAADIAAAABABgAAAAAALAdAAAAAAAAAAAAAAAAAAAAAAAA////
     ////////////////////////////////////////////////////////////////////////////
@@ -621,6 +622,35 @@ sub _play_icons {
     //////////////////8AAA==
     ) );
     return ($play, $playing, $stop, $stopped);
+}
+
+sub updateBitmap
+{
+    my ($base64) = @_;
+    $appWin->p5plCANVAS->Change(-bitmap => Win32::GUI::BitmapInline->new($base64));
+}
+
+sub requestCanvasSize
+{
+    my ($w,$h) = @_;
+
+    $appWin->p5plCANVAS->Resize($w,$h);
+    my $wh = $appWin->Height();
+    my $ww = $appWin->Width() ;
+
+    my $sh = $appWin->ScaleHeight();
+    my $sw = $appWin->ScaleWidth();
+
+    my $GUI_h = $wh - $sh;
+    my $GUI_w = $ww - $sw;
+
+    my $need_h = $GUI_h + 10 + 50 + 10 + $h + 10;   # GUI_h(TITLE+borders) + gap before, button, gap between, $h, gap after
+    my $need_w = $GUI_w + 10 + $w + 10;             # GUI_w(borders) + gap before, $w, gap after
+
+    my $new_wh = ($need_h > $wh) ? $need_h : $wh;
+    my $new_ww = ($need_w > $ww) ? $need_w : $ww;
+    $appWin->Resize($new_ww,$new_wh);
+    #print STDERR "resize: canvas($w x $h), win($ww x $wh): scaled($sw x $sh) vs needed($need_w x $need_h) => new($new_ww x $new_wh)\n";
 }
 
 1;
