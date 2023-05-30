@@ -7,7 +7,7 @@ if(!caller){Win32::GUI::P5PL::App->launch();}
 
 sub setup() {
   createCanvas(800, 400);
-  background(220);
+  background('rgb(100%,100%,0%)');
 }
 
 sub draw() {
