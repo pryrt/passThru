@@ -3,12 +3,34 @@ use 5.014;
 use warnings;
 our $VERSION = 0.001000;
 use Win32::GUI::P5PL::App();
-use Exporter 5.57 qw/import/;
+use Exporter;# 5.57 qw/import/;
 use Carp;
 use MIME::Base64();
 use GD 2.77;
+use Time::HiRes qw/time sleep/;
 
-our @EXPORT = qw/createCanvas background/;
+our %EXPORT_TAGS;
+our @EXPORT = qw/
+    createCanvas background
+    isLooping noLoop loop
+/;
+
+our @ISA = qw(Exporter);
+sub import
+{
+    state $counter=0;
+    strict->import;                     # enforce strict in the sketch
+    warnings->import;                   # enforce most warnings in the sketch
+    warnings->unimport('redefine');     # ... except for 'redefine'
+    if(!$counter++) {
+        my @c = caller;
+        #printf STDERR "__%s__ import?%d: (%s) from caller(0)=(%s): should run the GUI\n", __PACKAGE__, $counter, join(',',@_), join(',',@c);
+        # Win32::GUI::P5PL::App->launch( $c[1] );
+    } else {
+        printf STDERR "__%s__ import?%d: (%s) from caller(0)=(%s): recall @ %s\n", __PACKAGE__, $counter, join(',',@_), join(',',(caller)), time;
+    }
+    Exporter::export_to_level( __PACKAGE__, 1, @_ );
+}
 
 =pod
 
@@ -23,7 +45,7 @@ Win32::GUI::P5PL - GUI application inspired by p5*js
     # sketch.p5.pl
     #!perl
     use 5.014; # //, strict, say, s//r
-    use warnings;   no warnings 'redefine';
+    use warnings;
     use lib './lib';
     use Win32::GUI::P5PL;
     if(!caller){Win32::GUI::P5PL::App->launch();}
@@ -70,10 +92,13 @@ Improvements I want to make in order for the Live Changes to be more seamless:
 
 I<idea: See L<-X>'s C<-M> modification time check.>
 
-=item * ☐ Figure out how to temporarily inject the C<no warnings 'redefine';>
+=item * ☑ Figure out how to temporarily inject the C<no warnings 'redefine';>
 so that it doesn't have to be in the script.
 
-I<idea: look at how L<Modern::Perl> injects warnings/strict/features into the calling script>.
+☑ I<idea: look at how L<Modern::Perl> injects warnings/strict/features into the calling script>.
+
+Yeah, adding C<warnings-E<gt>unimport('redefine')> to the C<P5PL::import()> allowed it
+to turn off redefine-warnings for me.
 
 =item * ☐ Automatically do the equivalent of the C<if(!caller)...> call,
 so that it doesn't have to be in the script.
@@ -83,6 +108,9 @@ only run the C<P5PL.pm> itself once when the sketch is first run, the
 C<P5PL::import()> appears to run every time.  That was originally my downfall,
 but might also end up being what I can use to track whether it's the first load
 or not.  (Do a import-counting state variable, and only run the GUI on the first time)
+
+☒ I have some commented-out code that I<almost> worked, except that when combined with
+my auto-launch-gui feature, it launches a second GUI.
 
 =back
 
@@ -151,7 +179,7 @@ sub background
         croak "don't know background(@_)";
     }
     $c = sprintf("#%02X%02X%02X", $r, $g, $b);  # skip alpha for now
-    printf STDERR "background($r,$g,$b)\n";
+    #printf STDERR "background($r,$g,$b)\n";
 
     $img->fill(0,0, $img->colorResolve($r,$g,$b));  # TODO: incorporate alpha if available
     _pushImg();

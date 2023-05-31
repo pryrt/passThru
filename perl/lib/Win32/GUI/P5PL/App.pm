@@ -3,6 +3,7 @@ our $VERSION = 0.001000;
 use Win32::GUI();
 use Win32::GUI::Constants qw{/^MB_/};
 use Win32::GUI::BitmapInline();
+use Time::HiRes qw(time sleep);
 
 our $appWin;
 my $awTitleBase = "p5*pl v$VERSION";
@@ -11,10 +12,15 @@ my $awTitle = $awTitleBase;
 my ($bmpPlay, $bmpPlaying, $bmpStop, $bmpStopped) = _play_icons();
 my $bmpCanvas;
 
+# control variables
+my $playing = 0;
+my $fps = 2;           # above 100 becomes less likely to be implementable; ~1000 is the max, because I do loops of sleep(1ms)
+
 sub launch
 {
-    $awSource = (caller(0))[1];
+    $awSource = $_[1] // (caller(0))[1];
     $awTitle = "$awSource - $awTitleBase";
+    printf STDERR "launch(%s): awTitle = '%s'\n", join(',',map $_//'<undef>',@_),$awTitle;
     $appWin = Win32::GUI::Window->new(
         -name => 'p5pl',
         -text => $awTitle,
@@ -52,15 +58,33 @@ sub launch
     Win32::GUI::Dialog();
 }
 
-my $playing = 0;
+sub setLooping { $playing = $_[0]//0 }
+sub getLooping { $playing }
 sub push_play
 {
     if($playing) {return 0;} # don't restart
     $appWin->p5plPLAY->Change(-bitmap => $bmpPlaying);
     $appWin->p5plSTOP->Change(-bitmap => $bmpStop);
-    $playing = 1;
+    setLooping(1);
+    no warnings 'redefine';
     do $awSource;
+    use warnings;
     setup();
+    run_draw_loop();
+}
+
+sub run_draw_loop
+{
+    my $t0 = time - 1/$fps; # this way, it's always one frame
+    while($playing) {
+        Win32::GUI::DoEvents();
+        no warnings 'redefine';
+        do $awSource;
+        use warnings;
+        while(time - $t0 < 1/$fps) { sleep(0.01) };
+        draw();
+        $t0 = time;
+    }
 }
 
 sub push_stop
@@ -652,5 +676,6 @@ sub requestCanvasSize
     $appWin->Resize($new_ww,$new_wh);
     #print STDERR "resize: canvas($w x $h), win($ww x $wh): scaled($sw x $sh) vs needed($need_w x $need_h) => new($new_ww x $new_wh)\n";
 }
+
 
 1;

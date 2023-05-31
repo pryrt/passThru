@@ -1,15 +1,15 @@
 #!perl
 use 5.014; # //, strict, say, s//r
-use warnings; no warnings 'redefine';
+use warnings;
 use lib './lib';
 use Win32::GUI::P5PL;
 if(!caller){Win32::GUI::P5PL::App->launch();}
 
 sub setup() {
   createCanvas(800, 400);
-  background('rgb(100%,100%,0%)');
+  background(220);
 }
 
 sub draw() {
-  background(220);
+    background(255,0,0);
 }
