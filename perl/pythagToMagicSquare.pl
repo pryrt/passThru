@@ -30,7 +30,7 @@ for my $p ( 2 .. 101 ) {
 
 #dd \%mid2set;
 
-for my $M (sort {scalar(@{$mid2set{$b}}) <=> scalar(@{$mid2set{$a}}) || $b <=> $a}  grep { scalar( @{ $mid2set{$_} } ) >= 4 } keys %mid2set) {
+for my $M (sort {scalar(@{$mid2set{$b}}) <=> scalar(@{$mid2set{$a}}) || $b <=> $a}  grep { $_<100 and scalar( @{ $mid2set{$_} } ) >= 4 } keys %mid2set) {
     printf "M = %s, # = %d\n", $M, scalar(@{$mid2set{$M}});
     my $P = $M*$M;
     my $SUM = 3*$P;
@@ -75,16 +75,16 @@ for my $M (sort {scalar(@{$mid2set{$b}}) <=> scalar(@{$mid2set{$a}}) || $b <=> $
             }
             #$any = "NONE" unless length($any);
 
-            if($any) {
+            if($any or 65==$M) {
                 # diagonal / sum
-                print "\t \t\t \t \t \t \t \t", $d1, "\n";                                                                  # diagonal /
-                print "\t\t", join("\t+\t", map({sprintf '%2.2s²', $_} $s[0][0], $s[3][0], $s[1][2])), "\t=\t", $r0, "\n";  # rows
-                print "\t\t", join("\t+\t", map({sprintf '%2.2s²', $_} $s[2][0], $s[3][1], $s[2][2])), "\t=\t", $r1, "\n";  # rows
-                print "\t\t", join("\t+\t", map({sprintf '%2.2s²', $_} $s[1][0], $s[3][2], $s[0][2])), "\t=\t", $r2, "\n";  # rows
-                print "\t\t", join("\t \t", map({sprintf '%-5.5s' , $_} $c0, $c1, $c2, $d0)), "\n";                         # cols and diagonal \
+                print "\t\t", join("\t \t", map({sprintf '%16s ', $_} '', '', '')), "\t=\t", $d1, "\n";                                               # diagonal /
+                print "\t\t", join("\t+\t", map({sprintf '%16s²', $_} $s[0][0], $s[3][0], $s[1][2])), "\t=\t", $r0, "\n";  # rows
+                print "\t\t", join("\t+\t", map({sprintf '%16s²', $_} $s[2][0], $s[3][1], $s[2][2])), "\t=\t", $r1, "\n";  # rows
+                print "\t\t", join("\t+\t", map({sprintf '%16s²', $_} $s[1][0], $s[3][2], $s[0][2])), "\t=\t", $r2, "\n";  # rows
+                print "\t\t", join("\t \t", map({sprintf '%16s ' , $_} $c0, $c1, $c2, $d0)), "\n";                         # cols and diagonal \
 
                 # results
-                print "\t$any\n";
+                print "\t$any\n" if $any;
 
                 # separator
                 print "\n";
