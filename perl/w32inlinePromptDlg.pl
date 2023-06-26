@@ -61,6 +61,17 @@ int sizes(int input) {
     print_sizeof(HWND);
     print_sizeof(IV);
     print_sizeof(SV);
+    // https://learn.microsoft.com/en-us/cpp/cpp/char-wchar-t-char16-t-char32-t?view=msvc-170
+    //  comparing sizes and notations for char, wchar_t, char16_t, and char32_t
+    //
+    print_sizeof(char);
+    print_sizeof('a');
+    print_sizeof(wchar_t);      // native "wide": for MS, it's 16bit (2byte) UTF16-LE (Windows internal native type)
+    print_sizeof(L'a');         // the L prefix to a character or string makes it wchar_t
+    print_sizeof(u'a');         // the u prefix makes it char16_t
+    print_sizeof(U'a');         // the U prefix makes it char32_t
+    //                          // wchar_t, char16_t, and char32_t are all "wide strings", though some people use "wide string" only for wchar_t
+    //                          // char and char8_t are "narrow strings", even if they are used for storing utf8 sequences
     fflush(stdout);
     return(0);
 }
@@ -98,8 +109,9 @@ IV lreturn_iv(SV* ignore) {
 
 #define DLGTITLE  L"Debug"
 #define DLGFONT   L"MS Sans Serif"
-#define DLGAPPLY  L"&Apply"
+#define DLGOK     L"&OK"
 #define DLGCANCEL L"&Cancel"
+#define DLGBMPLBL L"Bitmap Label"
 #define NUMCHARS(aa) (sizeof(aa)/sizeof((aa)[0]))
 #define IDC_BITMAP 99
 
@@ -121,7 +133,7 @@ static struct { // dltt
     WCHAR  wszFont[NUMCHARS(DLGFONT)];   // typeface name, if DS_SETFONT is set
 
     // control info
-    //
+    // OK
     struct {
        DWORD  style;
        DWORD  exStyle;
@@ -132,11 +144,12 @@ static struct { // dltt
        WORD   id;
        WORD   sysClass;       // 0xFFFF identifies a system window class
        WORD   idClass;        // ordinal of a system window class
-       WCHAR  wszTitle[NUMCHARS(DLGAPPLY)];
+       WCHAR  wszTitle[NUMCHARS(DLGOK)];
        WORD   cbCreationData; // bytes of following creation data
 //       WORD   wAlign;         // align next control to DWORD boundry.
     } apply;
 
+    // CANCEL
     struct {
        DWORD  style;
        DWORD  exStyle;
@@ -151,6 +164,7 @@ static struct { // dltt
        WORD   cbCreationData; // bytes of following creation data
     } cancel;
 
+    // BITMAP
     struct {
        DWORD  style;
        DWORD  exStyle;
@@ -161,7 +175,7 @@ static struct { // dltt
        WORD   id;
        WORD   sysClass;       // 0xFFFF identifies a system window class
        WORD   idClass;        // ordinal of a system window class
-       WCHAR  wszTitle[1];    // title string or ordinal of a resource
+       WCHAR  wszTitle[NUMCHARS(DLGBMPLBL)];    // title string or ordinal of a resource
        WORD   cbCreationData; // bytes of following creation data
     } bitmap;
 
@@ -185,7 +199,7 @@ static struct { // dltt
       190,160,50,14,
       IDOK,
       0xFFFF, 0x0080, // button
-      DLGAPPLY, 0,
+      DLGOK, 0,
       },
 
       {
@@ -200,12 +214,16 @@ static struct { // dltt
       {
       WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,    // 0x50020000
       WS_EX_NOPARENTNOTIFY, // 0x4
-      6,6,288,8,
+      6,6,288,26,
       IDC_BITMAP,
       0xFFFF, 0x0082, // static
-      L"", 0,
+      DLGBMPLBL, 0,
       },
    };
+
+    // https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-dlgitemtemplate =>
+    //  => shows the 0x0080 = BUTTON, 0x0081 = EDIT (textbox?), 0x0082 = STATIC (label, including bitmap),
+    //      0x0083 = LIST BOX, 0x0084 = SCROLL BAR, 0x0085 = COMBOBOX
 
 #pragma pack(pop)
 
@@ -219,6 +237,7 @@ INT_PTR CALLBACK Debug_DlgProc (
        {
        case WM_INITDIALOG:
            {
+               SetDlgItemTextA(hwnd, IDC_BITMAP, "This is my new text\ncross multiple lines\ng101T 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 g101T 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 g101T 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 ");
            }
            break;
 
@@ -260,7 +279,7 @@ LRESULT DoDebugDialog(HWND hwndApp, LPVOID pvData)
    printf("DialogBoxIndirectParamW(0x%X, %p, 0x%X, %p, 0x%X)\n", hinst, &g_DebugDlgTemplate, hwndApp, /*NULL*/Debug_DlgProc, (LPARAM)pvData);
    printf("%s\nHit ^C to exit...", "\x20\x21\x22");fflush(stdout);
 
-   return DialogBoxIndirectParamW (hinst, (LPCDLGTEMPLATEW)&g_DebugDlgTemplate, hwndApp, NULL/*Debug_DlgProc*/, (LPARAM)pvData);
+   return DialogBoxIndirectParamW (hinst, (LPCDLGTEMPLATEW)&g_DebugDlgTemplate, hwndApp, Debug_DlgProc, (LPARAM)pvData);
 }
 
 IV c_myDialog(UV hwndApp)
@@ -308,4 +327,34 @@ Remind myself that if I give a NULL dialog-proc function, it draws the dialog bu
     string (or undef) to perl; if I'm going to have Inline::C->XS anyway, why not just handle
     it there for now.  I can use some other project for making a more generic dialog creation
 
-svn commit -m "verify returning undef; confirm dlgProc==NULL will display with no interaction; remind myself of the old plan, but decide I still want to go down my new route of doing the full prompt dialog/dlgProc in C (Inline::C now, XS later), and just return the string to perl"
+svn commit -m "verify returning undef; confirm dlgProc==NULL will display with no interaction; remind myself of the old plan, but decide I still want to go down my new route of doing the full prompt dialog/dlgProc in C (Inline::C now, XS later), and just return the string to perl" → r68
+
+Now, let's start defining a different dialog.  I need two more controls.
+
+Actually, looking up the details:
+    https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-dlgitemtemplate =>
+     => shows the types:
+        0x0080 = BUTTON
+        0x0081 = EDIT (textbox?)
+        0x0082 = STATIC (label, including bitmap)
+        0x0083 = LIST BOX
+        0x0084 = SCROLL BAR
+        0x0085 = COMBOBOX
+So the third control is actual a STATIC control (label or bitmap); since that example doesn't actually
+embed a bitmap, it's really a LABEL.  I was able to give it default text using the hardcoded structure.
+I then was able to send a new string during WM_INITDIALOG using SetDlgItemTextA(), so I _should_ be
+able to dynamically create that label.
+
+While playing around, before finding the Set, I found the Get at
+    https://stackoverflow.com/questions/7389757/get-text-from-an-edit-control-pure-win32-api
+    where I was able to derive the following:
+        int iChars = GetWindowTextLength( GetDlgItem(hwnd, IDC_BITMAP) );    // not including '\0'
+        iChars = 2;
+        char str[256] = "initial text";
+        UINT n = GetDlgItemText(hwnd, IDC_BITMAP, str, (iChars>255) ? (256) : (iChars + 1));
+        printf("GetDlgItemText => '%s'[%d] vs iChars=%d\n", str, n, iChars);
+Save that in my notes, because that's what I'll need for saving the results of the INPUT box,
+eventually.
+
+By making the label's height bigger, and using \n in the SetDlgItemTextA(), I can make it multiple lines.
+If I make a line really long, does it wrap?
