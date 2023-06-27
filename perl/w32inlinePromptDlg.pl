@@ -20,7 +20,7 @@ sub noarg_lret { lreturn_iv(@_ ? @_ : undef); }
 sub myDialog { c_myDialog(@_?@_:0) }
 sub myPrompt($$;$) { $_[2] //= ''; _c_prompt(@_) }
 
-my $r = myPrompt("prompt", "title", "default");
+my $r = myPrompt("multiple\nline\nprompt", "this is my title", "this is the default value");
 printf "result in perl: %s\n", $r//'<undef>';
 
 __DATA__
@@ -107,13 +107,15 @@ IV lreturn_iv(SV* ignore) {
 // https://app.assembla.com/spaces/pryrt/subversion/source/HEAD/trunk/c_cpp/misc/manualDialog.c
 // => https://stackoverflow.com/questions/2270196/c-win32api-creating-a-dialog-box-without-resource
 
-#define DLGTITLE  L"Debug"
+#define DLGTITLE  L"Debug Title"
 #define DLGFONT   L"MS Sans Serif"
 #define DLGOK     L"&OK"
 #define DLGCANCEL L"&Cancel"
-#define DLGBMPLBL L"Bitmap Label"
+#define DLGLBLTXT L"Label Default"
+#define DLGTXTBOX L"Textbox Default"
 #define NUMCHARS(aa) (sizeof(aa)/sizeof((aa)[0]))
 #define IDC_LABEL 99
+#define IDC_TEXTBOX 98
 
 #pragma pack(push, 4)
 
@@ -147,7 +149,7 @@ static struct { // dltt
        WCHAR  wszTitle[NUMCHARS(DLGOK)];
        WORD   cbCreationData; // bytes of following creation data
 //       WORD   wAlign;         // align next control to DWORD boundry.
-    } apply;
+    } okstruct;
 
     // CANCEL
     struct {
@@ -175,9 +177,23 @@ static struct { // dltt
        WORD   id;
        WORD   sysClass;       // 0xFFFF identifies a system window class
        WORD   idClass;        // ordinal of a system window class
-       WCHAR  wszTitle[NUMCHARS(DLGBMPLBL)];    // title string or ordinal of a resource
+       WCHAR  wszTitle[NUMCHARS(DLGLBLTXT)];    // title string or ordinal of a resource
        WORD   cbCreationData; // bytes of following creation data
-    } bitmap;
+    } labelstruct;
+
+    struct {
+       DWORD  style;
+       DWORD  exStyle;
+       short  x;
+       short  y;
+       short  cx;
+       short  cy;
+       WORD   id;
+       WORD   sysClass;       // 0xFFFF identifies a system window class
+       WORD   idClass;        // ordinal of a system window class
+       WCHAR  wszTitle[NUMCHARS(DLGTXTBOX)];    // title string or ordinal of a resource
+       WORD   cbCreationData; // bytes of following creation data
+    } editstruct;
 
    } g_DebugDlgTemplate = {
 
@@ -185,7 +201,7 @@ static struct { // dltt
    | DS_MODALFRAME | DS_3DLOOK
    | DS_SETFONT,
    0x0,        // exStyle;
-   3,          // ccontrols
+   4,          // ccontrols
    0, 0, 300, 180,
    0,                       // menu: none
    0,                       // window class: none
@@ -217,7 +233,16 @@ static struct { // dltt
       6,6,288,26,
       IDC_LABEL,
       0xFFFF, 0x0082, // static
-      DLGBMPLBL, 0,
+      DLGLBLTXT, 0,
+      },
+
+      {
+      WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_AUTOVSCROLL | ES_LEFT | ES_MULTILINE | ES_WANTRETURN,
+      WS_EX_NOPARENTNOTIFY, // 0x4
+      6,50,288,100,
+      IDC_TEXTBOX,
+      0xFFFF, 0x0081, // edit
+      DLGTXTBOX, 0,
       },
    };
 
@@ -234,27 +259,30 @@ INT_PTR CALLBACK Debug_DlgProc (
     LPARAM lParam)
 {
     switch (uMsg)
-       {
-       case WM_INITDIALOG:
-           {
-               onInitDlg(hwnd);
-           }
-           break;
+    {
+    case WM_INITDIALOG:
+        {
+            onInitDlg(hwnd);
+        }
+        break;
 
-       case WM_COMMAND:
-           {
-           UINT wId = LOWORD(wParam);
-           if (wId == IDOK || wId == IDCANCEL)
-              {
-              EndDialog (hwnd, wId);
-              }
-           }
-           break;
+    case WM_COMMAND:
+        {
+            UINT wId = LOWORD(wParam);
+            onCloseDlg(hwnd, wId==IDOK);
+            if (wId == IDOK || wId == IDCANCEL)
+            {
+                EndDialog (hwnd, wId);
+            }
+        }
+        break;
 
-       case WM_CLOSE:
-           EndDialog(hwnd, IDCANCEL);
-           break;
-       }
+    case WM_CLOSE:
+        {
+            EndDialog(hwnd, IDCANCEL);
+        }
+        break;
+    }
 
     return FALSE;
 }
@@ -292,10 +320,27 @@ IV c_myDialog(UV hwndApp)
 char* gs_dlgPrompt;
 char* gs_dlgTitle;
 char* gs_dlgDefault;
+char* gs_dlgRetval;
 
-void onInitDlg(HWND hwnd) {
+void onInitDlg(HWND hwnd)
+{
     SetWindowTextA(hwnd, gs_dlgTitle);
     SetDlgItemTextA(hwnd, IDC_LABEL, gs_dlgPrompt);
+    SetDlgItemTextA(hwnd, IDC_TEXTBOX, gs_dlgDefault);
+}
+
+void onCloseDlg(HWND hwnd, bool is_ok)
+{
+    int iChars;
+    if(gs_dlgRetval) { free(gs_dlgRetval); }
+    if(is_ok) {
+        iChars = GetWindowTextLength( GetDlgItem(hwnd, IDC_TEXTBOX) );
+        gs_dlgRetval = (char*) calloc(iChars+1, sizeof(char));
+        GetDlgItemText(hwnd, IDC_TEXTBOX, gs_dlgRetval, iChars+1);
+    } else {
+        gs_dlgRetval = (char*) calloc(1, sizeof(char));
+        gs_dlgRetval[0] = '\0';
+    }
 }
 
 void _c_prompt(char* str_prompt, char* str_title, char* str_default)
@@ -305,9 +350,11 @@ void _c_prompt(char* str_prompt, char* str_title, char* str_default)
     gs_dlgTitle = str_title;
     gs_dlgDefault = str_default;
     LRESULT r = DoDebugDialog((HWND)0, NULL);
-    printf("result = %d\n", r);fflush(stdout);
+    printf("result = %d, string\n%s\n", r, gs_dlgRetval);
+    fflush(stdout);
     Inline_Stack_Vars;
     Inline_Stack_Reset;
+    // TODO: if r then push the gs_dlgRetval, else push the undef as below
     Inline_Stack_Push(&PL_sv_undef);
     Inline_Stack_Done;
     return;
@@ -380,4 +427,9 @@ svn commit -m "figure out button types for LABEL (0x0082) and probably TEXTBOX (
 
 Able to add some globals and a function that pre-populates the TITLE and LABEL text.
 
-svn commit -m "pre-populate TITLE and LABEL from perl strings"
+svn commit -m "pre-populate TITLE and LABEL from perl strings" → r70
+
+I now have an edit box which I can prepopulate, add ENTER,  and retrieve the value on OK (or "" on CANCEL);
+TODO = transfer the string back to perl on OK
+
+svn commit -m "add edit box and verify I can read the string; TODO: send string to perl on OK" → r71
