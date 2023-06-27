@@ -113,7 +113,7 @@ IV lreturn_iv(SV* ignore) {
 #define DLGCANCEL L"&Cancel"
 #define DLGBMPLBL L"Bitmap Label"
 #define NUMCHARS(aa) (sizeof(aa)/sizeof((aa)[0]))
-#define IDC_BITMAP 99
+#define IDC_LABEL 99
 
 #pragma pack(push, 4)
 
@@ -215,7 +215,7 @@ static struct { // dltt
       WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,    // 0x50020000
       WS_EX_NOPARENTNOTIFY, // 0x4
       6,6,288,26,
-      IDC_BITMAP,
+      IDC_LABEL,
       0xFFFF, 0x0082, // static
       DLGBMPLBL, 0,
       },
@@ -237,7 +237,7 @@ INT_PTR CALLBACK Debug_DlgProc (
        {
        case WM_INITDIALOG:
            {
-               SetDlgItemTextA(hwnd, IDC_BITMAP, "This is my new text\ncross multiple lines\ng101T 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 g101T 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 g101T 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 ");
+               onInitDlg(hwnd);
            }
            break;
 
@@ -289,9 +289,21 @@ IV c_myDialog(UV hwndApp)
     return((IV)r);
 }
 
+char* gs_dlgPrompt;
+char* gs_dlgTitle;
+char* gs_dlgDefault;
+
+void onInitDlg(HWND hwnd) {
+    SetWindowTextA(hwnd, gs_dlgTitle);
+    SetDlgItemTextA(hwnd, IDC_LABEL, gs_dlgPrompt);
+}
+
 void _c_prompt(char* str_prompt, char* str_title, char* str_default)
 {
     printf("prompt='%s', title='%s', default='%s'\n", str_prompt, str_title, str_default);
+    gs_dlgPrompt = str_prompt;
+    gs_dlgTitle = str_title;
+    gs_dlgDefault = str_default;
     LRESULT r = DoDebugDialog((HWND)0, NULL);
     printf("result = %d\n", r);fflush(stdout);
     Inline_Stack_Vars;
@@ -348,13 +360,24 @@ able to dynamically create that label.
 While playing around, before finding the Set, I found the Get at
     https://stackoverflow.com/questions/7389757/get-text-from-an-edit-control-pure-win32-api
     where I was able to derive the following:
-        int iChars = GetWindowTextLength( GetDlgItem(hwnd, IDC_BITMAP) );    // not including '\0'
+        int iChars = GetWindowTextLength( GetDlgItem(hwnd, IDC_LABEL) );    // not including '\0'
         iChars = 2;
         char str[256] = "initial text";
-        UINT n = GetDlgItemText(hwnd, IDC_BITMAP, str, (iChars>255) ? (256) : (iChars + 1));
+        UINT n = GetDlgItemText(hwnd, IDC_LABEL, str, (iChars>255) ? (256) : (iChars + 1));
         printf("GetDlgItemText => '%s'[%d] vs iChars=%d\n", str, n, iChars);
 Save that in my notes, because that's what I'll need for saving the results of the INPUT box,
 eventually.
 
 By making the label's height bigger, and using \n in the SetDlgItemTextA(), I can make it multiple lines.
-If I make a line really long, does it wrap?
+If I make a line really long, does it wrap?  Yep.  Height of 26 allows for 3 full rows plus the top of a T
+for the fourth row (which is kindof weird, because each row of text was actually 13 pixels, so I would have
+expected 41-42 for that; it almost appears that the "height" starts at the _bottom_ of the first row of text,
+or the height isn't in pixels, both of which are weird to understand)
+
+But all that to say: I just need _one_ additional field, an EDIT control, to be able to round out my dialog.
+
+svn commit -m "figure out button types for LABEL (0x0082) and probably TEXTBOX (0x0081); experiment with setting text on LABEL" → r69
+
+Able to add some globals and a function that pre-populates the TITLE and LABEL text.
+
+svn commit -m "pre-populate TITLE and LABEL from perl strings"
