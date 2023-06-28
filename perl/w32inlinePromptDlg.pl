@@ -140,21 +140,15 @@ void call_perlsub_from_c(char* cstr_fnname, SV* svp_fnname, SV* svp_cref)
     PUSHMARK(SP);   // per EXAMPLES: No Parameters, Nothing Returned, still need dSP;PUSHMARK(SP);
     call_pv(cstr_fnname, G_DISCARD|G_NOARGS);
 
-#if 0
     printf("second will call_sv(\"%s\") from a SV* with the name\n", SvPV_nolen(svp_fnname)); fflush(stdout);
     SPAGAIN;        // "you must always refresh the local copy using SPAGAIN whenever you make use of the call_* functions or any other Perl internal function"
     PUSHMARK(SP);
-    call_pv(svp_fnname, G_DISCARD|G_NOARGS);
-    // "Undefined subroutine &main::HS called at w32inlinePromptDlg.pl line 29"
-#endif
+    call_sv(svp_fnname, G_DISCARD|G_NOARGS);
 
-#if 0
-    printf("third will call_sv(SV* cref)\n"); fflush(stdout);
+    printf("third will call_sv(%s)\n", SvPV_nolen(svp_cref)); fflush(stdout);
     SPAGAIN;        // "you must always refresh the local copy using SPAGAIN whenever you make use of the call_* functions or any other Perl internal function"
     PUSHMARK(SP);
-    call_pv(svp_cref, G_DISCARD|G_NOARGS);
-    // "Undefined subroutine &main:: called at w32inlinePromptDlg.pl line 29"
-#endif
+    call_sv(svp_cref, G_DISCARD|G_NOARGS);
 
     printf("end of call_perlsub_from_c()\n\n", cstr_fnname); fflush(stdout);
 }
@@ -494,3 +488,8 @@ I now have an edit box which I can prepopulate, add ENTER,  and retrieve the val
 TODO = transfer the string back to perl on OK
 
 svn commit -m "add edit box and verify I can read the string; TODO: send string to perl on OK" → r71
+
+svn commit -m "(1) correctly return the string to perl! (2) experiment with call_pv and call_sv -- oh, wait, no wonder the errors, because I used call_pv; finish the commit, then try again"
+→ r72
+
+svn commit -m "switching to call_sv fixed it" → r73
