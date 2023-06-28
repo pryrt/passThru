@@ -20,8 +20,13 @@ sub noarg_lret { lreturn_iv(@_ ? @_ : undef); }
 sub myDialog { c_myDialog(@_?@_:0) }
 sub myPrompt($$;$) { $_[2] //= ''; _c_prompt(@_) }
 
-my $r = myPrompt("multiple\nline\nprompt", "this is my title", "this is the default value");
-printf "result in perl: %s\n", $r//'<undef>';
+if(0) {
+    my $r = myPrompt("multiple\nline\nprompt", "this is my title", "this is the default value");
+    printf "result in perl: %s\n", $r//'<undef>';
+}
+
+sub perlsub2call {print "this is the perlsub2call()\n"; }
+call_perlsub_from_c("perlsub2call", "perlsub2call", \&perlsub2call);
 
 __DATA__
 
@@ -76,6 +81,15 @@ int sizes(int input) {
     return(0);
 }
 
+// https://perldoc.perl.org/perlcall#EXAMPLES   -- this is the section where I figured out how to return a list,
+// specifically, in https://perldoc.perl.org/perlcall#Returning-a-List-of-Values
+//      actually, no it's not; I don't see the Inline_Stack in the perlapi or perlcall or perlguts; where did I get those?
+//      using Google Advanced search on perldoc => https://metacpan.org/pod/Inline::C#THE-INLINE-STACK-MACROS
+//          so they are Inline::C macros!
+//      https://metacpan.org/dist/Inline-C/view/lib/Inline/C/Cookbook.pod#Multiple-Return-Values => this is probably really
+//          where I got the sequence
+// The `newSV*()` are in https://perldoc.perl.org/perlapi
+//
 void retlist(int qty) {
     SV* mysvp;
     Inline_Stack_Vars;
@@ -103,6 +117,49 @@ IV lreturn_iv(SV* ignore) {
     LRESULT lr = 0x123456789abcdef0;
     return((IV)lr);
 }
+
+// aside from the perlcall and perlapi sections mentioned above, see especially
+//  https://perldoc.perl.org/perlapi#CV-Handling
+//  https://perldoc.perl.org/perlcall#THE-CALL_-FUNCTIONS   -- describes call_pv(char*,flag) and call_sv(SV*,flag)
+//  https://perldoc.perl.org/perlcall#FLAG-VALUES           -- the G_XXX constants for the call_pv/sv flags arguments
+//  https://perldoc.perl.org/perlcall#Using-call_sv         -- "Using call_sv" section
+//      -- if I want to save the SV* coderef to be used by some different c-function than the one
+//          that I called from perl, I will need to make a copy of it, not just store the SV*
+//          search for "keepSub" in the "Using call_sv" section to see how to use newSVsv(oldsv) to copy it
+//  The call_argv() appears to be a way to call a perl function with arguments, where the function name
+//      and all the arguments are strings (akin to `main(argc, argv)` having all string arguments)
+//  If you want to call an SV* function with arguments, see the
+//      https://perldoc.perl.org/perlcall#Passing-Parameters for how to pass parameters
+//      by placing the various SV on the stack
+
+void call_perlsub_from_c(char* cstr_fnname, SV* svp_fnname, SV* svp_cref)
+{
+    printf("\nbeginning of call_perlsub_from_c()\n", cstr_fnname); fflush(stdout);
+    printf("first will call_pv(\"%s\") from a cstring\n", cstr_fnname); fflush(stdout);
+    dSP;
+    PUSHMARK(SP);   // per EXAMPLES: No Parameters, Nothing Returned, still need dSP;PUSHMARK(SP);
+    call_pv(cstr_fnname, G_DISCARD|G_NOARGS);
+
+#if 0
+    printf("second will call_sv(\"%s\") from a SV* with the name\n", SvPV_nolen(svp_fnname)); fflush(stdout);
+    SPAGAIN;        // "you must always refresh the local copy using SPAGAIN whenever you make use of the call_* functions or any other Perl internal function"
+    PUSHMARK(SP);
+    call_pv(svp_fnname, G_DISCARD|G_NOARGS);
+    // "Undefined subroutine &main::HS called at w32inlinePromptDlg.pl line 29"
+#endif
+
+#if 0
+    printf("third will call_sv(SV* cref)\n"); fflush(stdout);
+    SPAGAIN;        // "you must always refresh the local copy using SPAGAIN whenever you make use of the call_* functions or any other Perl internal function"
+    PUSHMARK(SP);
+    call_pv(svp_cref, G_DISCARD|G_NOARGS);
+    // "Undefined subroutine &main:: called at w32inlinePromptDlg.pl line 29"
+#endif
+
+    printf("end of call_perlsub_from_c()\n\n", cstr_fnname); fflush(stdout);
+}
+
+
 
 // https://app.assembla.com/spaces/pryrt/subversion/source/HEAD/trunk/c_cpp/misc/manualDialog.c
 // => https://stackoverflow.com/questions/2270196/c-win32api-creating-a-dialog-box-without-resource
@@ -305,7 +362,7 @@ LRESULT DoDebugDialog(HWND hwndApp, LPVOID pvData)
 
    printf_bytes(&g_DebugDlgTemplate, sizeof(g_DebugDlgTemplate));
    printf("DialogBoxIndirectParamW(0x%X, %p, 0x%X, %p, 0x%X)\n", hinst, &g_DebugDlgTemplate, hwndApp, /*NULL*/Debug_DlgProc, (LPARAM)pvData);
-   printf("%s\nHit ^C to exit...", "\x20\x21\x22");fflush(stdout);
+   printf("Hit ^C to exit...\n");fflush(stdout);
 
    return DialogBoxIndirectParamW (hinst, (LPCDLGTEMPLATEW)&g_DebugDlgTemplate, hwndApp, Debug_DlgProc, (LPARAM)pvData);
 }
@@ -350,12 +407,16 @@ void _c_prompt(char* str_prompt, char* str_title, char* str_default)
     gs_dlgTitle = str_title;
     gs_dlgDefault = str_default;
     LRESULT r = DoDebugDialog((HWND)0, NULL);
-    printf("result = %d, string\n%s\n", r, gs_dlgRetval);
-    fflush(stdout);
+    // printf("result = %d, string\n%s\n", r, gs_dlgRetval);
+    // fflush(stdout);
     Inline_Stack_Vars;
     Inline_Stack_Reset;
-    // TODO: if r then push the gs_dlgRetval, else push the undef as below
-    Inline_Stack_Push(&PL_sv_undef);
+    // TODO: if r==1 then push the gs_dlgRetval, else push the undef as below
+    if(r==1 && gs_dlgRetval && gs_dlgRetval[0]) {
+        Inline_Stack_Push(newSVpvf("%s", gs_dlgRetval));
+    } else {
+        Inline_Stack_Push(&PL_sv_undef);
+    }
     Inline_Stack_Done;
     return;
 }
