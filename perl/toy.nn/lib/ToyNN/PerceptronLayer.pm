@@ -16,4 +16,7 @@ sub new
     return $self;
 }
 
+sub W { $_[0]->{W} }; sub weights { $_[0]->{W} };
+sub B { $_[0]->{B} }; sub biases  { $_[0]->{B} };
+
 1;
