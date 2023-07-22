@@ -16,6 +16,9 @@ print "c x r => ", my $mcr = $col x $row;   # expected (3 row 3 col), got that
 print "row->dims: ", join ',', $row->dims;
 print "col->dims: ", join ',', $col->dims;
 
+print "slice the middle column of mcr => ", $mcr->slice('1,:');
+print "slice the middle row of mcr => ", $mcr->slice(':,1');
+
 # https://stackoverflow.com/questions/72589417/is-there-a-map-equivalent-for-pdl-without-doing-pdl-map-unpdl
 # => broadcast_define (newer name) => thread_define (older name in strawberry 5.32 version of PDL)
 # https://metacpan.org/release/CHM/PDL-2.019/view/Basic/Core/Core.pm#thread_define
