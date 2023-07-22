@@ -4,10 +4,8 @@ use warnings;
 use PDL;
 
 my $this;
-thread_define('square(a();[o]b())', over { $_[1] .= $_[0] ** 2 });
-thread_define('other(a();[o]b())',  over { printf "other(%s,%s)\n", $this->{fn}, $_[0]; $_[1] .= $this->{fn}->($_[0]); });
-thread_define('fn(a();[o]b())',  over { $_[1] .= $this->fn($_[0]) });
-#thread_define('df(a();[o]b())', over { $_[1] .= $this->df($_[0]) });
+thread_define('this_fn(a();[o]b())',  over { $_[1] .= $this->fn($_[0]) });
+thread_define('this_df(a();[o]b())',  over { $_[1] .= $this->df($_[0]) });
 sub prepare_broadcast { $this = $_[0] }
 
 sub new
@@ -27,17 +25,17 @@ sub new
 
 sub W { $_[0]->{W} }; sub weights { $_[0]->{W} };
 sub B { $_[0]->{B} }; sub biases  { $_[0]->{B} };
+sub fn { $_[0]->{fn}->($_[1]) }
+sub df { $_[0]->{df}->($_[1]) }
 
 sub feedforward
 {
     my ($self, $inputs) = @_;
     my $sums = $self->W x $inputs  + $self->B;
-    print "ff(weighted sum) => ", $sums;
     $self->prepare_broadcast;
-    #fn($sums, my $activated = PDL->null);
-    #square($sums, (my $out = PDL->null));
-    other($sums, (my $out = PDL->null));
-    print $out;
+    my $out = PDL->null;
+    this_fn($sums, $out);
+    return $out;
 }
 
 sub sigmoid($)
@@ -56,3 +54,6 @@ sub dsigmoid($)
 
 
 1;
+
+__END__
+Reference: https://github.com/CodingTrain/Toy-Neural-Network-JS/blob/5c1e9f46bdb125aff84cfe703664a474f319d320/nn.js
