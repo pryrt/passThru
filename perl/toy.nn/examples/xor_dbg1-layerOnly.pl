@@ -1,5 +1,8 @@
 #!perl -l
 
+# TODO: turn this into layer.t, to test that a single layer is working correctly,
+# given the known starting point of weights/biases all set to 1, and 1 and 100 epochs
+
 use 5.014; # //, strict, say, s///r
 use warnings;
 use FindBin;
