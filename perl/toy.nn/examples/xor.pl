@@ -23,15 +23,43 @@ my $layer = ToyNN::PerceptronLayer::->new(2, 2);
 # print "outN => ",
 my $outN = $layer->feedforward( $xcols );    # all input data
 # print "W    => ", $layer->W;
-print "inp1 => ",
+#print "inp1 => ",
 my $inp1 = $xcols->slice('3,:');             # third column only
-print "out1 => ",
+#print "out1 => ",
 my $out1 = $layer->feedforward( $inp1 );
-print "err1 => ",
+#print "err1 => ",
 my $err1 = $target->slice('3,:') - $out1;
-print "calculate SSE from errors                        => ", my $eSSE = $layer->eSSE($target - $outN);
-print "calculate SSE from outputs and targets           => ", my $oSSE = $layer->oSSE($outN, $target);
-print "calculate SSE from inputs and targets            => ", my $iSSE = $layer->iSSE($xcols, $target);
+#print "calculate SSE from errors                        => ", my $eSSE = $layer->eSSE($target - $outN);
+#print "calculate SSE from outputs and targets           => ", my $oSSE = $layer->oSSE($outN, $target);
+#print "calculate SSE from inputs and targets            => ", my $iSSE = $layer->iSSE($xcols, $target);
+
+# test vs spreadsheet
+print "TARGET => ",
+my $TARGET = pdl
+[
+    [map {ToyNN::PerceptronLayer::sigmoid($_)} -15,-5,-5,5],
+    [map {ToyNN::PerceptronLayer::sigmoid($_)} -5,5,5,15]
+];
+my $X = $xcols->copy();
+my $XT = $xcols->transpose();
+$layer->{W} .= 1;   # set all elements to 1
+$layer->{B} .= 1;   # set all elements to 1
+$layer->set_learning_rate(1);
+for(1..1000) {
+    #print "W*X + B         => ", $layer->W x $X + $layer->B;
+    #print "s(WX+B)         => ",
+    my $Q = $layer->feedforward($X);
+    #print "s'              => ", $Q*(1-$Q); # element-wise multiplication
+    #print "ERR             => ",
+    my $E = $TARGET - $Q;
+    printf "%-15.15s => %s\n", "SSE($_)", $layer->eSSE($E);
+    $layer->backpropagate($X, $Q, $E);
+    #print "updated weights & biases => ", $layer->W, $layer->B;
+}
+print "final weights & biases => ", $layer->W, $layer->B;
+printf "%-15.15s => %s\n", "SSE(END)", $layer->iSSE($X, $TARGET);
+
+__END__
 
 $layer->backpropagate($inp1, $out1, $err1);
 $outN = $layer->feedforward( $xcols ); # update outN based on new network

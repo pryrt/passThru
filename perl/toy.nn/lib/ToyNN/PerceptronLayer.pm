@@ -44,41 +44,73 @@ sub feedforward
 sub backpropagate
 {
     my ($self, $inputs, $outputs, $errors) = @_;
-    print "backprop:errors => ", $errors;
+    my $DEBUG = 0;
     my $gradients = PDL->null;          # using a thread_define function requires passing in a null matrix to hold the output
-    this_df($inputs, $gradients);       # Coding train used dsigmoid(outputs) because they did d(s(x)) = s(x)*(1-s(x)), so they passed in the known outputs
-    print "gradients => ", $gradients;
-    $gradients *= $inputs;
-    print "element-multiplied by inputs => ", $gradients;
+    $DEBUG and print "backprop:inputs => ", $inputs;
+    my $sum = $self->W x $inputs + $self->B;
+    $DEBUG and print "backprop:sum    => ", $sum;
+    this_df($sum, $gradients);       # Coding train used dsigmoid(outputs) because they did d(s(x)) = s(x)*(1-s(x)), so they passed in the known outputs
+    $DEBUG and print "dsigmoid => ", $gradients;
+    $DEBUG and print "backprop:errors => ", $errors;
+    $gradients *= $errors;
+    $DEBUG and print "element-multiplied by errors => ", $gradients;
     $gradients *= $self->lr();
-    print "scaled by learning rate => ", $gradients;
+    $DEBUG and print "scaled by learning rate => ", $gradients;
 
     my $in_t = $inputs->transpose();
-    print "input transposed => ", $in_t;
+    $DEBUG and print "input transposed => ", $in_t;
 
     my $dw = $gradients x $in_t;
-    print "weight change => ", $dw;
+    $DEBUG and print "weight change => ", $dw;
 
     # adjust the weights
     $self->{W} += $dw;
-    print "updated weights => ", $self->W;
+    $DEBUG and print "updated weights => ", $self->W;
 
     # the bias uses the same gradients, but since the "input" to the bias is all 1,
-    $self->{B} += $gradients;
-    print "updated biases => ", $self->B;
+    #   but I still have to sum the gradients for each row
+    $DEBUG and print "gradients->sumover->T => ", $gradients->sumover()->transpose();
+    $self->{B} += $gradients->sumover()->transpose();
+    $DEBUG and print "updated biases => ", $self->B;
 
+}
+
+# there are three reasonable options for calculating Sum Squared Error,
+#   depending on what you already have available/calculated
+# 1) You know the errors, so you just have to square and sum
+sub eSSE
+{
+    my ($self, $err) = @_;
+    return ($err**2)->sum();
+}
+# 2) You know the outputs and targets, so have to compute the error,
+#       then square and sum
+sub oSSE
+{
+    my ($self, $outputs, $targets) = @_;
+    return (($targets - $outputs)**2)->sum();
+}
+# 3) You know the input and targets, so have to compute the output,
+#       then compute the error, then square and sum
+sub iSSE
+{
+    my ($self, $inputs, $targets) = @_;
+    my $outputs = $self->feedforward($inputs);
+    return (($targets - $outputs)**2)->sum();
 }
 
 sub sigmoid($)
 {
-    my ($x) = @_;
-    return 1 / (1 + exp(-$x));
+    my ($sum) = @_;
+    #print "sigmoid($sum) = ", 1 / (1 + exp(-$sum)), "\n";
+    return 1 / (1 + exp(-$sum));
 }
 
 sub dsigmoid($)
 {
-    my ($x) = @_;
-    my $s = sigmoid($x);
+    my ($sum) = @_;
+    my $s = sigmoid($sum);
+    #print "dsigmoid($sum) = $s(1-$s) = ", $s*(1-$s), "\n";
     return $s * (1 - $s);
 }
 
