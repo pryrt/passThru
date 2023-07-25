@@ -1,13 +1,5 @@
-#!perl -l
-
-# TODO: Add the Test::More stuff necessary to test that a single layer is working correctly,
-# given the known starting point of weights/biases all set to 1, and 1 and 100 epochs
-# FindBin should not be needed for the test version
-
 use 5.014; # //, strict, say, s///r
 use warnings;
-use FindBin;
-use lib "${FindBin::Bin}/../lib";
 use PDL;
 use ToyNN::PerceptronNetwork;
 use Test::More tests => 37;
