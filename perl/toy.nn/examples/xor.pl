@@ -33,6 +33,7 @@ my $output = $network->feedforward($X);
 print "Output => ", $output;
 
 # next, do a single training epoch -- start without any of the complications of multiple layers, but add that in later
+$network->backpropagate($X, $output, $TARGET);
 
 __END__
 
