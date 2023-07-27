@@ -30,10 +30,28 @@ for my $layer ( @{ $network->{layers} }) {
 }
 
 my $output = $network->feedforward($X);
-print "Output => ", $output;
+print "Initial Output => ", $output;
+my $ll = $network->lastLayerIndex;
+my $sse = $network->L($ll)->oSSE($output, $TARGET);
+print "Initial SSE => ", $sse;
 
 # next, do a single training epoch -- start without any of the complications of multiple layers, but add that in later
 $network->backpropagate($X, $output, $TARGET);
+
+$output = $network->feedforward($X);
+print "Updated Output => ", $output;
+$ll = $network->lastLayerIndex;
+$sse = $network->L($ll)->oSSE($output, $TARGET);
+print "Updated SSE => ", $sse;
+
+# another 99 epochs
+$network->backpropagate($X, $output, $TARGET) for 1..99;
+
+$output = $network->feedforward($X);
+print "100th Output => ", $output;
+$ll = $network->lastLayerIndex;
+$sse = $network->L($ll)->oSSE($output, $TARGET);
+print "100th SSE => ", $sse;
 
 __END__
 

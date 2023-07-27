@@ -20,6 +20,24 @@ sub new
     return $self;
 }
 
+sub nLayers
+{
+    my ($self) = @_;
+    return scalar @{ $self->{layers}};
+}
+
+sub lastLayerIndex
+{
+    my ($self) = @_;
+    return $self->nLayers - 1;
+}
+
+sub L
+{
+    my ($self, $lNum) = @_;
+    return $self->{layers}[$lNum];
+}
+
 sub feedforward
 {
     my ($self, $X) = @_;
@@ -61,7 +79,7 @@ sub backpropagate
         my $Whot = $layer->W()->transpose();
         my $Eh = $Whot x $E;
         print STDERR "layer#$l: W_ho^T , E_h => ", $Whot, $Eh;
-        # TODO: do I need to handle biases here?  This is why I much prefer the idea of having biases be part of the weights!
+        # DECISION: do I need to handle biases here?  No, I don't think so: the Coding Train didn't,
 
         $E = $Eh;   # the error at the input of this layer will be the error at the output of the previous layer (if there is a previous layer)
     }
