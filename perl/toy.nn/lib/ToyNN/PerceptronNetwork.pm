@@ -69,16 +69,16 @@ sub backpropagate
     for my $l ( reverse 0 .. $#{ $self->{layers} }) {
         my $layer = $self->{layers}[$l];
         $prop[$l]{E} = $E;
-        print STDERR "layer#$l: X, Y, E => ", @{$prop[$l]}{qw/X Y E/};
-        print STDERR "layer#$l: W,B before backprop => ", $layer->W, $layer->B;
+        ##### print STDERR "layer#$l: X, Y, E => ", @{$prop[$l]}{qw/X Y E/};
+        ##### print STDERR "layer#$l: W,B before backprop => ", $layer->W, $layer->B;
         $layer->backpropagate( @{$prop[$l]}{qw/X Y E/} );
-        print STDERR "layer#$l: W,B after  backprop => ", $layer->W, $layer->B;
+        ##### print STDERR "layer#$l: W,B after  backprop => ", $layer->W, $layer->B;
 
         # see "Calculate the hidden layer errors"
         #   E_h = W_ho^T x E_o
         my $Whot = $layer->W()->transpose();
         my $Eh = $Whot x $E;
-        print STDERR "layer#$l: W_ho^T , E_h => ", $Whot, $Eh;
+        ##### print STDERR "layer#$l: W_ho^T , E_h => ", $Whot, $Eh;
         # DECISION: do I need to handle biases here?  No, I don't think so: the Coding Train didn't,
 
         $E = $Eh;   # the error at the input of this layer will be the error at the output of the previous layer (if there is a previous layer)
