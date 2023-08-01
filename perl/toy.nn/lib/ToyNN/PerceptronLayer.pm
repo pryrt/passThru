@@ -3,10 +3,43 @@ use 5.014; # //, strict, say, s///r
 use warnings;
 use PDL;
 
+
+=pod
+
+=encoding utf8
+
+=head1 NAME
+
+ToyNN::PerceptronLayer - a single layer of Perceptron neurons
+
+=head1 SYNPOSIS
+
+    # standalone layer
+    my $layer = ToyNN::PerceptronLayer::->new($nIn, $Out);
+
+    # normally used instead through PerceptronNetwork object instead
+
+=head1 DESCRIPTION
+
+Uses PDL ndarrays (or "piddles" as they used to be called) for propagating
+and backpropagating data through a layer of Perceptron neurons.
+
+=head1 METHODS
+
+=cut
+
 my $this;
 thread_define('this_fn(a();[o]b())',  over { $_[1] .= $this->fn($_[0]) });
 thread_define('this_df(a();[o]b())',  over { $_[1] .= $this->df($_[0]) });
-sub prepare_broadcast { $this = $_[0] }
+sub _prepare_broadcast { $this = $_[0] }
+
+=head2 new
+
+    my $layer = ToyNN::PerceptronLayer::->new($nIn, $Out);
+
+Define the number of inputs and outputs
+
+=cut
 
 sub new
 {
@@ -24,6 +57,41 @@ sub new
     return $self;
 }
 
+
+=head2 weights
+
+=head2 W
+
+=head2 biases
+
+=head2 B
+
+    print $layer->weights;
+    print $layer->biases;
+
+Returns the weights and bias ndarrays for this layer.
+
+=head2 fn
+
+=head2 df
+
+    my $activated = $layer->fn($sum);
+    my $gradient = $layer->df($sum);
+
+Runs the activation function and activation slope function on a given C<$sum>
+(or on any other ndarray).
+
+=head2 lr
+
+=head2 set_learning_rate
+
+    my $current_learning_rate = $layer->lr();
+    $layer->set_learning_rate($new_learning_rate);
+
+Retrieve or set the layer's learning rate
+
+=cut
+
 sub W { $_[0]->{W} }; sub weights { $_[0]->{W} };
 sub B { $_[0]->{B} }; sub biases  { $_[0]->{B} };
 sub fn { $_[0]->{fn}->($_[1]) }
@@ -31,15 +99,44 @@ sub df { $_[0]->{df}->($_[1]) }
 sub lr { $_[0]->{lr} }
 sub set_learning_rate { $_[0]->{lr} = $_[1]; }
 
+=head2 feedforward
+
+    my $Q = $layer->feedforward($X);
+
+Activates the layer on a given set of inputs, including performing the
+weighted sum, adding biases, and passing through the activation function.
+
+It performs the matrix equation:
+
+    Q = fn( W * X + B )
+
+In that equation, C<W> is the weight matrix, C<*> is the matrix multiplication operator,
+C<X> is the input matrix (each column is one set of inputs, so you can calculate
+a whole epoch with a single call to C<feedforward>), C<B> is the bias column matrix,
+C<fn> is the activation function, and C<Q> is the output matrix.
+
+=cut
+
 sub feedforward
 {
     my ($self, $inputs) = @_;
     my $sums = $self->W x $inputs  + $self->B;
-    $self->prepare_broadcast;
+    $self->_prepare_broadcast;
     my $out = PDL->null; # using a thread_define function requires passing in a null matrix to hold the output
     this_fn($sums, $out);
     return $out;
 }
+
+=head2 backpropagate
+
+    $Q = $layer->feedforward($Q);
+    $E = $TARGET - $Q;
+    $layer->backpropagate($X, $Q, $E);
+
+Uses gradient descent to backpropagate the output error C<$E> through
+the layer to calculate and apply the change in weights.
+
+=cut
 
 sub backpropagate
 {
@@ -75,6 +172,26 @@ sub backpropagate
 
 }
 
+=head2 iSSE
+
+=head2 oSSE
+
+=head2 eSSE
+
+    $iSSE = $layer->iSSE($X, $TARGET);
+
+    $Q = $layer->feedforward($X);
+    $oSSE = $layer->oSSE($Q, $TARGET);
+
+    $E = $TARGET - $Q;
+    $eSSE = $layer->eSSE($E);
+
+Three methods to calculate the SSE (sum-squared error), which is the "quality" score for
+a layer.  C<iSSE> is based on inputs and target; C<oSSE> is based on precomputed outputs and
+target; C<eSSE> is based on precomputed output error.  All three are equivalent.
+
+=cut
+
 # there are three reasonable options for calculating Sum Squared Error,
 #   depending on what you already have available/calculated
 # 1) You know the errors, so you just have to square and sum
@@ -98,6 +215,22 @@ sub iSSE
     my $outputs = $self->feedforward($inputs);
     return (($targets - $outputs)**2)->sum();
 }
+
+=head2 set_activation
+
+    $layer->set_activation('tanh');
+    $layer->set_activation('sigmoid');
+
+Sets the activation functions to either the default 'sigmoid' or the alternate 'tanh',
+and the activation-slope function to the derivative of each.
+
+    $layer->set_activation(\&fn, \&df);
+
+Sets the activation function and slope-function to any functions you define.  Each
+needs to accept an ndarray where each column is a set of weighted sums, each with
+one row for each neuron in the layer.
+
+=cut
 
 sub set_activation
 {
@@ -129,6 +262,20 @@ sub set_activation
     die $usg;
 }
 
+=head2 activation functions
+
+=head3 actv_sig
+
+=head3 dactv_sig
+
+Sigmoid activation and slope (gradient).  Takes inputs from negative infinity to infinity
+and outputs values from 0 to 1.
+
+    sigmoid(x) = 1 / (1 + exp(-x))
+    dsigmoid(x) = sigmoid(x) * (1 - sigmoid(x))
+
+=cut
+
 sub actv_sig($)
 {
     my ($sum) = @_;
@@ -144,6 +291,20 @@ sub dactv_sig($)
     return $s * (1 - $s);
 }
 
+
+=head3 actv_tanh
+
+=head3 dactv_tanh
+
+tanh activation and slope (gradient) use the hyperbolic tangent function and its derivative.
+Takes inputs from negative infinity to infinity and outputs values from -1 to 1.
+
+    tanh(x) = (exp(2x)-1) / (exp(2x)+1)
+    dtanh(x) = 1-(tanh(x)**2)
+
+=cut
+
+
 sub actv_tanh($)
 {
     my ($sum) = @_;
@@ -157,7 +318,6 @@ sub dactv_tanh($)
     my $t = tanh($sum);
     return 1-$t*$t;
 }
-
 
 1;
 
