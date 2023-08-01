@@ -1,0 +1,32 @@
+#defaults
+^Makefile$
+^blib/
+^pm_to_blib
+^blibdirs
+
+#Module::Build = n/a, but included anyway
+^Build$
+^_build/
+
+# this is in perldoc ExtUtils::Manifest example, but not in #defaults:
+^MANIFEST\.
+
+# pcj
+^.svn/
+^.github/
+^.gitignore$
+^.gitattributes$
+^MYMETA
+^\.?travis\.yml$
+^\.?appveyor\.yml$
+\.old$
+\.bak$
+\.tar\.gz$
+
+#########################################
+# module-specific
+#########################################
+^RELEASE.md$
+^patch/$
+
+# end with a blank line
