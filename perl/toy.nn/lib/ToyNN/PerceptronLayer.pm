@@ -114,6 +114,19 @@ sub dsigmoid($)
     return $s * (1 - $s);
 }
 
+sub actv_tanh($)
+{
+    my ($sum) = @_;
+    my $e2x = exp(2*$sum);
+    return ($e2x-1)/($e2x+1);
+}
+
+sub dactv_tanh($)
+{
+    my ($sum) = @_;
+    my $t = tanh($sum);
+    return 1-$t*$t;
+}
 
 
 1;
