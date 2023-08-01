@@ -92,8 +92,10 @@ Retrieve or set the layer's learning rate
 
 =cut
 
-sub W { $_[0]->{W} }; sub weights { $_[0]->{W} };
-sub B { $_[0]->{B} }; sub biases  { $_[0]->{B} };
+sub W { $_[0]->{W} };
+sub weights { $_[0]->{W} };
+sub B { $_[0]->{B} };
+sub biases  { $_[0]->{B} };
 sub fn { $_[0]->{fn}->($_[1]) }
 sub df { $_[0]->{df}->($_[1]) }
 sub lr { $_[0]->{lr} }
@@ -140,8 +142,7 @@ the layer to calculate and apply the change in weights.
 
 sub backpropagate
 {
-    my ($self, $inputs, $outputs, $errors) = @_;
-    my $DEBUG = 0;
+    my ($self, $inputs, $outputs, $errors, $DEBUG) = @_;
     my $gradients = PDL->null;          # using a thread_define function requires passing in a null matrix to hold the output
     $DEBUG and print "backprop:inputs => ", $inputs;
     my $sum = $self->W x $inputs + $self->B;

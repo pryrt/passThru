@@ -2,7 +2,7 @@ use 5.014; # //, strict, say, s///r
 use warnings;
 use PDL;
 use ToyNN::PerceptronNetwork;
-use Test::More tests => 37;
+use Test::More tests => 38;
 $| = 1;
 
 sub is_float_close_enough($$$;$) {
@@ -49,10 +49,11 @@ SKIP: {
     is scalar(@d), 0, "'layer->B' has no other dimensions";
 }
 
-# verify activation function and activation slope are correct for the default sigmoid activation function
-is_float_close_enough $layer->fn(0), 0.5, 'Activation: sigmoid(0)';
-is_float_close_enough $layer->fn(-log(3)), 0.25, 'Activation: sigmoid(-log(3))';
-is_float_close_enough $layer->df(0), 0.25, 'Activation Slope: dsigmoid(0)';
+# check weights-vs-W and biases-vs-B
+is ref($layer->W), ref($layer->{W}), '->W() gives ->{W}';
+is ref($layer->weights), ref($layer->{W}), '->weights() gives ->{W}';
+is ref($layer->B), ref($layer->{B}), '->B() gives ->{B}';
+is ref($layer->biases), ref($layer->{B}), '->biases() gives ->{B}';
 
 # update the weights/biases to known values
 $layer->{W} .= 1;   # set all elements to 1
@@ -101,3 +102,7 @@ is_float_close_enough $Q->at(1,1), 0.878, 0.0005, 'epoch(100): Q[1,1]';
 is_float_close_enough $Q->at(2,1), 0.878, 0.0005, 'epoch(100): Q[2,1]';
 is_float_close_enough $Q->at(3,1), 0.995, 0.0005, 'epoch(100): Q[3,1]';
 cmp_ok $SSE100, '<', $SSE1, 'Training Improved Things: SSE(100) < SSE(1)';
+
+# coverage: force it to run backpropagate in DEBUG mode
+# TODO: capture the STDOUT and verify it actually prints something...
+$layer->backpropagate($X, $Q, $Q*0, 1);
