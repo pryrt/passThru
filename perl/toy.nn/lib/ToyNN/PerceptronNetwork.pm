@@ -121,7 +121,7 @@ sub feedforward
 =head2 backpropagate
 
     $Q = $network->feedforward($X);
-    $layer->backpropagate($X, $Q, $TARGET);
+    $layer->backpropagate($X, $TARGET);
 
 Uses gradient descent to backpropagate the output error C<$E> through
 all the layers in the network, to calculate and apply the changes in each
@@ -133,7 +133,7 @@ layer's weights and biases.
 
 sub backpropagate
 {
-    my ($self, $initial_inputs, $final_outputs, $final_target) = @_;
+    my ($self, $initial_inputs, $final_target) = @_;
 
     # need all the intermediate outputs, not just the final outputs, so don't just use feedforward
     my @prop = ();
@@ -152,7 +152,7 @@ sub backpropagate
         $prop[$l]{E} = $E;
         ##### print STDERR "layer#$l: X, Y, E => ", @{$prop[$l]}{qw/X Y E/};
         ##### print STDERR "layer#$l: W,B before backprop => ", $layer->W, $layer->B;
-        $layer->backpropagate( @{$prop[$l]}{qw/X Y E/} );
+        $layer->backpropagate( @{$prop[$l]}{qw/X E/} );
         ##### print STDERR "layer#$l: W,B after  backprop => ", $layer->W, $layer->B;
 
         # see "Calculate the hidden layer errors"

@@ -74,7 +74,7 @@ for(1..100) {
     $Q = $layer->feedforward($X);
     $E = $TARGET - $Q;
     #printf "%-15.15s => %s\n", "SSE($_)", $layer->eSSE($E);
-    $layer->backpropagate($X, $Q, $E);
+    $layer->backpropagate($X, $E);
     if($_==1) {
         is_float_close_enough $Q->at(0,0), 0.731, 0.0005, 'epoch(1): Q[0,0]';
         is_float_close_enough $Q->at(1,0), 0.881, 0.0005, 'epoch(1): Q[1,0]';
@@ -105,4 +105,4 @@ cmp_ok $SSE100, '<', $SSE1, 'Training Improved Things: SSE(100) < SSE(1)';
 
 # coverage: force it to run backpropagate in DEBUG mode
 # TODO: capture the STDOUT and verify it actually prints something...
-$layer->backpropagate($X, $Q, $Q*0, 1);
+$layer->backpropagate($X, $Q*0, 1);

@@ -134,7 +134,7 @@ sub feedforward
 
     $Q = $layer->feedforward($X);
     $E = $TARGET - $Q;
-    $layer->backpropagate($X, $Q, $E);
+    $layer->backpropagate($X, $E);
 
 Uses gradient descent to backpropagate the output error C<$E> through
 the layer to calculate and apply the change in weights.
@@ -143,7 +143,7 @@ the layer to calculate and apply the change in weights.
 
 sub backpropagate
 {
-    my ($self, $inputs, $outputs, $errors, $DEBUG) = @_;
+    my ($self, $inputs, $errors, $DEBUG) = @_;
     my $gradients = PDL->null;          # using a thread_define function requires passing in a null matrix to hold the output
     $DEBUG and print "backprop:inputs => ", $inputs;
     my $sum = $self->W x $inputs + $self->B;

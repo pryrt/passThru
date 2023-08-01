@@ -10,10 +10,9 @@ Inspired by Coding Train videos and code
 ## Notes ##
 
 ### TODO
-
+```
 ☐: TODO | ✓: DONE | ✗: DECIDE_NO
 
-☐ backpropagate improvement: neither layer nor network uses the Q/Y input, so why bother?
 ✓ PerceptronLayer
     ✓ Init
     ✓ Feedforward
@@ -30,9 +29,19 @@ Inspired by Coding Train videos and code
     ✓ test: network.t -- two-layer XOR
 ✗ Consider Bias & Weights combo -- see below; for now, decided NO
 ✓ Add fn()=tanh, df()=d(tanh) and function-chooser
-✓ Coding Challenge: XOR
-☐ Coding Challenge: Doodle Classifier
+✓ backpropagate arguments: remove Q argument from
+    ✓ network
+    ✓ layer
+☐ add ability to save the topology and weights of an entire network
+    (I want to be able to train it once, and use it thereafter)
+☐ Coding Challenges:
+    ✓ Coding Challenge: XOR
+    ☐ Coding Challenge: Doodle Classifier [MAYBE]
+    ☐ Nonagram Solver:
+        ☐ Nonagram engine (handle 5x5, 10x10, 15x15)
+        ☐ Solver ANN
 
+```
 
 
 ### Bias & Weights

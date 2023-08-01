@@ -111,7 +111,7 @@ for(1..100) {
         $SSE0 = $network->L($ll)->eSSE($E);
         is_float_close_enough $SSE0, 1.18, 0.01, 'epoch(0): initial SSE';
     }
-    $network->backpropagate($X, $Q, $TARGET);
+    $network->backpropagate($X, $TARGET);
     if($_==1) {
         is_float_close_enough $Q->at(0,0), 0.269, 0.0005, 'epoch(1): Q[0,0]';
         is_float_close_enough $Q->at(1,0), 0.269, 0.0005, 'epoch(1): Q[1,0]';
