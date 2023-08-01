@@ -2,7 +2,7 @@ use 5.014; # //, strict, say, s///r
 use warnings;
 use PDL;
 use ToyNN::PerceptronLayer;
-use Test::More tests => 12;
+use Test::More tests => 16;
 $| = 1;
 
 sub is_float_close_enough($$$;$) {
