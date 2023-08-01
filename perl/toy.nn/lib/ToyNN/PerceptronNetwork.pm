@@ -4,6 +4,36 @@ use warnings;
 use PDL;
 use ToyNN::PerceptronLayer;
 
+=pod
+
+=encoding utf8
+
+=head1 NAME
+
+ToyNN::PerceptronNetwork - a multi-layer network of Perceptron neurons
+
+=head1 SYNPOSIS
+
+    # normally used instead through PerceptronNetwork object instead
+    my $network = ToyNN::PerceptronNetwork::->new($nIn, $nHidden, ..., $nHiddenN, $nOut);
+
+=head1 DESCRIPTION
+
+Uses PDL ndarrays (or "piddles" as they used to be called) for propagating
+and backpropagating data through one or more layer of Perceptron neurons.
+
+=head1 METHODS
+
+=head2 new
+
+    my $network = ToyNN::PerceptronLayer::->new($nIn, $nOut); # 1 output layer
+    my $network = ToyNN::PerceptronLayer::->new($nIn, $nHidden, $nOut); # 1 hidden layer, 1 output layer
+    my $network = ToyNN::PerceptronLayer::->new($nIn, $nHidden, ..., $nHiddenN, $nOut); # N hidden layer, 1 output layer
+
+Define the number of inputs to the network and the number of outputs for each of the 0 or more hidden layers, and the
+number of outputs for the network.
+
+=cut
 
 sub new
 {
@@ -20,11 +50,27 @@ sub new
     return $self;
 }
 
+=head2 nLayers
+
+    print $network->nLayers();  # similar to scalar(@array)
+
+Returns number of layers in the network
+
+=cut
+
 sub nLayers
 {
     my ($self) = @_;
     return scalar @{ $self->{layers}};
 }
+
+=head2 lastLayerIndex
+
+    print $network->lastLayerIndex();  # similar to $#array
+
+Returns the index of the last layers in the network.
+
+=cut
 
 sub lastLayerIndex
 {
@@ -32,11 +78,31 @@ sub lastLayerIndex
     return $self->nLayers - 1;
 }
 
+=head2 L
+
+    for my $i ( 0 .. $network->lastLayerIndex ) {
+        my $layer = $network->L($i);
+        ...
+    }
+
+Easily access a single layer.
+
+=cut
+
 sub L
 {
     my ($self, $lNum) = @_;
     return $self->{layers}[$lNum];
 }
+
+=head2 feedforward
+
+    my $Q = $network->feedforward($X);
+
+Activates the each layer of the network in sequence, including performing the
+weighted sum, adding biases, and passing through the activation function for each layer.
+
+=cut
 
 sub feedforward
 {
@@ -49,6 +115,19 @@ sub feedforward
     }
     return $Y;
 }
+
+=head2 backpropagate
+
+    $Q = $network->feedforward($X);
+    $layer->backpropagate($X, $Q, $TARGET);
+
+Uses gradient descent to backpropagate the output error C<$E> through
+all the layers in the network, to calculate and apply the changes in each
+layer's weights and biases.
+
+=cut
+
+
 
 sub backpropagate
 {
@@ -84,6 +163,23 @@ sub backpropagate
         $E = $Eh;   # the error at the input of this layer will be the error at the output of the previous layer (if there is a previous layer)
     }
 }
+
+=head1 AUTHOR
+
+Peter C. Jones C<E<lt>petercj AT cpan DOT orgE<gt>>
+
+=head1 COPYRIGHT
+
+Copyright (C) 2023 Peter C. Jones
+
+=head1 LICENSE
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of either: the GNU General Public License as published
+by the Free Software Foundation; or the Artistic License.
+See L<http://dev.perl.org/licenses/> for more information.
+
+=cut
 
 1;
 

@@ -13,6 +13,7 @@ Inspired by Coding Train videos and code
 
 ☐: TODO | ✓: DONE | ✗: DECIDE_NO
 
+☐ backpropagate improvement: neither layer nor network uses the Q/Y input, so why bother?
 ✓ PerceptronLayer
     ✓ Init
     ✓ Feedforward

@@ -129,7 +129,7 @@ sub feedforward
 
 =head2 backpropagate
 
-    $Q = $layer->feedforward($Q);
+    $Q = $layer->feedforward($X);
     $E = $TARGET - $Q;
     $layer->backpropagate($X, $Q, $E);
 
@@ -318,6 +318,23 @@ sub dactv_tanh($)
     my $t = tanh($sum);
     return 1-$t*$t;
 }
+
+=head1 AUTHOR
+
+Peter C. Jones C<E<lt>petercj AT cpan DOT orgE<gt>>
+
+=head1 COPYRIGHT
+
+Copyright (C) 2023 Peter C. Jones
+
+=head1 LICENSE
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of either: the GNU General Public License as published
+by the Free Software Foundation; or the Artistic License.
+See L<http://dev.perl.org/licenses/> for more information.
+
+=cut
 
 1;
 
