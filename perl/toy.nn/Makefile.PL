@@ -6,7 +6,7 @@ my %mm_args = (
     'NAME'          => 'ToyNN',
     'AUTHOR'        => 'Peter C. jones <petercj AT cpan.org>',
     'ABSTRACT'      => 'ToyNN - Toy implementation of a multi-layer Perceptron neural network',
-    'VERSION'       => '9.999',
+    'VERSION'       => '0.001',
     'PREREQ_PM'     => {
         'PDL'               => 2.025,
         'Exporter'          => 5.57,    # needed for `use Exporter qw(import);` notation
@@ -149,7 +149,7 @@ LICENSE :: lib/ToyNN/PerceptronNetwork.pm Makefile.PL
 	pod2text LICENSE.pod LICENSE
 	$(RM_F) LICENSE.pod
 
-docs :: manifest populateversion populatecopyright README.md LICENSE
+docs :: realclean manifest populateversion populatecopyright README.md LICENSE
 
 POSTAMBLE
 }

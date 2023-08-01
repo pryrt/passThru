@@ -1,8 +1,9 @@
-package ToyNN::PerceptronLayer 0.001;
+package ToyNN::PerceptronLayer;
 use 5.014; # //, strict, say, s///r
 use warnings;
 use PDL;
 
+our $VERSION = '0.001'; # auto-populated from Makefile.PL
 
 =pod
 

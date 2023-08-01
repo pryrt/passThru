@@ -14,8 +14,10 @@
 # pcj
 ^.svn/
 ^.github/
+^cover_db/
 ^.gitignore$
 ^.gitattributes$
+^README.pod$
 ^MYMETA
 ^\.?travis\.yml$
 ^\.?appveyor\.yml$
