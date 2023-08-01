@@ -15,7 +15,7 @@ my $X = pdl [[ 0, 0, 1, 1],[ 0, 1, 0, 1]];
 # define a target output for the trained version
 my $TARGET = pdl
 [
-    [map {ToyNN::PerceptronLayer::sigmoid($_)} -5,5,5,-5],
+    [map {ToyNN::PerceptronLayer::actv_sig($_)} -5,5,5,-5],
 ];
 
 # create a network with two layers
@@ -43,7 +43,7 @@ my $sse = $network->L($ll)->oSSE($output, $TARGET);
 print "Initial SSE => ", $sse;
 
 # next, do a single training epoch -- start without any of the complications of multiple layers, but add that in later
-$network->backpropagate($X, $output, $TARGET);
+$network->backpropagate($X, $TARGET);
 
 $output = $network->feedforward($X);
 print "Updated Output => ", $output;
@@ -52,7 +52,7 @@ $sse = $network->L($ll)->oSSE($output, $TARGET);
 print "Updated SSE => ", $sse;
 
 # another 99 epochs
-$network->backpropagate($X, $output, $TARGET) for 1..99;
+$network->backpropagate($X, $TARGET) for 1..99;
 
 $output = $network->feedforward($X);
 print "100th Output => ", $output;

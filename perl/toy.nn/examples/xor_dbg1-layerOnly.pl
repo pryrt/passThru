@@ -37,8 +37,8 @@ my $err1 = $target->slice('3,:') - $out1;
 print "TARGET => ",
 my $TARGET = pdl
 [
-    [map {ToyNN::PerceptronLayer::sigmoid($_)} -15,-5,-5,5],
-    [map {ToyNN::PerceptronLayer::sigmoid($_)} -5,5,5,15]
+    [map {ToyNN::PerceptronLayer::actv_sig($_)} -15,-5,-5,5],
+    [map {ToyNN::PerceptronLayer::actv_sig($_)} -5,5,5,15]
 ];
 my $X = $xcols->copy();
 my $XT = $xcols->transpose();
@@ -53,7 +53,7 @@ for(1..100) {
     #print "ERR             => ",
     my $E = $TARGET - $Q;
     printf "%-15.15s => %s\n", "SSE($_)", $layer->eSSE($E);
-    $layer->backpropagate($X, $Q, $E);
+    $layer->backpropagate($X, $E);
     #print "updated weights & biases => ", $layer->W, $layer->B;
 }
 print "final weights & biases => ", $layer->W, $layer->B;
