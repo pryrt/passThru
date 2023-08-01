@@ -28,7 +28,7 @@ Inspired by Coding Train videos and code
     ✓ Spreadsheet: add another tab, this time doing a two-layer XOR, not just the AND and OR components for the hidden layer
     ✓ test: network.t -- two-layer XOR
 ✗ Consider Bias & Weights combo -- see below; for now, decided NO
-☐ Add fn()=tanh, df()=d(tanh) and function-chooser
+✓ Add fn()=tanh, df()=d(tanh) and function-chooser
 ✓ Coding Challenge: XOR
 ☐ Coding Challenge: Doodle Classifier
 

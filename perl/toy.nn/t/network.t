@@ -24,7 +24,7 @@ my $X = pdl [[ 0, 0, 1, 1],[ 0, 1, 0, 1]];
 # define a target output for the trained version
 my $TARGET = pdl
 [
-    [map {ToyNN::PerceptronLayer::sigmoid($_)} -5,5,5,-5],
+    [map {ToyNN::PerceptronLayer::actv_sig($_)} -5,5,5,-5],
 ];
 
 # create a network with two layers

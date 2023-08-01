@@ -16,8 +16,8 @@ sub new
         n => $nOut,
         W => ones($nIn, $nOut),      #random($nIn, $nOut),           # one column per input, one row per output
         B => ones($nOut)->transpose, #random($nOut)->transpose(),    # one column, one row per output
-        fn => \&sigmoid,
-        df => \&dsigmoid,
+        fn => \&actv_sig,
+        df => \&dactv_sig,
         lr => 0.01, # learning_rate
     }, $class;
 
@@ -49,8 +49,8 @@ sub backpropagate
     $DEBUG and print "backprop:inputs => ", $inputs;
     my $sum = $self->W x $inputs + $self->B;
     $DEBUG and print "backprop:sum    => ", $sum;
-    this_df($sum, $gradients);       # Coding train used dsigmoid(outputs) because they did d(s(x)) = s(x)*(1-s(x)), so they passed in the known outputs
-    $DEBUG and print "dsigmoid => ", $gradients;
+    this_df($sum, $gradients);       # Coding train used dactv_sig(outputs) because they did d(s(x)) = s(x)*(1-s(x)), so they passed in the known outputs
+    $DEBUG and print "gradient => ", $gradients;
     $DEBUG and print "backprop:errors => ", $errors;
     $gradients *= $errors;
     $DEBUG and print "element-multiplied by errors => ", $gradients;
@@ -99,18 +99,48 @@ sub iSSE
     return (($targets - $outputs)**2)->sum();
 }
 
-sub sigmoid($)
+sub set_activation
+{
+    my ($self, $act, $dact) = @_;
+    my $usg = <<~'EOD';
+        set_activation usage:
+            $layer->set_activation($string);            # arg must be in qw/sigmoid tanh/
+          or
+            $layer->set_activation(\&fn, \&df)          # args must be coderefs
+        EOD
+    if(!defined $act) {
+        die $usg;
+    }
+    if("$act" eq 'sigmoid') {
+        $self->{fn} = \&actv_sig;
+        $self->{df} = \&dactv_sig;
+        return 1;
+    }
+    if("$act" eq 'tanh') {
+        $self->{fn} = \&actv_tanh;
+        $self->{df} = \&dactv_tanh;
+        return 2;
+    }
+    if((ref($act)eq'CODE') && (ref($dact//{})eq'CODE')) {
+        $self->{fn} = $act;
+        $self->{df} = $dact;
+        return -1;
+    }
+    die $usg;
+}
+
+sub actv_sig($)
 {
     my ($sum) = @_;
-    #print "sigmoid($sum) = ", 1 / (1 + exp(-$sum)), "\n";
+    #print "actv_sig($sum) = ", 1 / (1 + exp(-$sum)), "\n";
     return 1 / (1 + exp(-$sum));
 }
 
-sub dsigmoid($)
+sub dactv_sig($)
 {
     my ($sum) = @_;
-    my $s = sigmoid($sum);
-    #print "dsigmoid($sum) = $s(1-$s) = ", $s*(1-$s), "\n";
+    my $s = actv_sig($sum);
+    #print "dactv_sig($sum) = $s(1-$s) = ", $s*(1-$s), "\n";
     return $s * (1 - $s);
 }
 
