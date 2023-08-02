@@ -48,8 +48,8 @@ sub new
 
     my $self = bless {
         n => $nOut,
-        W => ones($nIn, $nOut),      #random($nIn, $nOut),           # one column per input, one row per output
-        B => ones($nOut)->transpose, #random($nOut)->transpose(),    # one column, one row per output
+        W => random($nIn, $nOut)*2-1,           #ones($nIn, $nOut),      #random($nIn, $nOut),           # one column per input, one row per output
+        B => random($nOut)->transpose()*2-1,    #ones($nOut)->transpose, #random($nOut)->transpose(),    # one column, one row per output
         fn => \&actv_sig,
         df => \&dactv_sig,
         lr => 0.01, # learning_rate

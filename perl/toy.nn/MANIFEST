@@ -1,7 +1,6 @@
 examples/ManualTrainingExamples.ods
-examples/matrix_mult_and_broadcast.pl
+examples/nono.pl
 examples/xor.pl
-examples/xor_dbg1-layerOnly.pl
 lib/ToyNN/PerceptronLayer.pm
 lib/ToyNN/PerceptronNetwork.pm
 LICENSE
