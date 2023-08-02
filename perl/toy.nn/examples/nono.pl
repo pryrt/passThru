@@ -43,19 +43,22 @@ for (1 .. 5) {
 }
 #dd { Xt => \@aXt, Tt => \@aTt };
 
+use Time::HiRes qw/time/;
 my $network = ToyNN::PerceptronNetwork::->new($nIn, $nHid, $nOut);
 my $ll = $network->lastLayerIndex;
-print "X => ", my $X = pdl(\@aXt)->transpose / $w;
-print "T => ", my $T = pdl(\@aTt)->transpose;
-print "Q => ", my $Q = $network->feedforward($X);
-print "SSE => ", $network->L($ll)->oSSE($Q, $T), "\n";
-print "W => ", $network->L($ll)->weights;
-print "B => ", $network->L($ll)->biases;
-<STDIN>;
-$network->backpropagate($X, $T);
-print "Q2 => ", $Q = $network->feedforward($X);
-print "SSE2 => ", $network->L($ll)->oSSE($Q, $T), "\n";
-print "W2 => ", $network->L($ll)->weights;
-print "B2 => ", $network->L($ll)->biases;
+my $X = pdl(\@aXt)->transpose / $w;
+my $T = pdl(\@aTt)->transpose;
+my $Q = $network->feedforward($X);
+my $perLoop = 100;
+my $cnt = 0;
+my $t0 = time;
+printf "%-12.1f SSE(%06d) => %6.3f\n", (time-$t0), $cnt * $perLoop, $network->L($ll)->oSSE($Q, $T);
+for $cnt ( 1 .. 100 ) {
+    $network->backpropagate($X, $T) for 1..$perLoop;
+    $Q = $network->feedforward($X);
+
+    printf "%-12.1f SSE(%06d) => %6.3f, max|err| = %6.3f\n", (time-$t0), $cnt * $perLoop, $network->L($ll)->oSSE($Q, $T), my $maxerr = ($T - $Q)->abs()->max();
+    last if $maxerr < 0.01;
+}
 
 __END__
