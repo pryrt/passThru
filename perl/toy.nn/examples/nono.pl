@@ -18,7 +18,7 @@ my $nOut = $w*$w;
 my $nHid = $nIn + $nOut;
 
 my (@aXt, @aTt);  # input and target AoA (will create $X and $T PDLs from their transposes
-for (1 .. 5) {
+for (1 .. 100) {
     my $game = App::NonogramGameEngine->createRandomBoard($w,$w);
     my @x;
     for my $r ( 0 .. $w-1 ) {
@@ -58,7 +58,7 @@ for $cnt ( 1 .. 100 ) {
     $Q = $network->feedforward($X);
 
     printf "%-12.1f SSE(%06d) => %6.3f, max|err| = %6.3f\n", (time-$t0), $cnt * $perLoop, $network->L($ll)->oSSE($Q, $T), my $maxerr = ($T - $Q)->abs()->max();
-    last if $maxerr < 0.01;
+    last if $maxerr < 0.1;
 }
 
 __END__
