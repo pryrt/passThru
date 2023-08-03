@@ -18,6 +18,31 @@ my $nOut = $w*$w;
 # no clue how many hidden layers or how many neurons per hidden layer; for now, guess 1 layer with more nodes than inputs or outputs
 my $nHid = $nIn + $nOut;
 
+# after trying a single hidden layer, it wouldn't train very generically;
+#   try a second hidden layer, to see if it gets better / more generic.  didn't seem to
+#   third layer, maybe?  And train with a lot more
+
+my ($X,$T) = make_games(100);
+my $network = ToyNN::PerceptronNetwork::->new($nIn, $nHid, $nHid, $nHid, $nOut);
+my $ll = $network->lastLayerIndex;
+my $Q = $network->feedforward($X);
+my $perLoop = 10;
+my $cnt = 0;
+my $t0 = time;
+printf "%-12.1f SSE(%06d) => %6.3f\n", (time-$t0), $cnt * $perLoop, $network->L($ll)->oSSE($Q, $T);
+for $cnt ( 1 .. 1000 ) {
+    $network->backpropagate($X, $T) for 1..$perLoop;
+    $Q = $network->feedforward($X);
+
+    printf "%-12.1f SSE(%06d) => %6.3f, max|err| = %6.3f\n", (time-$t0), $cnt * $perLoop, $network->L($ll)->oSSE($Q, $T), my $maxerr = ($T - $Q)->abs()->max();
+    last if $maxerr < 0.1;
+}
+
+my ($Xtest, $Ttest) = make_games(100);
+$Q = $network->feedforward($Xtest);
+printf "%-12.1f SSE(%6.6s) => %6.3f, max|err| = %6.3f\n", (time-$t0), 'test', $network->L($ll)->oSSE($Q, $Ttest), my $maxerr = ($Ttest - $Q)->abs()->max();
+
+
 sub make_games {
     my ($max) = @_;
     my $X = PDL->null;
@@ -49,26 +74,5 @@ sub make_games {
     #dd { Xt => \@aXt, Tt => \@aTt };
     return $X,$T;
 }
-
-my ($X,$T) = make_games(10);
-my $network = ToyNN::PerceptronNetwork::->new($nIn, $nHid, $nOut);
-my $ll = $network->lastLayerIndex;
-my $Q = $network->feedforward($X);
-my $perLoop = 10;
-my $cnt = 0;
-my $t0 = time;
-printf "%-12.1f SSE(%06d) => %6.3f\n", (time-$t0), $cnt * $perLoop, $network->L($ll)->oSSE($Q, $T);
-for $cnt ( 1 .. 100 ) {
-    $network->backpropagate($X, $T) for 1..$perLoop;
-    $Q = $network->feedforward($X);
-
-    printf "%-12.1f SSE(%06d) => %6.3f, max|err| = %6.3f\n", (time-$t0), $cnt * $perLoop, $network->L($ll)->oSSE($Q, $T), my $maxerr = ($T - $Q)->abs()->max();
-    last if $maxerr < 0.1;
-}
-
-my ($Xtest, $Ttest) = make_games(10);
-$Q = $network->feedforward($Xtest);
-printf "%-12.1f SSE(%6.6s) => %6.3f, max|err| = %6.3f\n", (time-$t0), 'test', $network->L($ll)->oSSE($Q, $Ttest), my $maxerr = ($Ttest - $Q)->abs()->max();
-
 
 __END__
