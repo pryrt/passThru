@@ -14,6 +14,7 @@ use Data::Dump;
 
 use myQuadTree;
 
-my $outer = myQuadTree::Rectangle(0,0,1,1);
-my $qtree = myQuadTree($outer, 4);
+my $outer = myQuadTree::Rectangle(0,0,1,1); # step4
+my $qtree = myQuadTree($outer, 4);          # step4
+$qtree->addItemAtPoint(\"dummyItem1", sqrt(.5), sqrt(.5));  # step5
 dd $qtree;

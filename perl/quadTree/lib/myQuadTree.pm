@@ -20,9 +20,33 @@ sub new
     my $self = bless {
         boundary => $boundary // croak("boundary region is required"),
         capacity => $capacity // croak("tree node's capacity is required"),
-        points   => [(undef) x $capacity],
+        items    => [],
         divided  => undef,
     }, $class;
+}
+
+# getters
+sub boundary { return $_[0]->{boundary} }
+sub capacity { return $_[0]->{capacity} }
+sub items    { return $_[0]->{items} }
+
+# lvalue: simple getter/setter
+sub divided : lvalue  { $_[0]->{divided} }
+
+# step 9 required a count of the points/items in the current tree node; I want to abstract that
+sub countItems
+{
+    my ($self) = @_;
+    scalar @{ $self->{items} };
+}
+
+sub addItemAtPoint
+{
+    my ($self, $item, $ptx, $pty) = @_; # step 7
+    if($self->countItems < $self->capacity) {
+        my $pointItem = Item($item, $ptx, $pty);
+        push @{$self->items}, $pointItem;
+    }
 }
 
 1;
