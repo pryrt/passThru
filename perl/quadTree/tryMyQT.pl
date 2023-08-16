@@ -22,6 +22,13 @@ dd $qtree;
 
 __END__
 
+step 17: already implemented capacity
+step 18: show() is being skipped in mine
+step 19: random points to test out show(), so ignored in mine
+step 20: boundaries to <= and >=, already implemented when I did 16
+step 21: return true/false for insert (aka addItemAtPoint), and use the return-or out of addItemAtPoint
+    -- I had the first part, but not the second
+
 do {
   my $a = bless({
     boundary  => bless({ cx => 0, cy => 0, rx => 1, ry => 1, type => "rectangle" }, "myQuadTree::Region"),

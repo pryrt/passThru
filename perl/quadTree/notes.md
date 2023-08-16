@@ -1,4 +1,4 @@
-QuadTree
+
 So the region is central.
 And the idea _is_ for lookup only within that region.
 

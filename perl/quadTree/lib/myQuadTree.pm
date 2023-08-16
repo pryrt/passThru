@@ -57,11 +57,12 @@ sub addItemAtPoint
         return 1;
     } else {
         $self->divided or $self->subdivide();
-        # now that it's subdivided, let each of the four quadrants decide whether to accept
-        $self->northwest->addItemAtPoint($item, $ptx, $pty);   # at step 14, the point will incorrectly go in all four quadrants
-        $self->northeast->addItemAtPoint($item, $ptx, $pty);   # at step 14, the point will incorrectly go in all four quadrants
-        $self->southwest->addItemAtPoint($item, $ptx, $pty);   # at step 14, the point will incorrectly go in all four quadrants
-        $self->southeast->addItemAtPoint($item, $ptx, $pty);   # at step 14, the point will incorrectly go in all four quadrants
+        # step 14: now that it's subdivided, let each of the four quadrants decide whether to accept, by running addItemAtPoint in all four quadrants
+        # step 21: switch to using return value and or-short-circuiting to avoid entering it in the same
+        return $self->northwest->addItemAtPoint($item, $ptx, $pty)
+            || $self->northeast->addItemAtPoint($item, $ptx, $pty)
+            || $self->southwest->addItemAtPoint($item, $ptx, $pty)
+            || $self->southeast->addItemAtPoint($item, $ptx, $pty);
     }
 }
 
