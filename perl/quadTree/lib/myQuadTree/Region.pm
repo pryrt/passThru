@@ -48,6 +48,25 @@ sub new
     }, $class;
 }
 
+# getters
+sub cx { $_[0]->{cx} }
+sub cy { $_[0]->{cy} }
+sub rx { $_[0]->{rx} }
+sub ry { $_[0]->{ry} }
+sub type { $_[0]->{type} }
+
+# lvalue getter/setters
 sub myItem : lvalue { $_[0]->{myItem} }
+
+# steps 16 & 20: implement ->contains and make it be true for edges
+sub contains
+{
+    my ($self, $px, $py) = @_;
+    return ($px >= $self->cx - $self->rx)
+        && ($px <= $self->cx + $self->rx)
+        && ($py >= $self->cy - $self->ry)
+        && ($py <= $self->cy + $self->ry)
+    ;
+}
 
 1;

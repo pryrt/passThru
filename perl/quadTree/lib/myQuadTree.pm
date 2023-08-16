@@ -47,6 +47,10 @@ sub countItems
 sub addItemAtPoint
 {
     my ($self, $item, $ptx, $pty) = @_; # step 7
+    if(!$self->boundary->contains($ptx,$pty))
+    {
+        return undef;
+    }
     if($self->countItems < $self->capacity) {
         my $pointItem = Item($item, $ptx, $pty);
         push @{$self->items}, $pointItem;

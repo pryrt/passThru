@@ -28,17 +28,17 @@ do {
     capacity  => 4,
     divided   => 1,
     items     => [
-                   bless({ cx => 0.5, cy => 0.5, myItem => \"dummyItem0", rx => 0, ry => 0, type => "point" }, "myQuadTree::Region"),
-                   bless({ cx => -0.08, cy => -0.71, myItem => \"dummyItem1", rx => 0, ry => 0, type => "point", }, "myQuadTree::Region"),
-                   bless({ cx => -0.99, cy => -0.02, myItem => \"dummyItem2", rx => 0, ry => 0, type => "point", }, "myQuadTree::Region"),
-                   bless({ cx => 0.53, cy => -0.24, myItem => \"dummyItem3", rx => 0, ry => 0, type => "point" }, "myQuadTree::Region"),
+                   bless({ cx => 0.5, cy => 0.5, myItem => \"itm0", rx => 0, ry => 0, type => "point" }, "myQuadTree::Region"),
+                   bless({ cx => -0.2, cy => 0.3, myItem => \"itm1", rx => 0, ry => 0, type => "point" }, "myQuadTree::Region"),
+                   bless({ cx => -0.6, cy => 0.5, myItem => \"itm2", rx => 0, ry => 0, type => "point" }, "myQuadTree::Region"),
+                   bless({ cx => -0.6, cy => -0.5, myItem => \"itm3", rx => 0, ry => 0, type => "point" }, "myQuadTree::Region"),
                  ],
     northeast => bless({
                    boundary => bless({ cx => 0.5, cy => 0.5, rx => 0.5, ry => 0.5, type => "rectangle" }, "myQuadTree::Region"),
                    capacity => 4,
                    divided  => undef,
                    items    => [
-                                 bless({ cx => 0.26, cy => 0.57, myItem => \"dummyItem4", rx => 0, ry => 0, type => "point" }, "myQuadTree::Region"),
+                                 bless({ cx => 0, cy => 0.6, myItem => \"itm4", rx => 0, ry => 0, type => "point" }, "myQuadTree::Region"),
                                ],
                  }, "myQuadTree"),
     northwest => bless({
@@ -46,28 +46,22 @@ do {
                    capacity => 4,
                    divided  => undef,
                    items    => [
-                                 bless({ cx => 0.26, cy => 0.57, myItem => 'fix', rx => 0, ry => 0, type => "point" }, "myQuadTree::Region"),
+                                 bless({ cx => 0, cy => 0.6, myItem => 'fix', rx => 0, ry => 0, type => "point" }, "myQuadTree::Region"),
                                ],
                  }, "myQuadTree"),
     southeast => bless({
                    boundary => bless({ cx => 0.5, cy => -0.5, rx => 0.5, ry => 0.5, type => "rectangle" }, "myQuadTree::Region"),
                    capacity => 4,
                    divided  => undef,
-                   items    => [
-                                 bless({ cx => 0.26, cy => 0.57, myItem => 'fix', rx => 0, ry => 0, type => "point" }, "myQuadTree::Region"),
-                               ],
+                   items    => [],
                  }, "myQuadTree"),
     southwest => bless({
                    boundary => bless({ cx => -0.5, cy => -0.5, rx => 0.5, ry => 0.5, type => "rectangle" }, "myQuadTree::Region"),
                    capacity => 4,
                    divided  => undef,
-                   items    => [
-                                 bless({ cx => 0.26, cy => 0.57, myItem => 'fix', rx => 0, ry => 0, type => "point" }, "myQuadTree::Region"),
-                               ],
+                   items    => [],
                  }, "myQuadTree"),
   }, "myQuadTree");
   $a->{northwest}{items}[0]{myItem} = \${$a->{northeast}{items}[0]{myItem}};
-  $a->{southeast}{items}[0]{myItem} = \${$a->{northeast}{items}[0]{myItem}};
-  $a->{southwest}{items}[0]{myItem} = \${$a->{northeast}{items}[0]{myItem}};
   $a;
 }
