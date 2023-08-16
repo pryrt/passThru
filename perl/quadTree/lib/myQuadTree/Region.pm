@@ -59,6 +59,8 @@ sub type { $_[0]->{type} }
 sub myItem : lvalue { $_[0]->{myItem} }
 
 # steps 16 & 20: implement ->contains and make it be true for edges
+#   if I ever implement the circular region checking from the CodingTrain repo,
+#   I will need a flag of some sort to
 sub contains
 {
     my ($self, $px, $py) = @_;
