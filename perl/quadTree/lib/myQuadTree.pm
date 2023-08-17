@@ -78,4 +78,26 @@ sub subdivide
     $self->divided = 1;
 }
 
+sub query
+{
+    my ($self, $range) = @_;
+    my $found = [];
+    if($self->boundary()->intersects($range)) {
+        for my $p (@{ $self->items }) {
+            if( $range->contains( $p->cx, $p->cy )) {
+                push @$found, $p;
+            }
+        }
+
+        # need to recurse into the quadrants if this node is divided
+        if($self->divided) {
+            push @$found, @{ $self->northwest->query($range) };
+            push @$found, @{ $self->northeast->query($range) };
+            push @$found, @{ $self->southwest->query($range) };
+            push @$found, @{ $self->southeast->query($range) };
+        }
+    }
+    return $found;
+}
+
 1;

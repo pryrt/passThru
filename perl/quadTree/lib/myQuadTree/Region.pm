@@ -60,7 +60,7 @@ sub myItem : lvalue { $_[0]->{myItem} }
 
 # steps 16 & 20: implement ->contains and make it be true for edges
 #   if I ever implement the circular region checking from the CodingTrain repo,
-#   I will need a flag of some sort to
+#   I will need a flag of some sort to decide whether to check rectangle or circle
 sub contains
 {
     my ($self, $px, $py) = @_;
@@ -70,5 +70,18 @@ sub contains
         && ($py <= $self->cy + $self->ry)
     ;
 }
+
+# step 202: implement ->intersects
+#   if I ever implement circular region, I will need a flag to decide whether to check rectangle or circle
+sub intersects
+{
+    my ($self, $range) = @_;
+    return !(   ($range->cx - $range->rx) > ($self->cx + $self->rx)
+            ||  ($range->cx + $range->rx) > ($self->cx - $self->rx)
+            ||  ($range->cy - $range->ry) > ($self->cy + $self->ry)
+            ||  ($range->cy + $range->ry) > ($self->cy - $self->ry)
+    );
+}
+
 
 1;
