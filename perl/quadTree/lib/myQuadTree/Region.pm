@@ -76,10 +76,18 @@ sub contains
 sub intersects
 {
     my ($self, $range) = @_;
-    return !(   ($range->cx - $range->rx) > ($self->cx + $self->rx)
-            ||  ($range->cx + $range->rx) > ($self->cx - $self->rx)
-            ||  ($range->cy - $range->ry) > ($self->cy + $self->ry)
-            ||  ($range->cy + $range->ry) > ($self->cy - $self->ry)
+    printf STDERR "intersects(self<%d±%d, %d±%d>, range<%d±%d, %d±%d> = %d\n",
+        $self->cx, $self->rx, $self->cy, $self->ry,
+        $range->cx, $range->rx, $range->cy, $range->ry,
+            !(  ($range->cx - $range->rx) >= ($self->cx + $self->rx)
+            ||  ($range->cx + $range->rx) <= ($self->cx - $self->rx)
+            ||  ($range->cy - $range->ry) >= ($self->cy + $self->ry)
+            ||  ($range->cy + $range->ry) <= ($self->cy - $self->ry)
+            ) || 0;
+    return !(   ($range->cx - $range->rx) >= ($self->cx + $self->rx)
+            ||  ($range->cx + $range->rx) <= ($self->cx - $self->rx)
+            ||  ($range->cy - $range->ry) >= ($self->cy + $self->ry)
+            ||  ($range->cy + $range->ry) <= ($self->cy - $self->ry)
     );
 }
 
