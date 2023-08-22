@@ -181,6 +181,8 @@ App                                                                             
                                                                                     ;;
                                                                                     ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
+2023-Aug-22: implemented through 207; skipping graphical 208; 209-210 was just bugfixes which I've already incorporated
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
 301: Everything below here is just notes added during the quick runthrough of his collision QuadTree
 His flocking uses Particles, his QuadTree uses Points, so he adds a "user data" element to the QuadTree
     so that there can be a link
