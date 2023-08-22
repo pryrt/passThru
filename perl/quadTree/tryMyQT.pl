@@ -20,7 +20,9 @@ $qtree->addItemAtPoint(\"itm0", 0.5, 0.5);  # step5
 $qtree->addItemAtPoint(\"itm$_", int(-10+rand 20)/10, int(-10 + rand 20)/10) for 1..4;  # step9 : trigger subdivide
 dd $qtree;
 
-my $range = myQuadTree::Rectangle(0.4, 0.4, 1, 1);
+$qtree->addItemAtPoint(\"itm$_", int(4+rand 2)/10, int(4 + rand 2)/10) for 5..9; # 207: add more points within rectangle to verify it finds them all
+
+my $range = myQuadTree::Rectangle(0.4, 0.4, .2, .2);
 my $found = $qtree->query($range);
 dd $found;
 
