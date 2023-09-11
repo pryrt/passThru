@@ -18,10 +18,17 @@ printf "noarg_lret  => 0x%016X\n", noarg_lret();
 
 sub noarg_lret { lreturn_iv(@_ ? @_ : undef); }
 sub myDialog { c_myDialog(@_?@_:0) }
-sub myPrompt($$;$) { $_[2] //= ''; _c_prompt(@_) }
+sub myPrompt($$;$$) { $_[2] //= ''; $_[3] //= sub{}; _c_prompt(@_) }
+sub plDlgProc($$$$) {
+    my ($hwnd, $uMsg, $wParam, $lParam) = @_;
+    state %h = ( 0x0110 => 'WM_INITDIALOG', 0x0111 => 'WM_COMMAND', 0x0010 => 'WM_CLOSE');
+    if(exists $h{$uMsg}) {
+        printf "plDlgProc(0x%016X, 0x%016x, 0x%016x, 0x%016x): %s\n", $hwnd, $uMsg, $wParam, $lParam, $h{$uMsg};
+    }
+}
 
-if(0) {
-    my $r = myPrompt("multiple\nline\nprompt", "this is my title", "this is the default value");
+if(1) {
+    my $r = myPrompt("multiple\nline\nprompt", "this is my title", "this is the default value", \&plDlgProc);
     printf "result in perl: %s\n", $r//'<undef>';
 }
 
@@ -153,7 +160,7 @@ void call_perlsub_from_c(char* cstr_fnname, SV* svp_fnname, SV* svp_cref)
     printf("end of call_perlsub_from_c()\n\n", cstr_fnname); fflush(stdout);
 }
 
-
+static SV* keepSub = (SV*)NULL;
 
 // https://app.assembla.com/spaces/pryrt/subversion/source/HEAD/trunk/c_cpp/misc/manualDialog.c
 // => https://stackoverflow.com/questions/2270196/c-win32api-creating-a-dialog-box-without-resource
@@ -309,16 +316,37 @@ INT_PTR CALLBACK Debug_DlgProc (
     WPARAM wParam,
     LPARAM lParam)
 {
+    if (1 && (keepSub != (SV*)NULL)) {
+        // per #passing-parameters
+        dSP;
+        ENTER;
+        SAVETMPS;
+        PUSHMARK(SP);
+        EXTEND(SP,4);
+        PUSHs(sv_2mortal(newSViv(hwnd)));
+        PUSHs(sv_2mortal(newSViv(uMsg)));
+        PUSHs(sv_2mortal(newSViv(wParam)));
+        PUSHs(sv_2mortal(newSViv(lParam)));
+        PUTBACK;
+
+        call_sv(keepSub, G_DISCARD);
+
+        FREETMPS;
+        LEAVE;
+    }
+
     switch (uMsg)
     {
     case WM_INITDIALOG:
         {
+    fprintf(stderr, "WARN: dlg(0x%016lx, 0x%016lx, 0x%016lx, 0x%016lx): WM_INITDIALOG\n", hwnd, uMsg, wParam, lParam);
             onInitDlg(hwnd);
         }
         break;
 
     case WM_COMMAND:
         {
+    fprintf(stderr, "WARN: dlg(0x%016lx, 0x%016lx, 0x%016lx, 0x%016lx): WM_COMMAND\n", hwnd, uMsg, wParam, lParam);
             UINT wId = LOWORD(wParam);
             onCloseDlg(hwnd, wId==IDOK);
             if (wId == IDOK || wId == IDCANCEL)
@@ -330,10 +358,31 @@ INT_PTR CALLBACK Debug_DlgProc (
 
     case WM_CLOSE:
         {
+    fprintf(stderr, "WARN: dlg(0x%016lx, 0x%016lx, 0x%016lx, 0x%016lx): WM_CLOSE\n", hwnd, uMsg, wParam, lParam);
             EndDialog(hwnd, IDCANCEL);
         }
         break;
     }
+
+    // if (1 && (keepSub != (SV*)NULL)) {
+    //     // per #passing-parameters
+    //     dSP;
+    //     ENTER;
+    //     SAVETMPS;
+    //     PUSHMARK(SP);
+    //     EXTEND(SP,4);
+    //     PUSHs(sv_2mortal(newSViv(hwnd)));
+    //     PUSHs(sv_2mortal(newSViv(uMsg)));
+    //     PUSHs(sv_2mortal(newSViv(wParam)));
+    //     PUSHs(sv_2mortal(newSViv(lParam)));
+    //     PUTBACK;
+    //
+    //     call_sv(keepSub, G_DISCARD);
+    //
+    //     FREETMPS;
+    //     LEAVE;
+    // }
+
 
     return FALSE;
 }
@@ -394,18 +443,25 @@ void onCloseDlg(HWND hwnd, bool is_ok)
     }
 }
 
-void _c_prompt(char* str_prompt, char* str_title, char* str_default)
+void _c_prompt(char* str_prompt, char* str_title, char* str_default, SV* svp_cref)
 {
     printf("prompt='%s', title='%s', default='%s'\n", str_prompt, str_title, str_default);
     gs_dlgPrompt = str_prompt;
     gs_dlgTitle = str_title;
     gs_dlgDefault = str_default;
+    if (keepSub == (SV*)NULL) {
+        /* first time, so create a new SV as a copy of the argument */
+        keepSub = newSVsv(svp_cref);
+    } else {
+        /* been here before, so just overwrite the internals */
+        SvSetSV(keepSub, svp_cref);
+    }
     LRESULT r = DoDebugDialog((HWND)0, NULL);
     // printf("result = %d, string\n%s\n", r, gs_dlgRetval);
     // fflush(stdout);
     Inline_Stack_Vars;
     Inline_Stack_Reset;
-    // TODO: if r==1 then push the gs_dlgRetval, else push the undef as below
+    // if good result, then push the gs_dlgRetval, else push the undef as retval
     if(r==1 && gs_dlgRetval && gs_dlgRetval[0]) {
         Inline_Stack_Push(newSVpvf("%s", gs_dlgRetval));
     } else {
@@ -493,3 +549,15 @@ svn commit -m "(1) correctly return the string to perl! (2) experiment with call
 → r72
 
 svn commit -m "switching to call_sv fixed it" → r73
+
+2023-Sep-11: pass in a coderef as last argument to _c_prompt(); store it according to the keepSub rules in perlcall;
+it appears to be able to call it, but when it does call the plDlgProc, it messes up the c process... I don't know whether
+I corrupted the stack, or whether something else is going wrong.
+Try moving it to the end rather than the beginning; with both, there was a compiler error; with just the end, it did the same
+as before... but then I noticed I had two PUSHMARK() macro calls.  Fix that, and it works either after or before
+
+So it's good to know that it works there.  However, for just the prompt capability, which is the core of what I want,
+I don't need a perl-based callback; I can just handle everything in the Inline::C -> XS, which will hopefully then
+allow me to get rid of the Win32::GUI dependency for Win32::Mechanize::NotepadPlusPlus (my first goal)
+
+git commit -a -m "c DlgProc can call plDlgProc" -m "I've done enough debug" -m "next step is to clone this to a -dbg variant" -m "then start stripping out debug stuff, and focus this on the simple prompt interface"
