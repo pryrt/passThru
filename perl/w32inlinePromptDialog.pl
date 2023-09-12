@@ -6,161 +6,41 @@ $|=1;
 
 #use Inline C => Config => CLEAN_AFTER_BUILD => 0;   # uncomment to keep the compiled version
 use Inline C => 'DATA';
-# hw();
-print wrapped("Hello, World"), "\n";
-noret("Hello, World");
-#noarg();
-print  "sizes       => ", sizes(5), "\n";
-print  "list        => (", join(';', retlist(2)), ")\n";
-printf "lret        => 0x%016X\n", lret(undef);
-printf "lretiv      => 0x%016X\n", lreturn_iv(undef);
-printf "noarg_lret  => 0x%016X\n", noarg_lret();
 
-sub noarg_lret { lreturn_iv(@_ ? @_ : undef); }
-sub myDialog { c_myDialog(@_?@_:0) }
-sub myPrompt($$;$$) { $_[2] //= ''; $_[3] //= sub{}; _c_prompt(@_) }
-sub plDlgProc($$$$) {
-    my ($hwnd, $uMsg, $wParam, $lParam) = @_;
-    state %h = ( 0x0110 => 'WM_INITDIALOG', 0x0111 => 'WM_COMMAND', 0x0010 => 'WM_CLOSE');
-    if(exists $h{$uMsg}) {
-        printf "plDlgProc(0x%016X, 0x%016x, 0x%016x, 0x%016x): %s\n", $hwnd, $uMsg, $wParam, $lParam, $h{$uMsg};
-    }
-}
+sub myPrompt($$;$$) { $_[2] //= ''; _c_prompt(@_) }
 
-if(1) {
-    my $r = myPrompt("multiple\nline\nprompt", "this is my title", "this is the default value", \&plDlgProc);
-    printf "result in perl: %s\n", $r//'<undef>';
-}
-
-sub perlsub2call {print "this is the perlsub2call()\n"; }
-call_perlsub_from_c("perlsub2call", "perlsub2call", \&perlsub2call);
+my $r = myPrompt("multiple\nline\nprompt", "this is my title", "this is the default value");
+printf "myPrompt() => result in perl: %s\n", $r//'<undef>';
 
 __DATA__
 
 __C__
 
-void hw(void) {
-    printf("Hello, World\n");
-    fflush(stdout);
-}
-
-SV* wrapped(char* msg) {
-    char ch_out[256] = "Fake Out";
-    size_t len;
-    len = strlen(msg);
-    return(newSVpvf("%s", ch_out));
-}
-
-void noret(char* msg) {
-    printf("%s\n", msg);
-    fflush(stdout);
-    return;
-}
-
-void noarg(void) {
-    printf("%s\n", "My Message");
-    fflush(stdout);
-    return;
-}
-
-#define print_sizeof(x) printf("sizeof(%s) = %d\n", #x, sizeof(x))
-int sizes(int input) {
-    printf("sizeof(%s) = %d\n", "int", sizeof(int));
-    print_sizeof(int);
-    print_sizeof(long);
-    print_sizeof(long long);
-    print_sizeof(LRESULT);
-    print_sizeof(HWND);
-    print_sizeof(IV);
-    print_sizeof(SV);
-    // https://learn.microsoft.com/en-us/cpp/cpp/char-wchar-t-char16-t-char32-t?view=msvc-170
-    //  comparing sizes and notations for char, wchar_t, char16_t, and char32_t
-    //
-    print_sizeof(char);
-    print_sizeof('a');
-    print_sizeof(wchar_t);      // native "wide": for MS, it's 16bit (2byte) UTF16-LE (Windows internal native type)
-    print_sizeof(L'a');         // the L prefix to a character or string makes it wchar_t
-    print_sizeof(u'a');         // the u prefix makes it char16_t
-    print_sizeof(U'a');         // the U prefix makes it char32_t
-    //                          // wchar_t, char16_t, and char32_t are all "wide strings", though some people use "wide string" only for wchar_t
-    //                          // char and char8_t are "narrow strings", even if they are used for storing utf8 sequences
-    fflush(stdout);
-    return(0);
-}
-
-// https://perldoc.perl.org/perlcall#EXAMPLES   -- this is the section where I figured out how to return a list,
-// specifically, in https://perldoc.perl.org/perlcall#Returning-a-List-of-Values
-//      actually, no it's not; I don't see the Inline_Stack in the perlapi or perlcall or perlguts; where did I get those?
-//      using Google Advanced search on perldoc => https://metacpan.org/pod/Inline::C#THE-INLINE-STACK-MACROS
-//          so they are Inline::C macros!
-//      https://metacpan.org/dist/Inline-C/view/lib/Inline/C/Cookbook.pod#Multiple-Return-Values => this is probably really
-//          where I got the sequence
-// The `newSV*()` are in https://perldoc.perl.org/perlapi
-//
-void retlist(int qty) {
-    SV* mysvp;
-    Inline_Stack_Vars;
-    Inline_Stack_Reset;
-    mysvp = newSViv(314);
-    for(int i=0; i<qty; i++)
-        Inline_Stack_Push(mysvp);
-    Inline_Stack_Push(newSViv(qty));
-    mysvp = newSVnv(2.718281828);
-    Inline_Stack_Push(mysvp);
-    mysvp = newSVpvf("printf[%d]", qty);
-    Inline_Stack_Push(mysvp);
-    LRESULT lr = -555;
-    mysvp = newSVuv(lr);
-    Inline_Stack_Push(mysvp);
-    Inline_Stack_Done;
-}
-
-SV* lret(SV* ignore) {
-    LRESULT lr = 0xdeadbeef;
-    return(newSVuv(lr));
-}
-
-IV lreturn_iv(SV* ignore) {
-    LRESULT lr = 0x123456789abcdef0;
-    return((IV)lr);
-}
-
-// aside from the perlcall and perlapi sections mentioned above, see especially
-//  https://perldoc.perl.org/perlapi#CV-Handling
-//  https://perldoc.perl.org/perlcall#THE-CALL_-FUNCTIONS   -- describes call_pv(char*,flag) and call_sv(SV*,flag)
-//  https://perldoc.perl.org/perlcall#FLAG-VALUES           -- the G_XXX constants for the call_pv/sv flags arguments
-//  https://perldoc.perl.org/perlcall#Using-call_sv         -- "Using call_sv" section
-//      -- if I want to save the SV* coderef to be used by some different c-function than the one
-//          that I called from perl, I will need to make a copy of it, not just store the SV*
-//          search for "keepSub" in the "Using call_sv" section to see how to use newSVsv(oldsv) to copy it
-//  The call_argv() appears to be a way to call a perl function with arguments, where the function name
-//      and all the arguments are strings (akin to `main(argc, argv)` having all string arguments)
-//  If you want to call an SV* function with arguments, see the
-//      https://perldoc.perl.org/perlcall#Passing-Parameters for how to pass parameters
-//      by placing the various SV on the stack
-
-void call_perlsub_from_c(char* cstr_fnname, SV* svp_fnname, SV* svp_cref)
-{
-    printf("\nbeginning of call_perlsub_from_c()\n", cstr_fnname); fflush(stdout);
-    printf("first will call_pv(\"%s\") from a cstring\n", cstr_fnname); fflush(stdout);
-    dSP;
-    PUSHMARK(SP);   // per EXAMPLES: No Parameters, Nothing Returned, still need dSP;PUSHMARK(SP);
-    call_pv(cstr_fnname, G_DISCARD|G_NOARGS);
-
-    printf("second will call_sv(\"%s\") from a SV* with the name\n", SvPV_nolen(svp_fnname)); fflush(stdout);
-    SPAGAIN;        // "you must always refresh the local copy using SPAGAIN whenever you make use of the call_* functions or any other Perl internal function"
-    PUSHMARK(SP);
-    call_sv(svp_fnname, G_DISCARD|G_NOARGS);
-
-    printf("third will call_sv(%s)\n", SvPV_nolen(svp_cref)); fflush(stdout);
-    SPAGAIN;        // "you must always refresh the local copy using SPAGAIN whenever you make use of the call_* functions or any other Perl internal function"
-    PUSHMARK(SP);
-    call_sv(svp_cref, G_DISCARD|G_NOARGS);
-
-    printf("end of call_perlsub_from_c()\n\n", cstr_fnname); fflush(stdout);
-}
-
-static SV* keepSub = (SV*)NULL;
+////    #define print_sizeof(x) printf("sizeof(%s) = %d\n", #x, sizeof(x))
+////    int sizes(int input) {
+////        printf("sizeof(%s) = %d\n", "int", sizeof(int));
+////        print_sizeof(int);
+////        print_sizeof(long);
+////        print_sizeof(long long);
+////        print_sizeof(LRESULT);
+////        print_sizeof(HWND);
+////        print_sizeof(IV);
+////        print_sizeof(SV);
+////        // https://learn.microsoft.com/en-us/cpp/cpp/char-wchar-t-char16-t-char32-t?view=msvc-170
+////        //  comparing sizes and notations for char, wchar_t, char16_t, and char32_t
+////        //
+////        print_sizeof(char);
+////        print_sizeof('a');
+////        print_sizeof(wchar_t);      // native "wide": for MS, it's 16bit (2byte) UTF16-LE (Windows internal native type)
+////        print_sizeof(L'a');         // the L prefix to a character or string makes it wchar_t
+////        print_sizeof(u'a');         // the u prefix makes it char16_t
+////        print_sizeof(U'a');         // the U prefix makes it char32_t
+////        //                          // wchar_t, char16_t, and char32_t are all "wide strings",
+////        //                          //      though some people use "wide string" only for wchar_t
+////        //                          // char and char8_t are "narrow strings", even if they are used for storing utf8 sequences
+////        fflush(stdout);
+////        return(0);
+////    }
 
 // https://app.assembla.com/spaces/pryrt/subversion/source/HEAD/trunk/c_cpp/misc/manualDialog.c
 // => https://stackoverflow.com/questions/2270196/c-win32api-creating-a-dialog-box-without-resource
@@ -316,37 +196,16 @@ INT_PTR CALLBACK Debug_DlgProc (
     WPARAM wParam,
     LPARAM lParam)
 {
-    if (1 && (keepSub != (SV*)NULL)) {
-        // per #passing-parameters
-        dSP;
-        ENTER;
-        SAVETMPS;
-        PUSHMARK(SP);
-        EXTEND(SP,4);
-        PUSHs(sv_2mortal(newSViv(hwnd)));
-        PUSHs(sv_2mortal(newSViv(uMsg)));
-        PUSHs(sv_2mortal(newSViv(wParam)));
-        PUSHs(sv_2mortal(newSViv(lParam)));
-        PUTBACK;
-
-        call_sv(keepSub, G_DISCARD);
-
-        FREETMPS;
-        LEAVE;
-    }
-
     switch (uMsg)
     {
     case WM_INITDIALOG:
         {
-    fprintf(stderr, "WARN: dlg(0x%016lx, 0x%016lx, 0x%016lx, 0x%016lx): WM_INITDIALOG\n", hwnd, uMsg, wParam, lParam);
             onInitDlg(hwnd);
         }
         break;
 
     case WM_COMMAND:
         {
-    fprintf(stderr, "WARN: dlg(0x%016lx, 0x%016lx, 0x%016lx, 0x%016lx): WM_COMMAND\n", hwnd, uMsg, wParam, lParam);
             UINT wId = LOWORD(wParam);
             onCloseDlg(hwnd, wId==IDOK);
             if (wId == IDOK || wId == IDCANCEL)
@@ -358,44 +217,12 @@ INT_PTR CALLBACK Debug_DlgProc (
 
     case WM_CLOSE:
         {
-    fprintf(stderr, "WARN: dlg(0x%016lx, 0x%016lx, 0x%016lx, 0x%016lx): WM_CLOSE\n", hwnd, uMsg, wParam, lParam);
             EndDialog(hwnd, IDCANCEL);
         }
         break;
     }
 
-    // if (1 && (keepSub != (SV*)NULL)) {
-    //     // per #passing-parameters
-    //     dSP;
-    //     ENTER;
-    //     SAVETMPS;
-    //     PUSHMARK(SP);
-    //     EXTEND(SP,4);
-    //     PUSHs(sv_2mortal(newSViv(hwnd)));
-    //     PUSHs(sv_2mortal(newSViv(uMsg)));
-    //     PUSHs(sv_2mortal(newSViv(wParam)));
-    //     PUSHs(sv_2mortal(newSViv(lParam)));
-    //     PUTBACK;
-    //
-    //     call_sv(keepSub, G_DISCARD);
-    //
-    //     FREETMPS;
-    //     LEAVE;
-    // }
-
-
     return FALSE;
-}
-
-void printf_bytes(LPVOID ptr, size_t sz)
-{
-    char* cp = (char*)ptr;
-    for(size_t i=0; i<sz; i++) {
-        if(0==i%16) printf("%-8d", i);
-        printf("\\x%02X", cp[i]&0xFF);
-        if(15==i%16) printf("\n");
-    }
-    printf("\n");fflush(stdout);
 }
 
 LRESULT DoDebugDialog(HWND hwndApp, LPVOID pvData)
@@ -403,18 +230,7 @@ LRESULT DoDebugDialog(HWND hwndApp, LPVOID pvData)
    HINSTANCE hinst = hwndApp ? (HINSTANCE)(LONG_PTR)GetWindowLongPtr(hwndApp, GWLP_HINSTANCE)
                              : (HINSTANCE)GetModuleHandle(NULL);
 
-   printf_bytes(&g_DebugDlgTemplate, sizeof(g_DebugDlgTemplate));
-   printf("DialogBoxIndirectParamW(0x%X, %p, 0x%X, %p, 0x%X)\n", hinst, &g_DebugDlgTemplate, hwndApp, /*NULL*/Debug_DlgProc, (LPARAM)pvData);
-   printf("Hit ^C to exit...\n");fflush(stdout);
-
    return DialogBoxIndirectParamW (hinst, (LPCDLGTEMPLATEW)&g_DebugDlgTemplate, hwndApp, Debug_DlgProc, (LPARAM)pvData);
-}
-
-IV c_myDialog(UV hwndApp)
-{
-    LRESULT r = DoDebugDialog((HWND)hwndApp, NULL);
-    printf("result = %d\n", r);fflush(stdout);
-    return((IV)r);
 }
 
 char* gs_dlgPrompt;
@@ -443,19 +259,22 @@ void onCloseDlg(HWND hwnd, bool is_ok)
     }
 }
 
-void _c_prompt(char* str_prompt, char* str_title, char* str_default, SV* svp_cref)
+// https://perldoc.perl.org/perlcall#EXAMPLES   -- this is the section where I figured out how to return a list,
+// specifically, in https://perldoc.perl.org/perlcall#Returning-a-List-of-Values
+//      actually, no it's not; I don't see the Inline_Stack in the perlapi or perlcall or perlguts; where did I get those?
+//      using Google Advanced search on perldoc => https://metacpan.org/pod/Inline::C#THE-INLINE-STACK-MACROS
+//          so they are Inline::C macros!
+//      https://metacpan.org/dist/Inline-C/view/lib/Inline/C/Cookbook.pod#Multiple-Return-Values => this is probably really
+//          where I got the sequence
+// The `newSV*()` are in https://perldoc.perl.org/perlapi
+//
+
+void _c_prompt(char* str_prompt, char* str_title, char* str_default)
 {
-    printf("prompt='%s', title='%s', default='%s'\n", str_prompt, str_title, str_default);
+    // printf("prompt='%s', title='%s', default='%s'\n", str_prompt, str_title, str_default);
     gs_dlgPrompt = str_prompt;
     gs_dlgTitle = str_title;
     gs_dlgDefault = str_default;
-    if (keepSub == (SV*)NULL) {
-        /* first time, so create a new SV as a copy of the argument */
-        keepSub = newSVsv(svp_cref);
-    } else {
-        /* been here before, so just overwrite the internals */
-        SvSetSV(keepSub, svp_cref);
-    }
     LRESULT r = DoDebugDialog((HWND)0, NULL);
     // printf("result = %d, string\n%s\n", r, gs_dlgRetval);
     // fflush(stdout);
@@ -561,3 +380,6 @@ I don't need a perl-based callback; I can just handle everything in the Inline::
 allow me to get rid of the Win32::GUI dependency for Win32::Mechanize::NotepadPlusPlus (my first goal)
 
 git commit -a -m "c DlgProc can call plDlgProc" -m "I've done enough debug" -m "next step is to clone this to a -dbg variant" -m "then start stripping out debug stuff, and focus this on the simple prompt interface"
+
+2023-Sep-12: moved debug version to different name; created a new file for just the Prompt dialog, without any of the extra debug
+stuff.
