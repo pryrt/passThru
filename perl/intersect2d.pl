@@ -7,7 +7,7 @@ use Carp;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use Math::Vector::Real::Intersect;
-use Test::More tests => 25;
+use Test::More tests => 34;
 BEGIN { $| = 1; }
 
 # utilities for capturing DEBUG
@@ -32,6 +32,10 @@ BEGIN { $| = 1; }
     }
     END { setDEBUG(0) }
 }
+
+##############################
+# Cross Products
+##############################
 
 do {    # 3d cross
     my $space1 = V(1,2,0);
@@ -60,6 +64,10 @@ do {
     #note sprintf "\t\tplane: %s x %s = %s vs %s", $plane1 , $plane2, $got, $exp;
 };
 
+##############################
+# Lines
+##############################
+
 do {
     my $v1 = V(0,0);
     my $v2 = V(1,1);
@@ -80,6 +88,10 @@ do {
     #   [ 1      -0   ] . [ s ] = [ 1-0 ]         a b    e
     #   [ dy1    -dy2 ]   [ t ]   [ y2-y1 ]         c d    f
     #
+
+    # 'swapped' coverage:
+    $got = intersect_lines($v2,$d2, $v1,$d1);
+    is_deeply $got, $exp, "intersect_lines: simple (swapped vector order)";
 
     # DEBUG coverage
     setDEBUG(1);
@@ -126,6 +138,11 @@ do {    # this test case found a bug in the original code
     is_deeply $got, $exp, "intersect_lines: test case up-vs-diagonal";
     #note sprintf "\t\tintersect_lines(%s @ %s, %s @ %s) = %s vs %s: test case that found bug in original code", $v1 , $d1, $v2 , $d2, $got, $exp;
 
+    # coverage: 'swapped' flag
+    $got = intersect_lines($v2,$d2, $v1,$d1);
+    is_deeply $got, $exp, "intersect_lines: test case up-vs-diagonal (swapped vector order)";
+
+
     # DEBUG coverage
     setDEBUG(1);
     $got = intersect_lines($v1,$d1, $v2,$d2);
@@ -133,6 +150,24 @@ do {    # this test case found a bug in the original code
     like getOUTPUT, qr/\Q[ t ]\E[^\r\n]+\n[^\r\n]+\Q[ s ]\E/s, 'reasonable DEBUG output ['.__LINE__.']';
     setDEBUG(0);
 
+};
+
+do {    # found another bug: swapping pairs didn't work; this was used to debug/verify, but I've added other swap-order tests above as well
+    #                           * <-----. v2 = (0,15) @ (-1,0)
+    #                           ^
+    #                           |
+    #   (-100,0) @ (0,1) = v1   .
+    #   where v2,d2,v1,d1 worked, but v1,d1,v2,d2 did not
+    my $v1 = V(-100,0);
+    my $d1 = V(0,1);
+    my $v2 = V(0,15);
+    my $d2 = V(-1,0);
+    my $exp = V(-100,15);
+    my $got = intersect_lines($v2,$d2, $v1,$d1);
+    is_deeply $got, $exp, "intersect_lines: test case: v2, left, v1, up";
+
+    $got = intersect_lines($v1,$d1, $v2,$d2);
+    is_deeply $got, $exp, "intersect_lines: test case: v1, up, v2, left";
 };
 
 do {    # test case: parallel-but-meeting (co-linear)
@@ -144,6 +179,11 @@ do {    # test case: parallel-but-meeting (co-linear)
     my $exp = ($v1+$v2)/2;  # equal |dir| so halfway between
     is_deeply $got, $exp, "intersect_lines: test case: parallel intersection (co-linear)";
     #note sprintf "\t\tintersect_lines(%s @ %s, %s @ %s) = %s vs %s: parallel intersection", $v1 , $d1, $v2 , $d2, $got, $exp;
+
+    # swap order
+    $got = intersect_lines($v2,$d2, $v1,$d1);
+    is_deeply $got, $exp, "intersect_lines: test case: parallel intersection (co-linear) (swapped vector order)";
+
 };
 
 do {    # test case: vertically aligned: co-linear _and_ dx1=dx2=0 _and_ DEBUG
@@ -158,6 +198,10 @@ do {    # test case: vertically aligned: co-linear _and_ dx1=dx2=0 _and_ DEBUG
     my $exp = ($v2-$v1)*1/3+$v1;    # |d1|=|d2|/2, so only 1/3 of the way between v1 and v2
     is_deeply $got, $exp, "intersect_lines: test case: vertical imbalanced distance";
     #note sprintf "\t\tintersect_lines(%s @ %s, %s @ %s) = %s vs %s: vertical and inline and imbalanced", $v1 , $d1, $v2 , $d2, $got, $exp;
+
+    # swap order
+    $got = intersect_lines($v2,$d2, $v1,$d1);
+    is_deeply $got, $exp, "intersect_lines: test case: vertical imbalanced distance (swapped vector order)";
 };
 
 do {    # test case: same point (within tolerance)
@@ -170,32 +214,60 @@ do {    # test case: same point (within tolerance)
     my $exp = $v1;
     is_deeply $got, $exp, "intersect_lines: test case: distance within tolerance";
     #note sprintf "\t\tintersect_lines(%s @ %s, %s @ %s) = %s vs %s: distance within tolerance", $v1 , $d1, $v2 , $d2, $got, $exp;
+
+    # swap order: but when within tolerance, it _always_ returns the first vector, so change expected value
+    $got = intersect_lines($v2,$d2, $v1,$d1);
+    $exp = $v2;
+    is_deeply $got, $exp, "intersect_lines: test case: distance within tolerance (swapped vector order, so swap expected value)";
+
 };
+
+##############################
+# Circles
+##############################
+
 
 do {
     my ($c1,$r1) = (V(0,0), 3.14159);
     my ($c2,$r2) = (V(3,4), 2.71828);
+
+    # different expectations depending on clockwise or counter-clockwise
+    my $expP = V(0.430890340295233, 3.11189994099108);
+    my $expN = V(2.86677464806877, 1.28498671016092);
+
+    # positive polarity
     my $got = intersect_circles($c1,$r1,$c2,$r2);
-    my $exp = V(0.430890340295233, 3.11189994099108);
-    is_deeply $got, $exp, "intersect_circles: positive polarity";
+    is_deeply $got, $expP, "intersect_circles: positive polarity";
     #note sprintf "\t\tintersect_circles(%s,%s,%s,%s) = %s vs %s", $c1,$r1,$c2,$r2, $got, $exp;
 
-    setDEBUG(1); # setDEBUG(1);
+    # coverage: swap order, so swap expectation as well
+    $got = intersect_circles($c2,$r2,$c1,$r1);
+    is_deeply $got, $expN, "intersect_circles: positive polarity (swap center order)";
+
+    # coverage: DEBUG
+    setDEBUG(1);
     $got = intersect_circles($c1,$r1,$c2,$r2);
-    is_deeply $got, $exp, "intersect_circles: positive polarity w/ DEBUG";
+    is_deeply $got, $expP, "intersect_circles: positive polarity w/ DEBUG";
     my $out = getOUTPUT();
     like $out, qr/\ADEBUG intersect_circles/, 'reasonable DEBUG output [' . __LINE__ . ']';
     setDEBUG(0);
 
+    # coverage: negative polarity in original order
     $r2 *= -1;
     $got = intersect_circles($c1,$r1,$c2,$r2);
-    $exp = V(2.86677464806877, 1.28498671016092);
-    is_deeply $got, $exp, "intersect_circles: negative polarity";
+    is_deeply $got, $expN, "intersect_circles: negative polarity";
     #note sprintf "\t\tintersect_circles(%s,%s,%s,%s) = %s vs %s", $c1,$r1,$c2,$r2, $got, $exp;
 
+    # coverage: swap order so swap expectation
+    $got = intersect_circles($c2,$r2,$c1,$r1);
+    my $gotRounded = sprintf "{%.6f,%.6f}", @$got;
+    my $expRounded = sprintf "{%.6f,%.6f}", @$expP;
+    is_deeply $gotRounded, $expRounded, "intersect_circles: negative polarity (swap center order)";
+
+    # coverage: DEBUG in negative polarity
     setDEBUG(); # setDEBUG(1);
     $got = intersect_circles($c1,$r1,$c2,$r2);
-    is_deeply $got, $exp, "intersect_circles: negative polarity w/ DEBUG";
+    is_deeply $got, $expN, "intersect_circles: negative polarity w/ DEBUG";
     $out = getOUTPUT();
     like $out, qr/\ADEBUG intersect_circles/, 'reasonable DEBUG output [' . __LINE__ . ']';
     setDEBUG(0);

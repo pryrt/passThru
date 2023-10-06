@@ -50,7 +50,7 @@ sub intersect_lines {
     if( abs($d2) < $TOLERANCE ) { croak "d2=$d2 is the zero vector" }
 
     # (essentially) same point: intersects at that point
-    if( $p1->dist($p2)<$TOLERANCE) {
+    if( abs($p1->dist($p2))<$TOLERANCE) {
         return $p1;
     }
 
@@ -115,8 +115,8 @@ sub intersect_lines {
     $b -= $mul*$d;
     $e -= $mul*$f;
 
-    my $s = $swap ? $f : $e;
-    my $t = $swap ? $e : $f;
+    my $s = $e;
+    my $t = $f;
     if($DEBUG) {
         printf "solve => s = %+010.6f, t = %+010.6f\t=>\t", $s, $t;
         printf "$p1 + $s*$d1 = %s\t|vs|\t$p2 + $t*$d2 = %s\n\n", $p1 + $s * $d1, $p2 + $t * $d2;
