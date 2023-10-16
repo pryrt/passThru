@@ -2,27 +2,26 @@
 
 use 5.014; # strict, //, s//r
 use warnings;
-use autodie;
 use FindBin;
 use lib "${FindBin::Bin}/lib";
-use GD ();
+use GDP5;
 
-our ($doLoop,$canvas, $animgif) = (1,undef,'');
-END { if(length $animgif) { open my $fh, '>:raw', 'CodingTrain.gif'; print {$fh} $animgif; } }
-preload();
-setup();
-while($doLoop) { draw(); }
+use Carp::Always;   # turn this on during debug...
 
-exit;
+GDP5::Run('ProjectNameHere');
 
-sub preload { ; }
 sub setup {
-    1;
+    createCanvas(100,100);
+    print STDERR "inside sketch's setup() function\n";
 }
+
 sub draw {
-    ;
+    GDP5::background(255,255,255);
+    printf STDERR "blue = %s\n", my $blue = gd->colorResolve(0,0,rand 255);
+    gd->filledEllipse(25 + rand 50,25 + rand 50,25,25,$blue);
+    GDP5::noLoop() if 1/32 > rand();
 }
-sub noLoop { $doLoop = 0; }
+
 
 =encoding utf8
 
