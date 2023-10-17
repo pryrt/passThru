@@ -13,6 +13,10 @@ use Carp::Always;   # turn this on during debug...
 GDP5::Run('WaveFunctionCollapse1');
 
 our %im;
+our @grid;
+sub DIM() { 3 }
+sub SCALE() { 150 }
+
 
 sub preload {
     print STDERR "preload is running...\n";
@@ -59,16 +63,24 @@ sub preload {
 }
 
 sub setup {
-    createCanvas(100,100);
-    print STDERR "inside sketch's setup() function\n";
+    createCanvas(DIM * SCALE, DIM * SCALE);
+    print STDERR "inside sketch's setup() function => dimensions(@{[join ',', gd->width, gd->height]})\n";
 }
 
 sub draw {
     GDP5::background(255,255,255);
-    #printf STDERR "blue = %s\n",
+    placeTile(down => 1,0);
+    placeTile(right => 0,1);
+    placeTile(left => 2,1);
+    placeTile(up => 1,2);
     my $blue = gd->colorResolve(0,0,rand 255);
-    gd->filledEllipse(45 + rand 10,45 + rand 10,25,25,$blue);
+    gd->filledEllipse(gd->width/2 - 5 + rand 10,gd->height/2 - 5 + rand 10,25,25,$blue);
     GDP5::noLoop() if 1/32 > rand();
+}
+
+sub placeTile {
+    my ($tileName, $col, $row) = @_;
+    gd->copyResized($im{$tileName}, $col*SCALE, $row*SCALE, 0,0, SCALE,SCALE, 3,3); # dest->src,destX,destY,srcX,srcY,destW,destH,srcW,srcH
 }
 
 =encoding utf8
