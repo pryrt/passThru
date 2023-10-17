@@ -2,13 +2,61 @@
 
 use 5.014; # strict, //, s//r
 use warnings;
+use autodie;
 use FindBin;
 use lib "${FindBin::Bin}/lib";
 use GDP5;
+use GD;
 
 use Carp::Always;   # turn this on during debug...
 
 GDP5::Run('WaveFunctionCollapse1');
+
+our %im;
+
+sub preload {
+    print STDERR "preload is running...\n";
+    my $img = GD::Image->new(3,3);
+    my $bg = $img->colorResolve(31,127,31);
+    my $fg = $img->colorResolve(31,255,31);
+    $img->setPixel(1,1,$fg);
+
+    # blank -- no fg pixels
+    $im{blank} = $img->clone();
+    $im{blank}->setPixel(0,0,$bg); $im{blank}->setPixel(1,0,$bg); $im{blank}->setPixel(2,0,$bg);
+    $im{blank}->setPixel(0,1,$bg); $im{blank}->setPixel(1,1,$bg); $im{blank}->setPixel(2,1,$bg);
+    $im{blank}->setPixel(0,2,$bg); $im{blank}->setPixel(1,2,$bg); $im{blank}->setPixel(2,2,$bg);
+    #do { my $n='blank'; open my $fh, '>:raw', "$n.png"; print {$fh} $im{$n}->png(); close($fh); system(1,"mspaint $n.png"); };
+
+    # up: ┴
+    $im{up} = $img->clone();
+    $im{up}->setPixel(0,0,$bg); $im{up}->setPixel(1,0,$fg); $im{up}->setPixel(2,0,$bg);
+    $im{up}->setPixel(0,1,$fg); $im{up}->setPixel(1,1,$fg); $im{up}->setPixel(2,1,$fg);
+    $im{up}->setPixel(0,2,$bg); $im{up}->setPixel(1,2,$bg); $im{up}->setPixel(2,2,$bg);
+    #do { my $n='up'; open my $fh, '>:raw', "$n.png"; print {$fh} $im{$n}->png(); close($fh); system(1,"mspaint $n.png"); };
+
+    # down: ┬
+    $im{down} = $img->clone();
+    $im{down}->setPixel(0,0,$bg); $im{down}->setPixel(1,0,$bg); $im{down}->setPixel(2,0,$bg);
+    $im{down}->setPixel(0,1,$fg); $im{down}->setPixel(1,1,$fg); $im{down}->setPixel(2,1,$fg);
+    $im{down}->setPixel(0,2,$bg); $im{down}->setPixel(1,2,$fg); $im{down}->setPixel(2,2,$bg);
+    #do { my $n='down'; open my $fh, '>:raw', "$n.png"; print {$fh} $im{$n}->png(); close($fh); system(1,"mspaint $n.png"); };
+
+    # left: ┤
+    $im{left} = $img->clone();
+    $im{left}->setPixel(0,0,$bg); $im{left}->setPixel(1,0,$fg); $im{left}->setPixel(2,0,$bg);
+    $im{left}->setPixel(0,1,$fg); $im{left}->setPixel(1,1,$fg); $im{left}->setPixel(2,1,$bg);
+    $im{left}->setPixel(0,2,$bg); $im{left}->setPixel(1,2,$fg); $im{left}->setPixel(2,2,$bg);
+    #do { my $n='left'; open my $fh, '>:raw', "$n.png"; print {$fh} $im{$n}->png(); close($fh); system(1,"mspaint $n.png"); };
+
+    # right: ├
+    $im{right} = $img->clone();
+    $im{right}->setPixel(0,0,$bg); $im{right}->setPixel(1,0,$fg); $im{right}->setPixel(2,0,$bg);
+    $im{right}->setPixel(0,1,$bg); $im{right}->setPixel(1,1,$fg); $im{right}->setPixel(2,1,$fg);
+    $im{right}->setPixel(0,2,$bg); $im{right}->setPixel(1,2,$fg); $im{right}->setPixel(2,2,$bg);
+    #do { my $n='right'; open my $fh, '>:raw', "$n.png"; print {$fh} $im{$n}->png(); close($fh); system(1,"mspaint $n.png"); };
+
+}
 
 sub setup {
     createCanvas(100,100);
@@ -17,8 +65,9 @@ sub setup {
 
 sub draw {
     GDP5::background(255,255,255);
-    printf STDERR "blue = %s\n", my $blue = gd->colorResolve(0,0,rand 255);
-    gd->filledEllipse(25 + rand 50,25 + rand 50,25,25,$blue);
+    #printf STDERR "blue = %s\n",
+    my $blue = gd->colorResolve(0,0,rand 255);
+    gd->filledEllipse(45 + rand 10,45 + rand 10,25,25,$blue);
     GDP5::noLoop() if 1/32 > rand();
 }
 
