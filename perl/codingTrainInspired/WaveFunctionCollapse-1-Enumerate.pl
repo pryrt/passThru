@@ -85,6 +85,10 @@ sub draw {
     $g->{collapsed} = 1;
     $g->{options} = [(qw/blank up right down left/)[int rand 5]];
 
+    # SIMPLE.6.Experiment:
+    $grid[0][2]{options} = [qw/blank right/] unless $grid[0][2]{collapsed};
+    $grid[2][0]{options} = [qw/blank left/] unless $grid[2][0]{collapsed};
+
     # SIMPLE.4: draw each element if collapsed
     for my $r (0 .. DIM-1) {
         for my $c (0 .. DIM-1) {
@@ -97,12 +101,21 @@ sub draw {
         }
     }
 
+    # SIMPLE.6: Look for lowest entropy that hasn't been collapsed
+    my @sortGrid = sort { scalar(@{$a->{options}}) <=> scalar(@{$b->{options}}) }
+        grep { ! $_->{collapsed} }
+        map {my $r = int $_/DIM; my $c = $_%DIM; $grid[$r][$c]} 0 .. DIM**2-1;
+    my $n = scalar @{$sortGrid[0]{options}};
+    my @filteredGrid = grep { scalar(@{$_->{options}}) == $n } @sortGrid;
+    my $chosen = $filteredGrid[rand @filteredGrid];
+    use Data::Dump; dd $chosen;
+
     # end SIMPLE.5
     $g->{collapsed} = 0;
     $g->{options} = [qw/blank up right down left/];
 
 
-    GDP5::noLoop() if 1/32 > rand();
+    GDP5::noLoop() if 1;#/32 > rand();
 }
 
 sub placeTile {
