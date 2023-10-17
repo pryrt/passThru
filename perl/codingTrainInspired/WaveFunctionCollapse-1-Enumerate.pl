@@ -112,19 +112,14 @@ sub placeTile {
 
 sub placeIndeterminant {
     my ($gridElement, $row, $col) = @_;
-    my $superposition = GD::Image->new(SCALE,SCALE);
-    $superposition->paletteCopy($im{up});
-    my $tmp = $superposition->clone();
+    my $superposition = $im{blank}->clone();
 
-    $tmp->copyResized($im{blank}, 0,0, 0,0, SCALE,SCALE, 3,3);              # resize
-    $superposition->copy($tmp, 0,0, 0,0, SCALE,SCALE);   # start with "blank" as background
-
-    for my $tileName ( @{ $gridElement->{options} } ) {
-        $tmp->copyResized($im{$tileName}, 0,0, 0,0, SCALE,SCALE, 3,3);                      # resize
-        $superposition->copyMerge($tmp, $col*SCALE, $row*SCALE, 0,0, SCALE,SCALE, 25);      # 25% overlay
+    for my $tileName ( @{ $gridElement->{options} } ) { # ( qw/blank up right down left/ ) { #
+        $superposition->copyMerge($im{$tileName}, 0,0, 0,0, 3,3, 20);      # 1/N overlay
     }
+    $superposition->copyMerge($im{blank}, 0,0, 0,0, 3,3, 75);      # make it more blank
 
-    gd->copy($superposition, $col*SCALE, $row*SCALE, 0,0, SCALE,SCALE);     # dest->src,destX,destY,srcX,srcY,W,H
+    gd->copyResized($superposition, $col*SCALE,$row*SCALE, 0,0, SCALE,SCALE, 3,3);
 }
 
 =encoding utf8
