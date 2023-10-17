@@ -91,6 +91,8 @@ sub draw {
             if($grid[$r][$c]{collapsed}) {
                 my $name = $grid[$r][$c]{options}[0];   # the first element is the only element
                 placeTile($name, $r, $c);
+            } else {
+                placeIndeterminant( $grid[$r][$c], $r, $c );
             }
         }
     }
@@ -106,6 +108,23 @@ sub draw {
 sub placeTile {
     my ($tileName, $row, $col) = @_;
     gd->copyResized($im{$tileName}, $col*SCALE, $row*SCALE, 0,0, SCALE,SCALE, 3,3); # dest->src,destX,destY,srcX,srcY,destW,destH,srcW,srcH
+}
+
+sub placeIndeterminant {
+    my ($gridElement, $row, $col) = @_;
+    my $superposition = GD::Image->new(SCALE,SCALE);
+    $superposition->paletteCopy($im{up});
+    my $tmp = $superposition->clone();
+
+    $tmp->copyResized($im{blank}, 0,0, 0,0, SCALE,SCALE, 3,3);              # resize
+    $superposition->copy($tmp, 0,0, 0,0, SCALE,SCALE);   # start with "blank" as background
+
+    for my $tileName ( @{ $gridElement->{options} } ) {
+        $tmp->copyResized($im{$tileName}, 0,0, 0,0, SCALE,SCALE, 3,3);                      # resize
+        $superposition->copyMerge($tmp, $col*SCALE, $row*SCALE, 0,0, SCALE,SCALE, 25);      # 25% overlay
+    }
+
+    gd->copy($superposition, $col*SCALE, $row*SCALE, 0,0, SCALE,SCALE);     # dest->src,destX,destY,srcX,srcY,W,H
 }
 
 =encoding utf8
