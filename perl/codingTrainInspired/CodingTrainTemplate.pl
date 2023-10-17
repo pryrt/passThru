@@ -18,7 +18,7 @@ sub setup {
 sub draw {
     GDP5::background(255,255,255);
     printf STDERR "blue = %s\n", my $blue = gd->colorResolve(0,0,rand 255);
-    gd->filledEllipse(25 + rand 50,25 + rand 50,25,25,$blue);
+    gd->filledEllipse(40 + rand 20,40 + rand 20,25,25,$blue);
     GDP5::noLoop() if 1/32 > rand();
 }
 
