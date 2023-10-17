@@ -65,21 +65,46 @@ sub preload {
 sub setup {
     createCanvas(DIM * SCALE, DIM * SCALE);
     print STDERR "inside sketch's setup() function => dimensions(@{[join ',', gd->width, gd->height]})\n";
+
+    # SIMPLE.3: initialize each grid object
+    for my $r (0 .. DIM-1) {
+        for my $c (0 .. DIM-1) {
+            $grid[$r][$c] = {
+                collapsed => 0,
+                options => [qw/blank up right down left/],
+            };
+        }
+    }
 }
 
 sub draw {
-    GDP5::background(255,255,255);
-    placeTile(down => 1,0);
-    placeTile(right => 0,1);
-    placeTile(left => 2,1);
-    placeTile(up => 1,2);
-    my $blue = gd->colorResolve(0,0,rand 255);
-    gd->filledEllipse(gd->width/2 - 5 + rand 10,gd->height/2 - 5 + rand 10,25,25,$blue);
+    GDP5::background(127,191,191);
+
+    # SIMPLE.5: experiment to verify it can draw a collapsed item
+    my $g = $grid[rand DIM][rand DIM];
+    $g->{collapsed} = 1;
+    $g->{options} = [(qw/blank up right down left/)[int rand 5]];
+
+    # SIMPLE.4: draw each element if collapsed
+    for my $r (0 .. DIM-1) {
+        for my $c (0 .. DIM-1) {
+            if($grid[$r][$c]{collapsed}) {
+                my $name = $grid[$r][$c]{options}[0];   # the first element is the only element
+                placeTile($name, $r, $c);
+            }
+        }
+    }
+
+    # end SIMPLE.5
+    $g->{collapsed} = 0;
+    $g->{options} = [qw/blank up right down left/];
+
+
     GDP5::noLoop() if 1/32 > rand();
 }
 
 sub placeTile {
-    my ($tileName, $col, $row) = @_;
+    my ($tileName, $row, $col) = @_;
     gd->copyResized($im{$tileName}, $col*SCALE, $row*SCALE, 0,0, SCALE,SCALE, 3,3); # dest->src,destX,destY,srcX,srcY,destW,destH,srcW,srcH
 }
 
