@@ -39,5 +39,6 @@ at least 2.0.33, which I obviously have.
         - _probably_ will need to know the paths to each of those libraries
     -   TODO:
         cpanm --look GD
-        perl Makefile.PL --options       "JPEG,PNG,WEBP,GIF,GIFANIM,WBMP,BMP,AVIF,TIFF"
+        perl Makefile.PL --options       "JPEG,PNG,WEBP,GIF,GIFANIM,BMP,AVIF,TIFF"
+                /usr/local/apps/berrybrew/perls/system/c/lib
 
