@@ -71,7 +71,7 @@ sub createCanvas {
     my ($w,$h) = @_;
     # TODO: if not void context, create a new one
     $defaultCanvasGD = GD::Image::->new($w,$h,0);
-    $gifdata = $defaultCanvasGD->gifanimbegin(0,0);
+    $gifdata = $defaultCanvasGD->gifanimbegin(0,-1);
     # print STDERR Dumper {createCanvas => $gifdata};
     return $defaultCanvasGD;
 }

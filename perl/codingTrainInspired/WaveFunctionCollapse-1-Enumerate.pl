@@ -2,24 +2,137 @@
 
 use 5.014; # strict, //, s//r
 use warnings;
+use autodie;
 use FindBin;
 use lib "${FindBin::Bin}/lib";
 use GDP5;
+use GD;
 
 use Carp::Always;   # turn this on during debug...
 
 GDP5::Run('WaveFunctionCollapse1');
 
+our %im;
+our @grid;
+sub DIM() { 3 }
+sub SCALE() { 150 }
+
+
+sub preload {
+    print STDERR "preload is running...\n";
+    my $img = GD::Image->new(3,3);
+    my $bg = $img->colorResolve(31,127,31);
+    my $fg = $img->colorResolve(31,255,31);
+    $img->setPixel(1,1,$fg);
+
+    # blank -- no fg pixels
+    $im{blank} = $img->clone();
+    $im{blank}->setPixel(0,0,$bg); $im{blank}->setPixel(1,0,$bg); $im{blank}->setPixel(2,0,$bg);
+    $im{blank}->setPixel(0,1,$bg); $im{blank}->setPixel(1,1,$bg); $im{blank}->setPixel(2,1,$bg);
+    $im{blank}->setPixel(0,2,$bg); $im{blank}->setPixel(1,2,$bg); $im{blank}->setPixel(2,2,$bg);
+    #do { my $n='blank'; open my $fh, '>:raw', "$n.png"; print {$fh} $im{$n}->png(); close($fh); system(1,"mspaint $n.png"); };
+
+    # up: ┴
+    $im{up} = $img->clone();
+    $im{up}->setPixel(0,0,$bg); $im{up}->setPixel(1,0,$fg); $im{up}->setPixel(2,0,$bg);
+    $im{up}->setPixel(0,1,$fg); $im{up}->setPixel(1,1,$fg); $im{up}->setPixel(2,1,$fg);
+    $im{up}->setPixel(0,2,$bg); $im{up}->setPixel(1,2,$bg); $im{up}->setPixel(2,2,$bg);
+    #do { my $n='up'; open my $fh, '>:raw', "$n.png"; print {$fh} $im{$n}->png(); close($fh); system(1,"mspaint $n.png"); };
+
+    # down: ┬
+    $im{down} = $img->clone();
+    $im{down}->setPixel(0,0,$bg); $im{down}->setPixel(1,0,$bg); $im{down}->setPixel(2,0,$bg);
+    $im{down}->setPixel(0,1,$fg); $im{down}->setPixel(1,1,$fg); $im{down}->setPixel(2,1,$fg);
+    $im{down}->setPixel(0,2,$bg); $im{down}->setPixel(1,2,$fg); $im{down}->setPixel(2,2,$bg);
+    #do { my $n='down'; open my $fh, '>:raw', "$n.png"; print {$fh} $im{$n}->png(); close($fh); system(1,"mspaint $n.png"); };
+
+    # left: ┤
+    $im{left} = $img->clone();
+    $im{left}->setPixel(0,0,$bg); $im{left}->setPixel(1,0,$fg); $im{left}->setPixel(2,0,$bg);
+    $im{left}->setPixel(0,1,$fg); $im{left}->setPixel(1,1,$fg); $im{left}->setPixel(2,1,$bg);
+    $im{left}->setPixel(0,2,$bg); $im{left}->setPixel(1,2,$fg); $im{left}->setPixel(2,2,$bg);
+    #do { my $n='left'; open my $fh, '>:raw', "$n.png"; print {$fh} $im{$n}->png(); close($fh); system(1,"mspaint $n.png"); };
+
+    # right: ├
+    $im{right} = $img->clone();
+    $im{right}->setPixel(0,0,$bg); $im{right}->setPixel(1,0,$fg); $im{right}->setPixel(2,0,$bg);
+    $im{right}->setPixel(0,1,$bg); $im{right}->setPixel(1,1,$fg); $im{right}->setPixel(2,1,$fg);
+    $im{right}->setPixel(0,2,$bg); $im{right}->setPixel(1,2,$fg); $im{right}->setPixel(2,2,$bg);
+    #do { my $n='right'; open my $fh, '>:raw', "$n.png"; print {$fh} $im{$n}->png(); close($fh); system(1,"mspaint $n.png"); };
+
+}
+
 sub setup {
-    createCanvas(100,100);
-    print STDERR "inside sketch's setup() function\n";
+    createCanvas(DIM * SCALE, DIM * SCALE);
+    print STDERR "inside sketch's setup() function => dimensions(@{[join ',', gd->width, gd->height]})\n";
+
+    # SIMPLE.3: initialize each grid object
+    for my $r (0 .. DIM-1) {
+        for my $c (0 .. DIM-1) {
+            $grid[$r][$c] = {
+                collapsed => 0,
+                options => [qw/blank up right down left/],
+            };
+        }
+    }
 }
 
 sub draw {
-    GDP5::background(255,255,255);
-    printf STDERR "blue = %s\n", my $blue = gd->colorResolve(0,0,rand 255);
-    gd->filledEllipse(25 + rand 50,25 + rand 50,25,25,$blue);
-    GDP5::noLoop() if 1/32 > rand();
+    GDP5::background(127,191,191);
+
+    # SIMPLE.5: experiment to verify it can draw a collapsed item
+    my $g = $grid[rand DIM][rand DIM];
+    $g->{collapsed} = 1;
+    $g->{options} = [(qw/blank up right down left/)[int rand 5]];
+
+    # SIMPLE.6.Experiment:
+    $grid[0][2]{options} = [qw/blank right/] unless $grid[0][2]{collapsed};
+    $grid[2][0]{options} = [qw/blank left/] unless $grid[2][0]{collapsed};
+
+    # SIMPLE.4: draw each element if collapsed
+    for my $r (0 .. DIM-1) {
+        for my $c (0 .. DIM-1) {
+            if($grid[$r][$c]{collapsed}) {
+                my $name = $grid[$r][$c]{options}[0];   # the first element is the only element
+                placeTile($name, $r, $c);
+            } else {
+                placeIndeterminant( $grid[$r][$c], $r, $c );
+            }
+        }
+    }
+
+    # SIMPLE.6: Look for lowest entropy that hasn't been collapsed
+    my @sortGrid = sort { scalar(@{$a->{options}}) <=> scalar(@{$b->{options}}) }
+        grep { ! $_->{collapsed} }
+        map {my $r = int $_/DIM; my $c = $_%DIM; $grid[$r][$c]} 0 .. DIM**2-1;
+    my $n = scalar @{$sortGrid[0]{options}};
+    my @filteredGrid = grep { scalar(@{$_->{options}}) == $n } @sortGrid;
+    my $chosen = $filteredGrid[rand @filteredGrid];
+    use Data::Dump; dd $chosen;
+
+    # end SIMPLE.5
+    $g->{collapsed} = 0;
+    $g->{options} = [qw/blank up right down left/];
+
+
+    GDP5::noLoop() if 1;#/32 > rand();
+}
+
+sub placeTile {
+    my ($tileName, $row, $col) = @_;
+    gd->copyResized($im{$tileName}, $col*SCALE, $row*SCALE, 0,0, SCALE,SCALE, 3,3); # dest->src,destX,destY,srcX,srcY,destW,destH,srcW,srcH
+}
+
+sub placeIndeterminant {
+    my ($gridElement, $row, $col) = @_;
+    my $superposition = $im{blank}->clone();
+
+    for my $tileName ( @{ $gridElement->{options} } ) { # ( qw/blank up right down left/ ) { #
+        $superposition->copyMerge($im{$tileName}, 0,0, 0,0, 3,3, 20);      # 1/N overlay
+    }
+    $superposition->copyMerge($im{blank}, 0,0, 0,0, 3,3, 75);      # make it more blank
+
+    gd->copyResized($superposition, $col*SCALE,$row*SCALE, 0,0, SCALE,SCALE, 3,3);
 }
 
 =encoding utf8
