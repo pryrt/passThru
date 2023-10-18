@@ -12,6 +12,7 @@ my ($callerPackage, $symTable);
 my ($defaultCanvasGD, $gifdata);
 my ($doLoop) = 1;
 my ($fps) = 33;   # frames per second
+my ($frameCount) = 0;
 our $AppName;
 sub gd { $defaultCanvasGD } # gives direct access to GD object
 
@@ -43,10 +44,11 @@ sub _drawLoop {
     while(1) {
         $symTable->{draw}->();
         if($defaultCanvasGD) {
-            $gifdata .= $defaultCanvasGD->gifanimadd(1,0,0,int(100/$fps)); #(0,0,0,int(100/$fps));
+            $gifdata .= $defaultCanvasGD->gifanimadd(1,0,0,int(100/$fps));
             # print STDERR Dumper {drawLoop => $gifdata};
         }
         last unless $doLoop;
+        ++$frameCount;
     }
     if($defaultCanvasGD) {
         $gifdata .= $defaultCanvasGD->gifanimend;
@@ -69,7 +71,11 @@ sub noLoop {
 
 sub frameRate {
     $fps = $_[0] if @_;
-    $fps;
+    return $fps;
+}
+
+sub frameCount {
+    return $frameCount;
 }
 
 sub createCanvas {

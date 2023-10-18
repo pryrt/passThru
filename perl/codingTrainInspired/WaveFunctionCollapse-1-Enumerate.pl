@@ -124,7 +124,7 @@ sub draw {
 
     my $collapsedCount = 0;
     $collapsedCount++ for grep { $_->{collapsed} } map {my $r = int $_/DIM; my $c = $_%DIM; $grid[$r][$c]} 0 .. DIM**2-1;
-    print STDERR "collapsedCount = $collapsedCount\n";
+    print STDERR "collapsedCount = $collapsedCount with $pick as most recent\n";
 
     state $count = 0;
     GDP5::noLoop() if ++$count>=DIM**2;#/32 > rand();
