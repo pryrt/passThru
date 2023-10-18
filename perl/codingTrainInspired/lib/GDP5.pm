@@ -43,7 +43,7 @@ sub _drawLoop {
     while(1) {
         $symTable->{draw}->();
         if($defaultCanvasGD) {
-            $gifdata .= $defaultCanvasGD->gifanimadd(1,0,0,10); #(0,0,0,int(100/$fps));
+            $gifdata .= $defaultCanvasGD->gifanimadd(1,0,0,int(100/$fps)); #(0,0,0,int(100/$fps));
             # print STDERR Dumper {drawLoop => $gifdata};
         }
         last unless $doLoop;
@@ -65,6 +65,11 @@ sub _save {
 
 sub noLoop {
     $doLoop = 0;
+}
+
+sub frameRate {
+    $fps = $_[0] if @_;
+    $fps;
 }
 
 sub createCanvas {

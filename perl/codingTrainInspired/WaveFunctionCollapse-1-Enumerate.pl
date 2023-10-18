@@ -75,19 +75,36 @@ sub setup {
             };
         }
     }
+
+    GDP5::frameRate(2);
 }
 
 sub draw {
     GDP5::background(127,191,191);
 
-    # SIMPLE.5: experiment to verify it can draw a collapsed item
-    my $g = $grid[rand DIM][rand DIM];
-    $g->{collapsed} = 1;
-    $g->{options} = [(qw/blank up right down left/)[int rand 5]];
+    # # SIMPLE.5: experiment to verify it can draw a collapsed item
+    # my $g = $grid[rand DIM][rand DIM];
+    # $g->{collapsed} = 1;
+    # $g->{options} = [(qw/blank up right down left/)[int rand 5]];
 
-    # SIMPLE.6.Experiment:
-    $grid[0][2]{options} = [qw/blank right/] unless $grid[0][2]{collapsed};
-    $grid[2][0]{options} = [qw/blank left/] unless $grid[2][0]{collapsed};
+    # # SIMPLE.6.Experiment:
+    # $grid[0][2]{options} = [qw/blank right/] unless $grid[0][2]{collapsed};
+    # $grid[2][0]{options} = [qw/blank left/] unless $grid[2][0]{collapsed};
+
+    # SIMPLE.6: Look for lowest entropy that hasn't been collapsed
+    my @sortGrid = sort { scalar(@{$a->{options}}) <=> scalar(@{$b->{options}}) }
+        grep { ! $_->{collapsed} }
+        map {my $r = int $_/DIM; my $c = $_%DIM; $grid[$r][$c]} 0 .. DIM**2-1;
+    my $n = scalar @{$sortGrid[0]{options}};
+    my @filteredGrid = grep { scalar(@{$_->{options}}) == $n } @sortGrid;
+    my $chosen = $filteredGrid[rand @filteredGrid]; # choose a random with lowest entropy if there's more than one
+
+    # SIMPLE.6.next: collapse the chosen to one of its potentials
+    my @options = @{$chosen->{options}};
+    my $pick = $options[rand @options];
+    $chosen->{options} = [$pick];
+    $chosen->{collapsed} = 1;
+    #use Data::Dump; dd { $chosen => $chosen, grid => \@grid };
 
     # SIMPLE.4: draw each element if collapsed
     for my $r (0 .. DIM-1) {
@@ -101,21 +118,16 @@ sub draw {
         }
     }
 
-    # SIMPLE.6: Look for lowest entropy that hasn't been collapsed
-    my @sortGrid = sort { scalar(@{$a->{options}}) <=> scalar(@{$b->{options}}) }
-        grep { ! $_->{collapsed} }
-        map {my $r = int $_/DIM; my $c = $_%DIM; $grid[$r][$c]} 0 .. DIM**2-1;
-    my $n = scalar @{$sortGrid[0]{options}};
-    my @filteredGrid = grep { scalar(@{$_->{options}}) == $n } @sortGrid;
-    my $chosen = $filteredGrid[rand @filteredGrid];
-    use Data::Dump; dd $chosen;
+    # # end SIMPLE.5
+    # $g->{collapsed} = 0;
+    # $g->{options} = [qw/blank up right down left/];
 
-    # end SIMPLE.5
-    $g->{collapsed} = 0;
-    $g->{options} = [qw/blank up right down left/];
+    my $collapsedCount = 0;
+    $collapsedCount++ for grep { $_->{collapsed} } map {my $r = int $_/DIM; my $c = $_%DIM; $grid[$r][$c]} 0 .. DIM**2-1;
+    print STDERR "collapsedCount = $collapsedCount\n";
 
-
-    GDP5::noLoop() if 1;#/32 > rand();
+    state $count = 0;
+    GDP5::noLoop() if ++$count>=DIM**2;#/32 > rand();
 }
 
 sub placeTile {
