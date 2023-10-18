@@ -106,7 +106,12 @@ sub draw {
     $chosen->{collapsed} = 1;
     #use Data::Dump; dd { $chosen => $chosen, grid => \@grid };
 
-    # SIMPLE.4: draw each element if collapsed
+    # TODO: SIMPLE.7: propagate:
+    #   _ iterate through every cell, and if it has a neighbor that prevents one of its options, eliminate that option
+    #   _ future optimization = use a "@neighbor" array, and only check neighbors of the $chosen;
+    #                           if any of @neighbor collapses, then add _its_ neighbors to the array as well
+
+    # SIMPLE.4: draw each element (collapsed is solid, superposition will be fuzzy)
     for my $r (0 .. DIM-1) {
         for my $c (0 .. DIM-1) {
             if($grid[$r][$c]{collapsed}) {
