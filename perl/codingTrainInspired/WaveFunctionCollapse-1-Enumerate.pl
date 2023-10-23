@@ -14,16 +14,9 @@ GDP5::Run('WaveFunctionCollapse1');
 
 our %im;
 our @grid;
-our %rules = (  # SIMPLE.8: set up rules
-    blank   => { up => ['blank','up'],          right => ['blank','right'],     down => ['blank','down'],       left => ['blank','left'] },
-    up      => { up => ['right','left','down'], right => ['left','up','down'],  down => ['blank','down'],       left => ['up','right','down'] },
-    right   => { up => ['right','left','down'], right => ['left','up','down'],  down => ['right','left','up'],  left => ['blank','left'] },
-    down    => { up => ['blank','up'],          right => ['left','up','down'],  down => ['right','left','up'],  left => ['up','right','down'] },
-    left    => { up => ['right','left','down'], right => ['blank','right'],     down => ['right','left','up'],  left => ['up','right','down'] },
-);
+our %rules;
 
-
-sub DIM() { 3 }
+sub DIM() { 2 }
 sub SCALE() { 150 }
 
 
@@ -69,6 +62,13 @@ sub preload {
     $im{right}->setPixel(0,2,$bg); $im{right}->setPixel(1,2,$fg); $im{right}->setPixel(2,2,$bg);
     #do { my $n='right'; open my $fh, '>:raw', "$n.png"; print {$fh} $im{$n}->png(); close($fh); system(1,"mspaint $n.png"); };
 
+    %rules = (  # SIMPLE.8: set up rules    # had to move to preload (or a BEGIN block), because of order of run
+        blank   => { up => ['blank','up'],          right => ['blank','right'],     down => ['blank','down'],       left => ['blank','left'] },
+        up      => { up => ['right','left','down'], right => ['left','up','down'],  down => ['blank','down'],       left => ['up','right','down'] },
+        right   => { up => ['right','left','down'], right => ['left','up','down'],  down => ['right','left','up'],  left => ['blank','left'] },
+        down    => { up => ['blank','up'],          right => ['left','up','down'],  down => ['right','left','up'],  left => ['up','right','down'] },
+        left    => { up => ['right','left','down'], right => ['blank','right'],     down => ['right','left','up'],  left => ['up','right','down'] },
+    );
 }
 
 sub setup {
@@ -122,13 +122,16 @@ sub draw {
     # I am NOT going to do the second grid ... so mine will actually partially propagate the collapsing
     for my $r (0 .. DIM-1) {
         for my $c (0 .. DIM-1) {
+            printf STDERR "ITERATE: row=%d, col=%d, collapsed=%s\n", $r, $c, join ',', map {$_//'<undef>'} $grid[$r][$c]{collapsed};
             if(!$grid[$r][$c]{collapsed}) {
                 # need to check its neighbors:
                 if($r>0) {
                     # look UP ($r-1)
+                    printf STDERR "LOOK UP: row=%d, col=%d, up.options=[%s]\n", $r, $c, join ',', map {$_//'<undef>'} @{ $grid[$r-1][$c]{options} };
                     for my $option (@{ $grid[$r-1][$c]{options} }) {      # SIMPLE.9: for option in [r-1][c]{options} { valid from rules, checkValid }
-                        my $valid = $rules{$option};
-                        checkValid( $grid[$r][$c]{options}, $valid );
+                        my $valid = $rules{$option}{down};
+                        printf STDERR "LOOK UP: row=%d, col=%d, option='%s', valid=[%s]\n", $r, $c, $option//'<undef>', $valid ? join(',',@$valid) : '<empty>';
+                        updateValid( $grid[$r][$c], $valid );
                     }
                 }
                 if($r<DIM-1) {
@@ -143,6 +146,7 @@ sub draw {
             }
         }
     }
+    warn "done with one prop";
 
     # SIMPLE.4: draw each element (collapsed is solid, superposition will be fuzzy)
     for my $r (0 .. DIM-1) {
@@ -165,7 +169,26 @@ sub draw {
     print STDERR "collapsedCount = $collapsedCount with $pick as most recent\n";
 
     state $count = 0;
-    GDP5::noLoop() if ++$count>=DIM**2;#/32 > rand();
+    GDP5::noLoop() ;#if ++$count>=DIM**2;#/32 > rand();
+}
+
+sub updateValid {
+    my ($cell, $valid) = @_;        # PCJ: I changed first arg from cell{options} to just the cell, because having the object makes it easier
+    my @arr = @{ $cell->{options} };
+    my %g; @g{@arr} = @arr;         # this cells current possibilities
+    my %n; @n{@$valid} = @$valid;   # what neighbor allows in the direction of this cell
+
+printf STDERR "\tbefore: (%s)\n", join ',', @{ $cell->{options} };
+
+    for my $key (keys %g) {             # go through this cell's possibilities
+        unless( exists $n{$key} ) {     # if the neighbor doesn't allow this possibility
+            delete $g{$key};            # then delete the possibility from this cell's list
+        }
+    }
+    @{$cell->{options}} = keys %g;                              # implicit return by changing the contents in-memory (made easier by having the cell object, rather than just its options)
+printf STDERR "\tafter:  (%s)\n", join ',', @{ $cell->{options} };
+    $cell->{collapsed} = 1 if 1 == keys %g;                     # PCJ added this logic (which required having the cell rather object rather than just its options)
+    warn "cell $cell has been made invalid!\n" unless keys %g;  # PCJ added this logic
 }
 
 sub placeTile {
@@ -268,6 +291,7 @@ This will be version 1: simple
                     for(i=arr.length-1; i>=0; i--)
                         if !valid.includes(arr[i]) { remove it }
                     implicit return by changing the valid[] array in-memory
+                            #### PCJ: I renamed it to "updateValid()", because checkValid implies a BOOL, but this actually changes the valid array
             11. back to draw:algo:else:
                     in the #look XXXX: do one for each,
                     #UP => if row>0
