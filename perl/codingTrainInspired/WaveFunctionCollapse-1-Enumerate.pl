@@ -125,7 +125,11 @@ sub draw {
             if(!$grid[$r][$c]{collapsed}) {
                 # need to check its neighbors:
                 if($r>0) {
-                    # TODO: look UP ($r-1)
+                    # look UP ($r-1)
+                    for my $option (@{ $grid[$r-1][$c]{options} }) {      # SIMPLE.9: for option in [r-1][c]{options} { valid from rules, checkValid }
+                        my $valid = $rules{$option};
+                        checkValid( $grid[$r][$c]{options}, $valid );
+                    }
                 }
                 if($r<DIM-1) {
                     # TODO: look DOWN ($r+1)
@@ -257,7 +261,7 @@ This will be version 1: simple
                 if(row>0) # skip top row, because cannot look up from there
                     up = grid[col + (row-1)*DIM)]
                     foreach option in up.options
-                        valid = rules[options][DOWN]
+                        valid = rules[option][DOWN]
                         checkValid(options, valid)
             10. New function:
                 checkValid(arr, valid)
