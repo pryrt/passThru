@@ -14,6 +14,15 @@ GDP5::Run('WaveFunctionCollapse1');
 
 our %im;
 our @grid;
+our %rules = (  # SIMPLE.8: set up rules
+    blank   => { up => ['blank','up'],          right => ['blank','right'],     down => ['blank','down'],       left => ['blank','left'] },
+    up      => { up => ['right','left','down'], right => ['left','up','down'],  down => ['blank','down'],       left => ['up','right','down'] },
+    right   => { up => ['right','left','down'], right => ['left','up','down'],  down => ['right','left','up'],  left => ['blank','left'] },
+    down    => { up => ['blank','up'],          right => ['left','up','down'],  down => ['right','left','up'],  left => ['up','right','down'] },
+    left    => { up => ['right','left','down'], right => ['blank','right'],     down => ['right','left','up'],  left => ['up','right','down'] },
+);
+
+
 sub DIM() { 3 }
 sub SCALE() { 150 }
 
@@ -106,10 +115,30 @@ sub draw {
     $chosen->{collapsed} = 1;
     #use Data::Dump; dd { $chosen => $chosen, grid => \@grid };
 
-    # TODO: SIMPLE.7: propagate:
+    # SIMPLE.7: propagate:
     #   _ iterate through every cell, and if it has a neighbor that prevents one of its options, eliminate that option
     #   _ future optimization = use a "@neighbor" array, and only check neighbors of the $chosen;
     #                           if any of @neighbor collapses, then add _its_ neighbors to the array as well
+    # I am NOT going to do the second grid ... so mine will actually partially propagate the collapsing
+    for my $r (0 .. DIM-1) {
+        for my $c (0 .. DIM-1) {
+            if(!$grid[$r][$c]{collapsed}) {
+                # need to check its neighbors:
+                if($r>0) {
+                    # TODO: look UP ($r-1)
+                }
+                if($r<DIM-1) {
+                    # TODO: look DOWN ($r+1)
+                }
+                if($c>0) {
+                    # TODO: look LEFT ($c-1)
+                }
+                if($c<DIM-1) {
+                    # TODO: look RIGHT ($c+1)
+                }
+            }
+        }
+    }
 
     # SIMPLE.4: draw each element (collapsed is solid, superposition will be fuzzy)
     for my $r (0 .. DIM-1) {
