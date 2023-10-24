@@ -16,8 +16,8 @@ our %im;
 our @grid;
 our %rules;
 
-sub DIM() { 2 }
-sub SCALE() { 150 }
+sub DIM() { 9 }
+sub SCALE() { 50 }
 
 
 sub preload {
@@ -81,11 +81,12 @@ sub setup {
             $grid[$r][$c] = {
                 collapsed => 0,
                 options => [qw/blank up right down left/],
+                rc => [$r,$c],
             };
         }
     }
 
-    GDP5::frameRate(2);
+    GDP5::frameRate(2*(DIM)/3);
 }
 
 sub draw {
@@ -107,12 +108,14 @@ sub draw {
     my $n = scalar @{$sortGrid[0]{options}};
     my @filteredGrid = grep { scalar(@{$_->{options}}) == $n } @sortGrid;
     my $chosen = $filteredGrid[rand @filteredGrid]; # choose a random with lowest entropy if there's more than one
+#use Data::Dump(); print STDERR Data::Dump::pp({chosen_cell => $chosen}), "\n";
 
     # SIMPLE.6.next: collapse the chosen to one of its potentials
     my @options = @{$chosen->{options}};
     my $pick = $options[rand @options];
     $chosen->{options} = [$pick];
     $chosen->{collapsed} = 1;
+use Data::Dump(); print STDERR Data::Dump::pp({chosen_cell => $chosen}), "\n";
     #use Data::Dump; dd { $chosen => $chosen, grid => \@grid };
 
     # SIMPLE.7: propagate:
@@ -127,26 +130,52 @@ sub draw {
                 # need to check its neighbors:
                 if($r>0) {
                     # look UP ($r-1)
-                    printf STDERR "LOOK UP: row=%d, col=%d, up.options=[%s]\n", $r, $c, join ',', map {$_//'<undef>'} @{ $grid[$r-1][$c]{options} };
-                    for my $option (@{ $grid[$r-1][$c]{options} }) {      # SIMPLE.9: for option in [r-1][c]{options} { valid from rules, checkValid }
-                        my $valid = $rules{$option}{down};
-                        printf STDERR "LOOK UP: row=%d, col=%d, option='%s', valid=[%s]\n", $r, $c, $option//'<undef>', $valid ? join(',',@$valid) : '<empty>';
-                        updateValid( $grid[$r][$c], $valid );
+                    printf STDERR "LOOK UP: row=%d, col=%d, up.options=[%s],%s\n", $r, $c, join(',', map {$_//'<undef>'} @{ $grid[$r-1][$c]{options} }), 0+$grid[$r-1][$c]{collapsed};
+                    # 10.DEBUG: add new logic: "if up.collapsed, then limit this cell's options"
+                    if($grid[$r-1][$c]{collapsed}) {
+                        for my $option (@{ $grid[$r-1][$c]{options} }) {      # SIMPLE.9: for option in [r-1][c]{options} { valid from rules, checkValid }
+                            my $valid = $rules{$option}{down};
+                            printf STDERR "VALIDATE FROM UP: row=%d, col=%d, option='%s', valid=[%s]\n", $r, $c, $option//'<undef>', $valid ? join(',',@$valid) : '<empty>';
+                            updateValid( $grid[$r][$c], $valid );
+                        }
                     }
                 }
                 if($r<DIM-1) {
                     # TODO: look DOWN ($r+1)
+                    printf STDERR "LOOK DOWN: row=%d, col=%d, down.options=[%s],%s\n", $r, $c, join(',', map {$_//'<undef>'} @{ $grid[$r+1][$c]{options} }), 0+$grid[$r+1][$c]{collapsed};
+                    if($grid[$r+1][$c]{collapsed}) {
+                        for my $option (@{ $grid[$r+1][$c]{options} }) {      # SIMPLE.9: for option in [r+1][c]{options} { valid from rules, checkValid }
+                            my $valid = $rules{$option}{up};
+                            printf STDERR "VALIDATE FROM DOWN: row=%d, col=%d, option='%s', valid=[%s]\n", $r, $c, $option//'<undef>', $valid ? join(',',@$valid) : '<empty>';
+                            updateValid( $grid[$r][$c], $valid );
+                        }
+                    }
                 }
                 if($c>0) {
                     # TODO: look LEFT ($c-1)
+                    printf STDERR "LOOK LEFT: row=%d, col=%d, left.options=[%s],%s\n", $r, $c, join(',', map {$_//'<undef>'} @{ $grid[$r][$c-1]{options} }), 0+$grid[$r][$c-1]{collapsed};
+                    if($grid[$r][$c-1]{collapsed}) {
+                        for my $option (@{ $grid[$r][$c-1]{options} }) {      # SIMPLE.9: for option in [r][c-1]{options} { valid from rules, checkValid }
+                            my $valid = $rules{$option}{right};
+                            printf STDERR "VALIDATE FROM LEFT: row=%d, col=%d, option='%s', valid=[%s]\n", $r, $c, $option//'<undef>', $valid ? join(',',@$valid) : '<empty>';
+                            updateValid( $grid[$r][$c], $valid );
+                        }
+                    }
                 }
                 if($c<DIM-1) {
                     # TODO: look RIGHT ($c+1)
+                    printf STDERR "LOOK RIGHT: row=%d, col=%d, right.options=[%s],%s\n", $r, $c, join(',', map {$_//'<undef>'} @{ $grid[$r][$c+1]{options} }), 0+$grid[$r][$c+1]{collapsed};
+                    if($grid[$r][$c+1]{collapsed}) {
+                        for my $option (@{ $grid[$r][$c+1]{options} }) {      # SIMPLE.9: for option in [r][c+1]{options} { valid from rules, checkValid }
+                            my $valid = $rules{$option}{left};
+                            printf STDERR "VALIDATE FROM RIGHT: row=%d, col=%d, option='%s', valid=[%s]\n", $r, $c, $option//'<undef>', $valid ? join(',',@$valid) : '<empty>';
+                            updateValid( $grid[$r][$c], $valid );
+                        }
+                    }
                 }
             }
         }
     }
-    warn "done with one prop";
 
     # SIMPLE.4: draw each element (collapsed is solid, superposition will be fuzzy)
     for my $r (0 .. DIM-1) {
@@ -169,7 +198,15 @@ sub draw {
     print STDERR "collapsedCount = $collapsedCount with $pick as most recent\n";
 
     state $count = 0;
-    GDP5::noLoop() ;#if ++$count>=DIM**2;#/32 > rand();
+    GDP5::noLoop() if ++$count>=DIM**2;#/32 > rand();
+
+    # debug: if no more that can be collapsed, need to end early:
+    @sortGrid = sort { scalar(@{$a->{options}}) <=> scalar(@{$b->{options}}) }
+        grep { ! $_->{collapsed} }
+        map {my $r = int $_/DIM; my $c = $_%DIM; $grid[$r][$c]} 0 .. DIM**2-1;
+    GDP5::noLoop() if !@sortGrid;
+
+    #<STDIN> unless $count>=DIM**2;
 }
 
 sub updateValid {
