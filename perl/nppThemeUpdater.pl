@@ -4,6 +4,7 @@ use 5.014; # strict, //, s//r
 use warnings;
 use autodie;
 use XML::LibXML;
+use Data::Dump ();
 
 $| = 1;
 our %LanguageRequirements = language_requirements();
@@ -17,11 +18,10 @@ for my $filename (@ARGV) {
     my $dom = XML::LibXML->load_xml(location => $filename, no_blanks => 1);
     my ($node_GlobalStyles) = $dom->findnodes('//GlobalStyles');
     my $gStyles = globalStyles_node_to_hashref($node_GlobalStyles);
-
-
-    use Data::Dump; dd {
-        GlobalStyles => $gStyles,
-    };
+    for my $lang ( keys %LanguageRequirements ) {
+        my ($node_LexerType) = $dom->findnodes(sprintf '//LexerType[@name="%s"]', $lang);
+        reconcileLanguage($node_LexerType, $LanguageRequirements{$lang}, $gStyles);
+    }
 }
 
 sub globalStyles_node_to_hashref {
@@ -35,11 +35,49 @@ sub globalStyles_node_to_hashref {
     return $hashref;
 }
 
+sub reconcileLanguage {
+    my ($node, $req, $gStyles) = @_;
+    printf "Need to check =>\n%s\nagainst =>\n%s\nusing styling =>\n%s\n", $node//'<undef>', Data::Dump::pp($req), Data::Dump::pp($gStyles);
+    my %usedID;
+    for my $node_WordsStyle ( $node->childNodes ) {
+        # findnodes('//WordsStyle') uses whole DOM, not just the active node, so returns the whole document's WordsStyle elements
+        # find('//WordsStyle') returned 'carp croak', which was useless.
+        printf "\tWordsStyle(%d,%s)\n", $node_WordsStyle->{styleID}, $node_WordsStyle->{name};
+        $usedID{$node_WordsStyle->{styleID}} = $node_WordsStyle;
+    }
+    # TODO: loop through hash elements, adding any that don't exist as children to $node
+
+
+}
+
 sub language_requirements {
     my %req;
-    $req{sql} = (
+    $req{sql} = {
+        0   => { name => "DEFAULT",                                             }, ##     <WordsStyle name="DEFAULT" styleID="0" fgColor="FF0000" bgColor="FF0000" fontName="" fontStyle="0" fontSize="" />
+        1   => { name => "COMMENT",                                             }, ##     <WordsStyle name="COMMENT" styleID="1" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+        2   => { name => "COMMENT LINE",                                        }, ##     <WordsStyle name="COMMENT LINE" styleID="2" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+        3   => { name => "COMMENT DOC",                                         }, ##     <WordsStyle name="COMMENT DOC" styleID="3" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+        4   => { name => "NUMBER",                                              }, ##     <WordsStyle name="NUMBER" styleID="4" fgColor="FF8000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+        5   => { name => "KEYWORD",                 keywordClass => "instre1",  }, ##     <WordsStyle name="KEYWORD" styleID="5" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="1" fontSize="" keywordClass="instre1" />
+        6   => { name => "STRING",                                              }, ##     <WordsStyle name="STRING" styleID="6" fgColor="808080" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+        7   => { name => "STRING2",                                             }, ##     <WordsStyle name="STRING2" styleID="7" fgColor="808080" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+        8   => { name => "SQLPLUS",                 keywordClass => "type2",    }, ##     <WordsStyle name="SQLPLUS" styleID="8" fgColor="FF0000" bgColor="FF0000" fontName="" fontStyle="0" fontSize="" keywordClass="type2" />
+        9   => { name => "SQLPLUS_PROMPT",                                      }, ##     <WordsStyle name="SQLPLUS_PROMPT" styleID="9" fgColor="FF0000" bgColor="FF0000" fontName="" fontStyle="0" fontSize="" />
+        10  => { name => "OPERATOR",                                            }, ##     <WordsStyle name="OPERATOR" styleID="10" fgColor="000080" bgColor="FFFFFF" fontName="" fontStyle="1" fontSize="" />
+        11  => { name => "IDENTIFIER",                                          }, ##     <WordsStyle name="IDENTIFIER" styleID="11" fgColor="FF0000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+        13  => { name => "SQLPLUS_COMMENT",                                     }, ##     <WordsStyle name="SQLPLUS_COMMENT" styleID="13" fgColor="FF0000" bgColor="FF0000" fontName="" fontStyle="0" fontSize="" />
+        15  => { name => "COMMENTLINEDOC",                                      }, ##     <WordsStyle name="COMMENTLINEDOC" styleID="15" fgColor="FF0000" bgColor="FF0000" fontName="" fontStyle="0" fontSize="" />
+        16  => { name => "KEYWORD2",                keywordClass => "instre2",  }, ##     <WordsStyle name="KEYWORD2" styleID="16" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="1" fontSize="" keywordClass="instre2" />
+        17  => { name => "COMMENTDOCKEYWORD",       keywordClass => "type1",    }, ##     <WordsStyle name="COMMENTDOCKEYWORD" styleID="17" fgColor="FF0000" bgColor="FF0000" fontName="" fontStyle="0" fontSize=""  keywordClass="type1" />
+        18  => { name => "COMMENTDOCKEYWORDERROR",                              }, ##     <WordsStyle name="COMMENTDOCKEYWORDERROR" styleID="18" fgColor="FF0000" bgColor="FF0000" fontName="" fontStyle="0" fontSize="" />
+        19  => { name => "USER1",                   keywordClass => "type3",    }, ##     <WordsStyle name="USER1" styleID="19" fgColor="800080" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" keywordClass="type3" />
+        20  => { name => "USER2",                   keywordClass => "type4",    }, ##     <WordsStyle name="SQL_USER2" styleID="20" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" keywordClass="type4" />
+        21  => { name => "USER3",                   keywordClass => "type5",    }, ##     <WordsStyle name="SQL_USER3" styleID="21" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" keywordClass="type5" />
+        22  => { name => "USER4",                   keywordClass => "type6",    }, ##     <WordsStyle name="SQL_USER4" styleID="22" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" keywordClass="type6" />
+        23  => { name => "QUOTEDIDENTIFIER",                                    }, ##     <WordsStyle name="QUOTEDIDENTIFIER" styleID="23" fgColor="FF0000" bgColor="FF0000" fontName="" fontStyle="0" fontSize="" />
+        24  => { name => "QOPERATOR",                                           }, ##     <WordsStyle name="QOPERATOR" styleID="24" fgColor="FF0000" bgColor="FF0000" fontName="" fontStyle="0" fontSize="" />
 
-    );
+    };
 
     return %req;
 }
@@ -49,29 +87,6 @@ C:\Users\PJones2\AppData\Roaming/Notepad++/stylers.xml
 
 
 
-0           => { name => "DEFAULT",                                      }  ##     <WordsStyle name="DEFAULT" styleID="0" fgColor="FF0000" bgColor="FF0000" fontName="" fontStyle="0" fontSize="" />
-1           => { name => "COMMENT",                                      }, ##     <WordsStyle name="COMMENT" styleID="1" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
-2           => { name => "COMMENT LINE",                                 }, ##     <WordsStyle name="COMMENT LINE" styleID="2" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
-3           => { name => "COMMENT DOC",                                  }, ##     <WordsStyle name="COMMENT DOC" styleID="3" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
-4           => { name => "NUMBER",                                       }, ##     <WordsStyle name="NUMBER" styleID="4" fgColor="FF8000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
-5           => { name => "KEYWORD",         keywordClass => "instre1",   }, ##     <WordsStyle name="KEYWORD" styleID="5" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="1" fontSize="" keywordClass="instre1" />
-6           => { name => "STRING",                                       }, ##     <WordsStyle name="STRING" styleID="6" fgColor="808080" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
-7           => { name => "STRING2",                                      }, ##     <WordsStyle name="STRING2" styleID="7" fgColor="808080" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
-8           => { name => "SQLPLUS",         keywordClass => "type2",     }, ##     <WordsStyle name="SQLPLUS" styleID="8" fgColor="FF0000" bgColor="FF0000" fontName="" fontStyle="0" fontSize="" keywordClass="type2" />
-9           => { name => "SQLPLUS_PROMPT",                               }, ##     <WordsStyle name="SQLPLUS_PROMPT" styleID="9" fgColor="FF0000" bgColor="FF0000" fontName="" fontStyle="0" fontSize="" />
-10          => { name => "OPERATOR",                                     }, ##     <WordsStyle name="OPERATOR" styleID="10" fgColor="000080" bgColor="FFFFFF" fontName="" fontStyle="1" fontSize="" />
-11          => { name => "IDENTIFIER",                                   }, ##     <WordsStyle name="IDENTIFIER" styleID="11" fgColor="FF0000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
-13          => { name => "SQLPLUS_COMMENT",                              }, ##     <WordsStyle name="SQLPLUS_COMMENT" styleID="13" fgColor="FF0000" bgColor="FF0000" fontName="" fontStyle="0" fontSize="" />
-15          => { name => "COMMENTLINEDOC",                               }, ##     <WordsStyle name="COMMENTLINEDOC" styleID="15" fgColor="FF0000" bgColor="FF0000" fontName="" fontStyle="0" fontSize="" />
-16          => { name => "KEYWORD2",        keywordClass => "instre2",   }, ##     <WordsStyle name="KEYWORD2" styleID="16" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="1" fontSize="" keywordClass="instre2" />
-17          => { name => "COMMENTDOCKEYWORD", keywordClass => "type1",   }, ##     <WordsStyle name="COMMENTDOCKEYWORD" styleID="17" fgColor="FF0000" bgColor="FF0000" fontName="" fontStyle="0" fontSize=""  keywordClass="type1" />
-18          => { name => "COMMENTDOCKEYWORDERROR",                       }, ##     <WordsStyle name="COMMENTDOCKEYWORDERROR" styleID="18" fgColor="FF0000" bgColor="FF0000" fontName="" fontStyle="0" fontSize="" />
-19          => { name => "USER1",           keywordClass => "type3",     }, ##     <WordsStyle name="USER1" styleID="19" fgColor="800080" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" keywordClass="type3" />
-20          => { name => "USER2",           keywordClass => "type4",     }, ##     <WordsStyle name="SQL_USER2" styleID="20" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" keywordClass="type4" />
-21          => { name => "USER3",           keywordClass => "type5",     }, ##     <WordsStyle name="SQL_USER3" styleID="21" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" keywordClass="type5" />
-22          => { name => "USER4",           keywordClass => "type6",     }, ##     <WordsStyle name="SQL_USER4" styleID="22" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" keywordClass="type6" />
-23          => { name => "QUOTEDIDENTIFIER",                             }, ##     <WordsStyle name="QUOTEDIDENTIFIER" styleID="23" fgColor="FF0000" bgColor="FF0000" fontName="" fontStyle="0" fontSize="" />
-24          => { name => "QOPERATOR",                                    }, ##     <WordsStyle name="QOPERATOR" styleID="24" fgColor="FF0000" bgColor="FF0000" fontName="" fontStyle="0" fontSize="" />
 
 LexSQL.cxx#L411                                             // peter's comments
 	case 0:                     wordListN = &keywords1;
