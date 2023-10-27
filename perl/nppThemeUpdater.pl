@@ -52,8 +52,11 @@ sub reconcileLanguage {
         $usedID{$id} = $node_WordsStyle;
     }
 
-    # TODO: loop through req elements, adding any that don't exist as children to $node
-
+    # loop through req elements, TODO: adding any that don't exist as children to $node
+    for my $styleID (sort keys %$req) {
+        next if exists $usedID{$styleID};
+        printf "UnusedCategory(%d,%s) TODO = needs to be added\n", $styleID, $req->{$styleID}{name};
+    }
 }
 
 sub language_requirements {
