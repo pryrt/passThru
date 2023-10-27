@@ -38,15 +38,21 @@ sub globalStyles_node_to_hashref {
 sub reconcileLanguage {
     my ($node, $req, $gStyles) = @_;
     printf "Need to check =>\n%s\nagainst =>\n%s\nusing styling =>\n%s\n", $node//'<undef>', Data::Dump::pp($req), Data::Dump::pp($gStyles);
+
+    # find all the styles that are currently used (and rename any that don't match req)
     my %usedID;
     for my $node_WordsStyle ( $node->childNodes ) {
         # findnodes('//WordsStyle') uses whole DOM, not just the active node, so returns the whole document's WordsStyle elements
         # find('//WordsStyle') returned 'carp croak', which was useless.
-        printf "\tWordsStyle(%d,%s)\n", $node_WordsStyle->{styleID}, $node_WordsStyle->{name};
-        $usedID{$node_WordsStyle->{styleID}} = $node_WordsStyle;
+        my $id = $node_WordsStyle->{styleID};
+        my $reqName = $req->{$id}{name};
+        my $rename = ($reqName eq $node_WordsStyle->{name}) ? "" : $reqName;
+        $node_WordsStyle->{name} = $rename if length $rename;
+        printf "WordsStyle(%d,%s)\n", $id, $node_WordsStyle->{name};
+        $usedID{$id} = $node_WordsStyle;
     }
-    # TODO: loop through hash elements, adding any that don't exist as children to $node
 
+    # TODO: loop through req elements, adding any that don't exist as children to $node
 
 }
 
@@ -76,7 +82,6 @@ sub language_requirements {
         22  => { name => "USER4",                   keywordClass => "type6",    }, ##     <WordsStyle name="SQL_USER4" styleID="22" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" keywordClass="type6" />
         23  => { name => "QUOTEDIDENTIFIER",                                    }, ##     <WordsStyle name="QUOTEDIDENTIFIER" styleID="23" fgColor="FF0000" bgColor="FF0000" fontName="" fontStyle="0" fontSize="" />
         24  => { name => "QOPERATOR",                                           }, ##     <WordsStyle name="QOPERATOR" styleID="24" fgColor="FF0000" bgColor="FF0000" fontName="" fontStyle="0" fontSize="" />
-
     };
 
     return %req;
