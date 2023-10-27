@@ -29,8 +29,11 @@ sub globalStyles_node_to_hashref {
     my $hashref = {};
     my ($node_default) = $node->findnodes('//WidgetStyle[@name="Default Style"]');
     # print $node_default->toString(1), "\n";
-    for my $attr (qw/fgColor bgColor fontName fontStyle fontSize/) {
+    for my $attr (qw/fgColor bgColor fontStyle/) {    # these need to be explicit copies of DefaultStyle
         $hashref->{$attr} = $node_default->{$attr} if exists $node_default->{$attr};
+    }
+    for my $attr (qw/fontName fontSize/) { # set these empty to automatically inherit from DefaultStyle
+        $hashref->{$attr} = "";
     }
     return $hashref;
 }
@@ -48,15 +51,27 @@ sub reconcileLanguage {
         my $reqName = $req->{$id}{name};
         my $rename = ($reqName eq $node_WordsStyle->{name}) ? "" : $reqName;
         $node_WordsStyle->{name} = $rename if length $rename;
+        $node_WordsStyle->{keywordClass} = $req->{$id}{keywordClass} if exists $req->{$id}{keywordClass};
         printf "WordsStyle(%d,%s)\n", $id, $node_WordsStyle->{name};
         $usedID{$id} = $node_WordsStyle;
     }
 
-    # loop through req elements, TODO: adding any that don't exist as children to $node
+    # loop through req elements, adding any that don't exist as children to $node
     for my $styleID (sort keys %$req) {
         next if exists $usedID{$styleID};
         printf "UnusedCategory(%d,%s) TODO = needs to be added\n", $styleID, $req->{$styleID}{name};
+        my $newWordsStyle = XML::LibXML::Element->new('WordsStyle');
+        $newWordsStyle->{name} = $req->{$styleID}{name};
+        $newWordsStyle->{styleID} = $styleID;
+        for my $attr ( qw/fgColor bgColor fontName fontStyle fontSize/ ) {
+            $newWordsStyle->{$attr} = $gStyles->{$attr};
+        }
+        $newWordsStyle->{keywordClass} = $req->{$styleID}{keywordClass} if exists $req->{$styleID}{keywordClass};
+        printf "\t%s\n", $newWordsStyle->toString();
+        $node->addChild($newWordsStyle);
     }
+
+    print "updated_node => \n", $node->toString(1), "\n";
 }
 
 sub language_requirements {
