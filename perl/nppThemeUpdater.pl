@@ -22,6 +22,8 @@ for my $filename (@ARGV) {
         my ($node_LexerType) = $dom->findnodes(sprintf '//LexerType[@name="%s"]', $lang);
         reconcileLanguage($node_LexerType, $LanguageRequirements{$lang}, $gStyles);
     }
+    open my $fh, '>', $filename;
+    print {$fh} $dom->toString(1);
 }
 
 sub globalStyles_node_to_hashref {
