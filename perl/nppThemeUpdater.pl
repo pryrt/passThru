@@ -104,6 +104,30 @@ sub language_requirements {
         24  => { name => "QOPERATOR",                                           }, ##     <WordsStyle name="QOPERATOR" styleID="24" fgColor="FF0000" bgColor="FF0000" fontName="" fontStyle="0" fontSize="" />
     };
 
+    $req{python} = {    # https://github.com/notepad-plus-plus/notepad-plus-plus/blob/master/lexilla/lexers/LexPython.cxx#L353-L376
+        0  => { name => "DEFAULT",                                      }, ##    <WordsStyle name="DEFAULT" styleID="0" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+        1  => { name => "COMMENTLINE",                                  }, ##    <WordsStyle name="COMMENTLINE" styleID="1" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+        2  => { name => "NUMBER",                                       }, ##    <WordsStyle name="NUMBER" styleID="2" fgColor="FF0000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+        3  => { name => "STRING",                                       }, ##    <WordsStyle name="STRING" styleID="3" fgColor="808080" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+        4  => { name => "CHARACTER",                                    }, ##    <WordsStyle name="CHARACTER" styleID="4" fgColor="808080" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+        5  => { name => "KEYWORDS",         keywordClass => "instre1",  }, ##    <WordsStyle name="KEYWORDS" styleID="5" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="1" fontSize="" keywordClass="instre1" />
+        6  => { name => "TRIPLE",                                       }, ##    <WordsStyle name="TRIPLE" styleID="6" fgColor="FF8000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+        7  => { name => "TRIPLEDOUBLE",                                 }, ##    <WordsStyle name="TRIPLEDOUBLE" styleID="7" fgColor="FF8000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+        8  => { name => "CLASSNAME",                                    }, ##    <WordsStyle name="CLASSNAME" styleID="8" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="1" fontSize="" />
+        9  => { name => "DEFNAME",                                      }, ##    <WordsStyle name="DEFNAME" styleID="9" fgColor="FF00FF" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+        10 => { name => "OPERATOR",                                     }, ##    <WordsStyle name="OPERATOR" styleID="10" fgColor="000080" bgColor="FFFFFF" fontName="" fontStyle="1" fontSize="" />
+        11 => { name => "IDENTIFIER",                                   }, ##    <WordsStyle name="IDENTIFIER" styleID="11" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+        12 => { name => "COMMENTBLOCK",                                 }, ##    <WordsStyle name="COMMENTBLOCK" styleID="12" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+        13 => { name => "STRING EOL",                                   }, ##    <WordsStyle name="STRING EOL" styleID="13" fgColor="FF0000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+        14 => { name => "BUILTINS",         keywordClass => "instre2",  }, ##    <WordsStyle name="BUILTINS" styleID="14" fgColor="880088" bgColor="FFFFFF" fontName="" fontStyle="1" fontSize="" keywordClass="instre2" />
+        15 => { name => "DECORATOR",                                    }, ##    <WordsStyle name="DECORATOR" styleID="15" fgColor="FF8000" bgColor="FFFFFF" fontName="" fontStyle="2" fontSize="" />
+        16 => { name => "F STRING",                                     }, ##    <WordsStyle name="F STRING" styleID="16" fgColor="808080" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+        17 => { name => "F CHARACTER",                                  }, ##    <WordsStyle name="F CHARACTER" styleID="17" fgColor="808080" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+        18 => { name => "F TRIPLE",                                     }, ##    <WordsStyle name="F TRIPLE" styleID="18" fgColor="FF8000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+        19 => { name => "F TRIPLEDOUBLE",                               }, ##    <WordsStyle name="F TRIPLEDOUBLE" styleID="19" fgColor="FF8000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+        20 => { name => "ATTRIBUTE",                                    }, ##    <WordsStyle name="ATTRIBUTE" styleID="13" fgColor="AAAAAA" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+    };
+
     return %req;
 }
 
