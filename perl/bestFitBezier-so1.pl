@@ -107,6 +107,21 @@ demonstration implementation here:<http://phrogz.net/svg/closest-point-on-bezier
 Keep my CubicBezier object and my random samples, but let's see if I can replicate the
 implementation below, assuming those.
 
+__TODO__
+Now that I've got the closest point on my guess to each of the samples,
+I think I can use the a,b,c,d formulas from <https://stackoverflow.com/a/57315396>
+and then compute the partials { d(DSQ)/da, d(DSQ)/db, d(DSQ)/dc, d(DSQ)/dd } for
+each of the points.  Then I would do the partials w/r/t param-n { da/dpₙ, db/dpₙ, dc/dpₙ, dd/dpₙ }
+and appropriately sum together the contributions
+    dD/dpₙ = sum { d(DSQ)/da * da/dpₙ, d(DSQ)/db * db/dpₙ, d(DSQ)/dc * dc/dpₙ, d(DSQ)/dd * dd/dpₙ }
+(or alternatively, recompute from DSQ = (Bx(t))^2 + (By(t))^2, and do d(DSQ)/dpₙ directly,
+which should give equivalent formula).
+
+Then I would do Δpₙₓ = (Sₓ-Gₓ) / [ d(DSQ)/dpₙₓ ]
+    where S=sample, G=guess
+Add up all the Δpₙₓᵢ for each of the Sᵢ
+Iterate.
+
 
 __JAVASCRIPT__
 
