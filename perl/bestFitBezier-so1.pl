@@ -19,7 +19,7 @@ print "$_\n" for @samples;
 print "End Slopes: ", $actual->dBdt(0), " ... ", $actual->dBdt(1), "\n";
 
 my $guess = CubicBezier(V(0,0), V(0,0.3), V(0.7,1), V(1,1));
-while(1) {
+for (1..10) {
     print "Training Loop:\n";
     printf "\tguess{%s} = %s\n", $_, $guess->{$_} for qw/p0 p1 p2 p3/;
 
@@ -56,32 +56,21 @@ while(1) {
         ΔP₃ₓ += (Sₓᵢ-Gₓ(tᵢ)) / (2⋅αᵢ⋅(           tᵢ³))          ΔP₃ᵧ += (Sᵧᵢ-Gᵧ(tᵢ)) / (2⋅βᵢ⋅(           tᵢ³))
 =cut
 
-        $ΔP[0][0] += ($sxi-$gxi) / (2*$αi*($Vti->[0]));         $ΔP[0][1] += ($syi-$gyi) / (2*$βi*($Vti->[0]));
-        $ΔP[1][0] += ($sxi-$gxi) / (6*$αi*($Vti->[1]));         $ΔP[1][1] += ($syi-$gyi) / (6*$βi*($Vti->[1]));
-        $ΔP[2][0] += ($sxi-$gxi) / (6*$αi*($Vti->[2]));         $ΔP[2][1] += ($syi-$gyi) / (6*$βi*($Vti->[2]));
-        $ΔP[3][0] += ($sxi-$gxi) / (2*$αi*($Vti->[3]));         $ΔP[3][1] += ($syi-$gyi) / (2*$βi*($Vti->[3]));
+        $ΔP[0][0] += ($sxi-$gxi) * (2*$αi*($Vti->[0]));         $ΔP[0][1] += ($syi-$gyi) * (2*$βi*($Vti->[0]));
+        $ΔP[1][0] += ($sxi-$gxi) * (6*$αi*($Vti->[1]));         $ΔP[1][1] += ($syi-$gyi) * (6*$βi*($Vti->[1]));
+        $ΔP[2][0] += ($sxi-$gxi) * (6*$αi*($Vti->[2]));         $ΔP[2][1] += ($syi-$gyi) * (6*$βi*($Vti->[2]));
+        $ΔP[3][0] += ($sxi-$gxi) * (2*$αi*($Vti->[3]));         $ΔP[3][1] += ($syi-$gyi) * (2*$βi*($Vti->[3]));
         printf "\t\t$i# ΔP[%d] = %s\n", $_, $ΔP[$_] for 0..3;
     }
-    printf "\tFINAL ΔP[%d] = %s\n", $_, $ΔP[$_] for 0..3;
+    for my $k ( 1 .. 2 ){
+        my $key = "p$k";
+        $guess->{$key} += $ΔP[$k];
+        printf "\tFINAL P%d = %s\n", $k, $guess->{$key};
 
-=begin
-    Math says ΔPₖ = ERR / ({∂/∂Pₖ}{Dᵢ²}) = ERR / (m*αᵢ*Vtᵢₖ)
-	* ΔP[0] = {1.76228029758438e+15, 2886452118.93534}
-	* ΔP[1] = {-175038592044.703, -1105901.88349331}
-	* ΔP[2] = {-1342177425517.63, -1342178099202.71}
-	* ΔP[3] = {-6.59706593186477e+18, -6.59706976665054e+18}
+    }
 
-    Way too big; need to figure out what's going wrong.
-        - well, for example, ideally Vt_sample0 = (1,0,0,0), which means all but k=0 will have huge denominators,
-        - and at Vt_sampleN = (0,0,0,1), which means all but k=3 will have huge denominators
-    Next TODO: maybe I should try the mathematically less rigorous, but possibly more-effective
-            param += error * mu * denom instead of error / denom,
-        which would make the change in parameter larger for when the time is close to that control,
-        and smaller when it's farther in time
-        ... that seems to be more like the ANN backprop of error times slope instead of error divided by slope
-=cut
-
-    last;# if $TotalDsq < 1e-6;
+    print "Hit ENTER:\n"; <STDIN>;
+    #last;# if $TotalDsq < 1e-6;
 }
 exit;
 
@@ -165,21 +154,49 @@ demonstration implementation here:<http://phrogz.net/svg/closest-point-on-bezier
 Keep my CubicBezier object and my random samples, but let's see if I can replicate the
 implementation below, assuming those.
 
-__TODO__
+__2023-Dec-07__
+
 Now that I've got the closest point on my guess to each of the samples,
 I think I can use the a,b,c,d formulas from <https://stackoverflow.com/a/57315396>
-and then compute the partials { d(DSQ)/da, d(DSQ)/db, d(DSQ)/dc, d(DSQ)/dd } for
-each of the points.  Then I would do the partials w/r/t param-n { da/dpₙ, db/dpₙ, dc/dpₙ, dd/dpₙ }
-and appropriately sum together the contributions
-    dD/dpₙ = sum { d(DSQ)/da * da/dpₙ, d(DSQ)/db * db/dpₙ, d(DSQ)/dc * dc/dpₙ, d(DSQ)/dd * dd/dpₙ }
-(or alternatively, recompute from DSQ = (Bx(t))^2 + (By(t))^2, and do d(DSQ)/dpₙ directly,
-which should give equivalent formula).
+and then compute the partials
 
-Then I would do Δpₙₓ = (Sₓ-Gₓ) / [ d(DSQ)/dpₙₓ ]
-    where S=sample, G=guess
-Add up all the Δpₙₓᵢ for each of the Sᵢ
-Iterate.
+- Make a guess for bezier G(t)
+- Loop
+    - Set ΔPₖₓ=0, ΔPₖᵧ=0
+    - For each ᵢ of the N samples
+        - use the iterative ClosestPoint algorithm to find the {tᵢ ⇒ [Gₓ(tᵢ), Gᵧ(tᵢ)]}
+          such that the point is closest to [Sₓᵢ,Sᵧᵢ], and determine the squared-distance (Dᵢ²)
+            αᵢ  = (1-tᵢ)³⋅P₀ₓ + 3⋅(1-tᵢ)²⋅tᵢ⋅P₁ₓ + 3⋅(1-tᵢ)⋅tᵢ²⋅P₂ₓ + tᵢ³⋅P₃ₓ - Sₓᵢ
+            βᵢ  = (1-tᵢ)³⋅P₀ᵧ + 3⋅(1-tᵢ)²⋅tᵢ⋅P₁ᵧ + 3⋅(1-tᵢ)⋅tᵢ²⋅P₂ᵧ + tᵢ³⋅P₃ᵧ - Sᵧᵢ
+            Dᵢ² = αᵢ² + βᵢ²
+        - Update each ΔPₖ based on the error in x or y divided by the partial derivative of Dᵢ² w/r/t Pₖ
+            ΔP₀ₓ += (Sₓᵢ-Gₓ(tᵢ)) / (2⋅αᵢ⋅(1-3tᵢ+3tᵢ²-tᵢ³))       ΔP₀ᵧ += (Sᵧᵢ-Gᵧ(tᵢ)) / (2⋅βᵢ⋅(1-3tᵢ+3tᵢ²-tᵢ³))
+            ΔP₁ₓ += (Sₓᵢ-Gₓ(tᵢ)) / (6⋅αᵢ⋅(   tᵢ-2tᵢ²+tᵢ³))       ΔP₁ᵧ += (Sᵧᵢ-Gᵧ(tᵢ)) / (6⋅βᵢ⋅(   tᵢ-2tᵢ²+tᵢ³))
+            ΔP₂ₓ += (Sₓᵢ-Gₓ(tᵢ)) / (6⋅αᵢ⋅(       tᵢ²-tᵢ³))       ΔP₂ᵧ += (Sᵧᵢ-Gᵧ(tᵢ)) / (6⋅βᵢ⋅(       tᵢ²-tᵢ³))
+            ΔP₃ₓ += (Sₓᵢ-Gₓ(tᵢ)) / (2⋅αᵢ⋅(           tᵢ³))       ΔP₃ᵧ += (Sᵧᵢ-Gᵧ(tᵢ)) / (2⋅βᵢ⋅(           tᵢ³))
+    - Update Pₖ += [ΔPₖₓ,ΔPₖᵧ]
+    - if ∑D²ᵢ<ε, exit loop
 
+Problem: The math says ΔPₖ = ERR / ({∂/∂Pₖ}Dᵢ²) = ERR / (m*αᵢ*Vtᵢₖ) ... but using real data:
+* ΔP[0] = {1.76228029758438e+15, 2886452118.93534}
+* ΔP[1] = {-175038592044.703, -1105901.88349331}
+* ΔP[2] = {-1342177425517.63, -1342178099202.71}
+* ΔP[3] = {-6.59706593186477e+18, -6.59706976665054e+18}
+
+That's way too big for the Δ; need to figure out what's going wrong.
+    - well, for example, ideally Vt_sample0 = (1,0,0,0), which means all but k=0 will have huge denominators,
+    - and at Vt_sampleN = (0,0,0,1), which means all but k=3 will have huge denominators
+
+Maybe I should try the mathematically less rigorous, but possibly more-effective
+    param += error * mu * denom instead of error / denom,
+which would make the change in parameter larger for when the time is close to that control,
+and smaller when it's farther in time
+
+That seems to be more like the ANN backprop of error times slope instead of error divided by slope.
+And the ANN backprop confuses me just as much as this does.  But doing it in a 2x loop, it definitely
+moves the answer in the right direction.  But when I do more, iterations, it quickly starts moving away.
+
+Even if I try to make P₀ and P₃ constants, they start diverging pretty quickly.
 
 __JAVASCRIPT__
 
