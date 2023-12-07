@@ -7,6 +7,7 @@ use lib "$FindBin::Bin/lib";
 use Math::Vector::Real;
 use Math::Vector::Real::Bezier::Cubic;
 use utf8;
+use open ':std', ':encoding(UTF-8)';
 
 BEGIN { $| = 1; }
 
@@ -18,13 +19,70 @@ print "$_\n" for @samples;
 print "End Slopes: ", $actual->dBdt(0), " ... ", $actual->dBdt(1), "\n";
 
 my $guess = CubicBezier(V(0,0), V(0,0.3), V(0.7,1), V(1,1));
-printf "guess{%s} = %s\n", $_, $guess->{$_} for qw/p0 p1 p2 p3/;
+while(1) {
+    print "Training Loop:\n";
+    printf "\tguess{%s} = %s\n", $_, $guess->{$_} for qw/p0 p1 p2 p3/;
 
-for my $samp ( @samples ) {
-    my $t = closestPoint($guess, $samp);
-    printf "ANSWER: closestPoint(%s) => t=%s, out=%s\n", $samp, $t, $guess->B($t);
+    my @ΔP = (V(0,0), V(0,0), V(0,0), V(0,0));
+    my $Vpx = V(map { $guess->{$_}[0] } qw/p0 p1 p2 p3/); # used for dot product with the time-vector for easily calculating αi
+    my $Vpy = V(map { $guess->{$_}[1] } qw/p0 p1 p2 p3/); # used for dot product with the time-vector for easily calculating βi
+    my $TotalDsq = 0;
+
+    for my $i ( 0 .. $#samples ) {
+        my $samp = $samples[$i];
+        my $ti = closestPoint($guess, $samp);
+        my $gi = $guess->B($ti);
+        printf "\tclosestPoint(#%2d: %-48.48s) => t=%014.12f, out=%-48.48s\n", $i, $samp, $ti, $gi;
+
+        my ($sxi, $syi) = @$samp;
+        my ($gxi, $gyi) = @$gi;
+        my $Vti = V(
+            1 - 3*$ti + 3*$ti*$ti - $ti*$ti*$ti,
+            0 +   $ti - 2*$ti*$ti + $ti*$ti*$ti,
+            0 +           $ti*$ti - $ti*$ti*$ti,
+            0 +                     $ti*$ti*$ti
+        );
+        printf "\t\tVtᵢ = %s\n", $Vti;
+        my $αi = $Vpx * $Vti - $sxi;
+        my $βi = $Vpy * $Vti - $syi;
+        my $Disq = $αi*$αi + $βi*$βi;
+        $TotalDsq += $Disq;
+        printf "\t\tDᵢ² = αᵢ² + βᵢ² = (%.6f)² + (%.6f)² = %.6f   => ∑ = %.6f\n", $αi, $βi, $Disq, $TotalDsq;
+
+=begin
+        ΔP₀ₓ += (Sₓᵢ-Gₓ(tᵢ)) / (2⋅αᵢ⋅(1-3tᵢ+3tᵢ²-tᵢ³))          ΔP₀ᵧ += (Sᵧᵢ-Gᵧ(tᵢ)) / (2⋅βᵢ⋅(1-3tᵢ+3tᵢ²-tᵢ³))
+        ΔP₁ₓ += (Sₓᵢ-Gₓ(tᵢ)) / (6⋅αᵢ⋅(   tᵢ-2tᵢ²+tᵢ³))          ΔP₁ᵧ += (Sᵧᵢ-Gᵧ(tᵢ)) / (6⋅βᵢ⋅(   tᵢ-2tᵢ²+tᵢ³))
+        ΔP₂ₓ += (Sₓᵢ-Gₓ(tᵢ)) / (6⋅αᵢ⋅(       tᵢ²-tᵢ³))          ΔP₂ᵧ += (Sᵧᵢ-Gᵧ(tᵢ)) / (6⋅βᵢ⋅(       tᵢ²-tᵢ³))
+        ΔP₃ₓ += (Sₓᵢ-Gₓ(tᵢ)) / (2⋅αᵢ⋅(           tᵢ³))          ΔP₃ᵧ += (Sᵧᵢ-Gᵧ(tᵢ)) / (2⋅βᵢ⋅(           tᵢ³))
+=cut
+
+        $ΔP[0][0] += ($sxi-$gxi) / (2*$αi*($Vti->[0]));         $ΔP[0][1] += ($syi-$gyi) / (2*$βi*($Vti->[0]));
+        $ΔP[1][0] += ($sxi-$gxi) / (6*$αi*($Vti->[1]));         $ΔP[1][1] += ($syi-$gyi) / (6*$βi*($Vti->[1]));
+        $ΔP[2][0] += ($sxi-$gxi) / (6*$αi*($Vti->[2]));         $ΔP[2][1] += ($syi-$gyi) / (6*$βi*($Vti->[2]));
+        $ΔP[3][0] += ($sxi-$gxi) / (2*$αi*($Vti->[3]));         $ΔP[3][1] += ($syi-$gyi) / (2*$βi*($Vti->[3]));
+        printf "\t\t$i# ΔP[%d] = %s\n", $_, $ΔP[$_] for 0..3;
+    }
+    printf "\tFINAL ΔP[%d] = %s\n", $_, $ΔP[$_] for 0..3;
+
+=begin
+    Math says ΔPₖ = ERR / ({∂/∂Pₖ}{Dᵢ²}) = ERR / (m*αᵢ*Vtᵢₖ)
+	* ΔP[0] = {1.76228029758438e+15, 2886452118.93534}
+	* ΔP[1] = {-175038592044.703, -1105901.88349331}
+	* ΔP[2] = {-1342177425517.63, -1342178099202.71}
+	* ΔP[3] = {-6.59706593186477e+18, -6.59706976665054e+18}
+
+    Way too big; need to figure out what's going wrong.
+        - well, for example, ideally Vt_sample0 = (1,0,0,0), which means all but k=0 will have huge denominators,
+        - and at Vt_sampleN = (0,0,0,1), which means all but k=3 will have huge denominators
+    Next TODO: maybe I should try the mathematically less rigorous, but possibly more-effective
+            param += error * mu * denom instead of error / denom,
+        which would make the change in parameter larger for when the time is close to that control,
+        and smaller when it's farther in time
+        ... that seems to be more like the ANN backprop of error times slope instead of error divided by slope
+=cut
+
+    last;# if $TotalDsq < 1e-6;
 }
-
 exit;
 
 #  Calculate a point along a Bézier segment for a given parameter.
