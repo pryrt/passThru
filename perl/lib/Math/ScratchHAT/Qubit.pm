@@ -27,7 +27,11 @@ sub observe
 sub hadamardMe
 {
     my ($self) = @_;
-    die "I haven't been implemented yet";
+    my $sum = $self->{falseAmp} + $self->{trueAmp};
+    my $dif = $self->{falseAmp} - $self->{trueAmp};
+    $self->{falseAmp} = $sum;
+    $self->{trueAmp} = $dif;
+    return $self;
 }
 
 1;

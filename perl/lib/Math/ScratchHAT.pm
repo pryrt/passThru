@@ -42,5 +42,31 @@ sub addQubit
     $self->{q}{$name} = Math::ScratchHAT::Qubit::->new();
 }
 
+sub print
+{
+    my ($self, $individual) = @_;
+
+    my $ket = '|';
+    for my $name ( @{ $self->{order} }) {
+        my $val = $self->{q}{$name}->observe();
+        my $str = (qw/F T/)[$val];
+        $ket .= $str;
+        print ".. qubit($name) = $str\n" if $individual;
+    }
+    $ket .= '>';
+    print "=> system: $ket\n";
+}
+
+sub HAT
+{
+    my ($self) = @_;
+
+    for my $name ( @{ $self->{order} }) {
+        $self->{q}{$name}->hadamardMe();
+    }
+
+    return $self;
+}
+
 
 1;
