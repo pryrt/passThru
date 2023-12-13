@@ -11,12 +11,14 @@ to provide the quantumness -- he called the block "Hadamard All the Things", or 
 
 =cut
 
+use Data::Dump;
 use FindBin;
 use lib $FindBin::Bin . '/lib';
 use Math::ScratchHAT;
 
 my $system = Math::ScratchHAT::->new();
-$system->addQubit('m1');
-$system->addQubit('m1');
-use Data::Dump;
+my $m1 = $system->addQubit('m1');
+my $m2 = $system->addQubit('m2');
+dd $system;
+$m1->observe;
 dd $system;

@@ -22,7 +22,7 @@ Creates a new B<ScratchHAT> quantum system.
 sub new
 {
     my ($class) = @_;
-    return bless {}, $class;
+    return bless { q => {}, order => [] }, $class;
 }
 
 =head2 addQubit
@@ -34,11 +34,13 @@ Adds a new qubit to the system.
 sub addQubit
 {
     my ($self, $name) = @_;
-    if(exists $self->{$name}) {
+    if(exists $self->{q}{$name}) {
         warn "cannot create a second '$name' qubit, sorry; I'll assume you've just forgotten, and will continue running without creating anything new";
         return;
     }
-    $self->{$name} = undef; # Math::ScratchHAT::Qubit::->new();
+    push @{$self->{order}}, $name;
+    $self->{q}{$name} = Math::ScratchHAT::Qubit::->new();
 }
+
 
 1;
