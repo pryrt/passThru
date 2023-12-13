@@ -42,6 +42,38 @@ sub addQubit
     $self->{q}{$name} = Math::ScratchHAT::Qubit::->new();
 }
 
+=head2 toggleQubit
+
+Toggles the specified qubit
+
+    $system->toggleQubit('m1');
+
+=cut
+
+sub toggleQubit
+{
+    my ($self, $name) = @_;
+    if(!exists $self->{q}{$name}) {
+        die "cannot toggle non-existing '$name' qubit";
+    }
+    $self->{q}{$name}->toggle;
+}
+
+=head2 print
+
+Print all the qubits in ket notation, like:
+
+    => system: |TTF>
+
+If the optional argument is true, also print the individual qubit values with their name
+
+    .. qubit(m1) = T
+    .. qubit(m2) = T
+    .. qubit(ans) = F
+    => system: |TTF>
+
+=cut
+
 sub print
 {
     my ($self, $individual) = @_;
@@ -56,6 +88,12 @@ sub print
     $ket .= '>';
     print "=> system: $ket\n";
 }
+
+=head2 HAT
+
+"Hadamard All the Things" => Runs the Hadamard transformation on each qubit in the system
+
+=cut
 
 sub HAT
 {

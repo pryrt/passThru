@@ -48,7 +48,9 @@ First program (0:41)
 
 Okay, now I should be able to implement such that mine will get the same results.
 
-Next (4:10)
+Before continuing with the video, make an attempt at the toggleQubit
+
+Next (4:10 = https://youtu.be/VuWklQM_3q8?t=250)
 
 =cut
 
@@ -57,11 +59,21 @@ use FindBin;
 use lib $FindBin::Bin . '/lib';
 use Math::ScratchHAT;
 
-program1() for 1..10;
-
-sub program1 {
+sub program1
+{
     my $system = Math::ScratchHAT::->new();
     $system->addQubit('m1');
     $system->HAT();
     $system->print();
 }
+#program1() for 1..5;
+
+sub my_toggle_test
+{
+    my $system = Math::ScratchHAT::->new();
+    $system->addQubit('m1');
+    $system->toggleQubit('m1');
+    $system->HAT();
+    $system->print();
+}
+my_toggle_test() for 1..10;
