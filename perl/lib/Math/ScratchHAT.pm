@@ -17,12 +17,15 @@ You can think of it as a "Quantum System".
 
 Creates a new B<ScratchHAT> quantum system.
 
+    my $system = Math::ScratchHAT::->new('myQuantumSystem');
+    my $sys2 = Math::ScratchHAT::->new();   # name defaults to 'system' if not given
+
 =cut
 
 sub new
 {
-    my ($class) = @_;
-    return bless { q => {}, order => [] }, $class;
+    my ($class, $sysname) = @_;
+    return bless { name => $sysname // 'system', q => {}, order => [] }, $class;
 }
 
 =head2 addQubit
@@ -86,7 +89,7 @@ sub print
         print ".. qubit($name) = $str\n" if $individual;
     }
     $ket .= '>';
-    print "=> system: $ket\n";
+    printf "=> %s: %s\n", $self->{name}, $ket;
 }
 
 =head2 HAT

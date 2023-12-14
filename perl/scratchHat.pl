@@ -70,7 +70,7 @@ sub program1
 
 sub my_toggle_test
 {
-    my $system = Math::ScratchHAT::->new();
+    my $system = Math::ScratchHAT::->new('toggleTest');
     $system->addQubit('m1');
     $system->toggleQubit('m1');
     $system->HAT();
