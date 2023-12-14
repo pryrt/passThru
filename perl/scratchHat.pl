@@ -68,12 +68,66 @@ sub program1
 }
 #program1() for 1..5;
 
-sub my_toggle_test
+sub program410
 {
     my $system = Math::ScratchHAT::->new('toggleTest');
     $system->addQubit('m1');
     $system->toggleQubit('m1');
+    #dd {beforeHAT => $system};
     $system->HAT();
+    #dd {afterHAT => $system};
     $system->print();
 }
-my_toggle_test() for 1..10;
+# program410() for 1..10;
+
+=begin TextBackground
+
+Mine worked the same as his, and now we'll analyze (4:54)
+
+    addQubit:
+            |F> = 1
+            |T> = 0
+    toggleQubit: "has the effect of switching false and true", which is what I think I coded
+            |F> = 0
+            |T> = 1
+    Hadamard Transformation
+            new |F> = |F> + |T> = 0 + 1 = 1
+            new |T> = |F> - |T> = 0 - 1 = -1
+    I verified with dd on before/afterHAT that those were the states that were there
+
+Next is 6:19
+
+=cut
+
+sub program619
+{
+    my $system = Math::ScratchHAT::->new('6:19 double HAT');
+    $system->addQubit('myQubit');
+    #dd {beforeHAT1 => $system};
+    $system->HAT();
+    #dd {afterHAT1 => $system};
+    $system->HAT();
+    #dd {afterHAT2 => $system};
+    $system->print();
+}
+program619() for 1..10;
+
+=begin TextBackground
+
+619 prints false every time.
+
+    addQubit:
+            |F> = 1
+            |T> = 0
+    Hadamard Transformation #1
+            new |F> = |F> + |T> = 1 + 0 = 1
+            new |T> = |F> - |T> = 1 - 0 = 1
+    Hadamard Transformation #2
+            new |F> = |F> + |T> = 1 + 1 = 2
+            new |T> = |F> - |T> = 1 - 1 = 0     # interference
+    => 100% probability of myQubit == false
+
+
+next at 9:20 is the huge finale from the "demo" video
+
+=cut
