@@ -10,14 +10,29 @@ sub new
     return bless { trueAmp => 0, falseAmp => 1, observed => 0 }, $class;
 }
 
+sub _p_true
+{
+    my ($self) = @_;
+    # this method doesn't collapse state, because it's just used internally, and is not an 'observation'
+
+    my $p = ($self->{trueAmp} ** 2) / ($self->{trueAmp} ** 2 + $self->{falseAmp} ** 2);
+}
+
+sub _p_false
+{
+    my ($self) = @_;
+    # this method doesn't collapse state, because it's just used internally, and is not an 'observation'
+
+    my $q = ($self->{falseAmp} ** 2) / ($self->{trueAmp} ** 2 + $self->{falseAmp} ** 2);
+}
 
 sub _internal_value
 {
     my ($self) = @_;
-    # this method doesn't collapse state, because it's just used internally
+    # this method doesn't collapse state, because it's just used internally, and is not an 'observation'
 
-    # calculate the probability that it's true: (trueAmp**2) / sumsq(trueAmp,falseAmp)
-    my $p = ($self->{trueAmp} ** 2) / ($self->{trueAmp} ** 2 + $self->{falseAmp} ** 2);
+    # calculate the probability that it's true, and use that to grab the "current" random state
+    my $p = $self->_p_true();
     my $state = (rand() < $p);
     return $state||0;
 }
