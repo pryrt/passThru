@@ -223,6 +223,56 @@ ASIDE
             |TFF> +1  NO CHANGE             |TFT> -1    NO CHANGE
             |TTF> -1  SWAP FROM RIGHT       |TTT> +1    SWAP FROM LEFT
         * 16:56 ends the mystery-toggles subroutine description
-    _ TODO: figure out how to do the mappings, so I can see how the SYSTEM amps shown above
-      correspond to individual amplitudes for each qubit in the system
+
+On paper, I saw that after toggle+HAT1, I had individual
+        M1  = (+1,+1) = (a,b)
+        M2  = (+1,+1) = (c,d)
+        ANS = (+1,-1) = (e,f)
+    and that each KET's amplitude depended on multiplying the amplitude for each state, so
+        |FTT> = AMP(M1,F) * AMP(M2,T) * AMP(ANS,T) = a*d*f = +1 * +1 * -1 = -1
+    For the MysteryToggle results, if I take the known KET values and back-compute the a,b,c,d,e,f from those, I can get
+        M1  = (a,b) = (+1,+1)
+        M2  = (c,d) = (+1,-1)
+        ANS = (e,f) = (+1,-1)
+        ... but that's confusing, because it's M2 that had to change its values rather than ANS.
+
+Go look at his Scratch program, and find where he does the
+    DEFINE "if thingName1 then toggle ANSWER"
+        SET cO to "Id"          <cO:var:Id>
+        run zzz_bA              clears speach bubble
+        delete all of aI        <aI:list:>
+        delete all of aD        <aD:list:>
+        add thingName1 to aI    <aI:list:thingName1>
+        add 2 to aD             <aD:list:2>
+        add answer to aI        <aI:list:thingName1,answer>
+        add 2 to aD             <aD:list:2,2>
+        run zzz_doFWTC
+        run zzz_eA
+
+    DEFINE "zzz_bA"
+        say()                   clears speach bubble
+
+    DEFINE "zzz_doFWTC"
+        run zzz_vAWTC
+        IF nV == 0:
+            stop thisScript
+        SET tot to item(r)of(R_D)
+        SET i to 0
+        REPEAT length(U_S_V):
+            change i by 1
+            delete all of f_a
+            set ii to 0
+            REPEAT length(aI)
+                change ii by 1
+                add[letter(item(ii)of(aI)) of(item(i)of(U_S_V))] to(f_a)
+            RUN zzz_coF
+            RUN zzz_aE( {nV}, {letter(r)of(item(i)of(U_S_V))} mod {tot})
+            RUN zzz_cL( {r}, o {(item(i)of(U_S_V)}, t {nV})
+            replace item(i)of(U_S_V) with {nV}
+        set nV to TRUE
+
+    ...
+    looks like a bunch of magic.  I'd have to decompose each of those functions methodically,
+    which isn't going to happen right now
+
 =cut
