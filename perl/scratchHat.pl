@@ -148,27 +148,27 @@ sub program920
     # pretend I don't know what's inside $mystery
     my $mystery = sub {
         $system->conditionalToggle( ifValue => 'm1', thenToggle => 'ans');
-        #$system->conditionalToggle( ifValue => 'm3', thenToggle => 'ans');
-        #$system->conditionalToggle( ifValue => 'm4', thenToggle => 'ans');
-        #$system->conditionalToggle( ifValue => 'm5', thenToggle => 'ans');
+        $system->conditionalToggle( ifValue => 'm3', thenToggle => 'ans');
+        $system->conditionalToggle( ifValue => 'm4', thenToggle => 'ans');
+        $system->conditionalToggle( ifValue => 'm5', thenToggle => 'ans');
     };
 
     # when you run togglesDetective, you "magically" get it to tell you which toggles are in mystery!
     my $togglesDetective = sub {
         $system->toggleQubit('ans');
-        dd { detectiveToggledAns => $system };
+        #dd { detectiveToggledAns => $system };
         $system->HAT();
-        dd { detectiveHAT1 => $system };
+        #dd { detectiveHAT1 => $system };
         $mystery->();
-        dd { detectiveAfterMystery => $system };
+        #dd { detectiveAfterMystery => $system };
         $system->HAT();
-        dd { detectiveHAT2 => $system };
+        #dd { detectiveHAT2 => $system };
         $system->print();
     };
     $togglesDetective->();
 
 }
-program920 for 1;#..10
+#program920 for 1;#..10
 
 =begin TextBackground
 
@@ -276,3 +276,46 @@ Go look at his Scratch program, and find where he does the
     which isn't going to happen right now
 
 =cut
+
+=begin TextBackground
+
+So, playing on paper, my experiments show that "if X then toggle ANS"
+_seems_ to be equivalent to setting amp_new(X,true)=-amp_old(X,true).
+I don't know if that works in _all_ circumstances, or just the limited
+examples that they gave and that I've tried on paper, but for trying
+to replicate the results on the small scale, I will see if that definition
+will work.  Since my notes show that 15:20 was where he was partway through
+explaining the M1,M2,ANS example, that's what I'll call the next code block
+
+=cut
+
+sub program1520
+{
+    my $system = Math::ScratchHAT::->new('15:20 mysteryToggles with |m1,m2,ans>');
+    $system->addQubit('m1');
+    $system->addQubit('m2');
+    $system->addQubit('ans');
+
+    # pretend I don't know what's inside $mystery
+    my $mystery = sub {
+        $system->conditionalToggle( ifValue => 'm2', thenToggle => 'ans');
+    };
+
+    # when you run togglesDetective, you "magically" get it to tell you which toggles are in mystery!
+    my $togglesDetective = sub {
+        $system->toggleQubit('ans');
+        #dd { detectiveToggledAns => $system };
+        $system->HAT();
+        #dd { detectiveHAT1 => $system };
+        $mystery->();
+        #dd { detectiveAfterMystery => $system };
+        $system->HAT();
+        #dd { detectiveHAT2 => $system };
+        $system->print();
+    };
+    $togglesDetective->();
+
+}
+program1520 for 1..10;      # with new algorithm, program1520 works reliably
+
+program920 for 1..10;       # with new algorithm, program920 also works reliably

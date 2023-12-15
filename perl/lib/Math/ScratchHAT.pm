@@ -74,32 +74,40 @@ sub conditionalToggle
 {
     my ($self, %conditions) = @_;
 
+    my $DEBUG = 0;
+
     # get the names (error checking)
     my $ifName = $conditions{ifValue} // die "conditionalToggle(%conditions) requires ifValue => 'name'";
     my $thenName = $conditions{thenToggle} // die "conditionalToggle(%conditions) requires thenToggle => 'name'";
-    print STDERR "debug conditionalToggle: names = $ifName, $thenName\n";
+    print STDERR "debug conditionalToggle: names = $ifName, $thenName\n"    if $DEBUG;
 
     # make sure those named qubits exist (error checking) and grab a reference to the input $qi and output $qo
     my $qi = $self->{q}{$ifName} // die "conditionalToggle(%conditions) requires $ifName to be in the system";
     my $qo = $self->{q}{$thenName} // die "conditionalToggle(%conditions) requires $thenName to be in the system";
-    print STDERR "debug conditionalToggle: qi = $qi, qo = $qo\n";
+    print STDERR "debug conditionalToggle: qi = $qi, qo = $qo\n" if $DEBUG;
 
     # figure out the probability q (false) and p (true) for the conditional
     my $p = $qi->_p_true;
     my $q = 1 - $p;
-    printf STDERR "debug conditionalToggle: prob:q(%s,false) = %s, prob:p(%s,true) = %s\n", $ifName, $q, $ifName, $p;
+    printf STDERR "debug conditionalToggle: prob:q(%s,false) = %s, prob:p(%s,true) = %s\n", $ifName, $q, $ifName, $p    if $DEBUG;
 
-    # now compute the new amplitudes
-    printf STDERR "debug conditionalToggle: old ampf(%s) = %s, ampt(%s) = %s\n", $thenName, $qo->{falseAmp}, $thenName, $qo->{trueAmp};
-    my $new_amp_f = $q * $qo->{falseAmp} + $p * $qo->{trueAmp};     # probability q of staying false, p of toggling to true
-    my $new_amp_t = $p * $qo->{falseAmp} + $q * $qo->{trueAmp};     # probability p of toggling false, q of staying true
-    printf STDERR "debug conditionalToggle: new ampf(%s) = %s, ampt(%s) = %s\n", $thenName, $new_amp_f, $thenName, $new_amp_t;
+    # now compute the new amplitudes:
+    #   first algorithm failed:
+    #       new o.F = q * o.F + p * o.T
+    #       new o.T = q * o.T + p * o.F
+    #   second algorithm:
+    #       new i.F = +i.F
+    #       new i.T = -i.T
+    printf STDERR "debug conditionalToggle: old   ampf(%s) = %s, ampt(%s) = %s\n", $ifName, $qi->{falseAmp}, $ifName, $qi->{trueAmp} if $DEBUG;
+    printf STDERR "debug conditionalToggle: old   ampf(%s) = %s, ampt(%s) = %s\n", $thenName, $qo->{falseAmp}, $thenName, $qo->{trueAmp} if $DEBUG;
+    my $new_amp_f = + $qi->{falseAmp};
+    my $new_amp_t = - $qi->{trueAmp};
 
-    # and propagate them to the output qubit
-    $qo->{falseAmp} = $new_amp_f;
-    $qo->{trueAmp} = $new_amp_t;
-    printf STDERR "debug conditionalToggle: final ampf(%s) = %s, ampt(%s) = %s\n", $ifName, $qi->{falseAmp}, $ifName, $qi->{trueAmp};
-    printf STDERR "debug conditionalToggle: final ampf(%s) = %s, ampt(%s) = %s\n", $thenName, $qo->{falseAmp}, $thenName, $qo->{trueAmp};
+    # and propagate them to the input qubit
+    $qi->{falseAmp} = $new_amp_f;
+    $qi->{trueAmp} = $new_amp_t;
+    printf STDERR "debug conditionalToggle: final ampf(%s) = %s, ampt(%s) = %s\n", $ifName, $qi->{falseAmp}, $ifName, $qi->{trueAmp} if $DEBUG;
+    printf STDERR "debug conditionalToggle: final ampf(%s) = %s, ampt(%s) = %s\n", $thenName, $qo->{falseAmp}, $thenName, $qo->{trueAmp} if $DEBUG;
 
     return $self;
 }
