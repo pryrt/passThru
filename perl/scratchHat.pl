@@ -236,7 +236,7 @@ On paper, I saw that after toggle+HAT1, I had individual
         ANS = (e,f) = (+1,-1)
         ... but that's confusing, because it's M2 that had to change its values rather than ANS.
 
-Go look at his Scratch program, and find where he does the
+Go look at his Scratch program <https://scratch.mit.edu/projects/875118011/editor/>, and find where he does the
     DEFINE "if thingName1 then toggle ANSWER"
         SET cO to "Id"          <cO:var:Id>
         run zzz_bA              clears speach bubble
