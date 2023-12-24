@@ -34,8 +34,8 @@ my $p2 = V($R,0,$r*1.1);    # printf "%-64.64s => %d\n", $p2, pointInsideTorus($
 # load the torus with any voxels that are inside the torus
 sub DBG_LAYERS { 0 }
 my @torus = ();
-my $maxR = ceil($R) + 1;
-my $maxr = ceil($r) + 1;
+my $maxR = ceil($R) + 3;
+my $maxr = ceil($r) + 3;
 for my $y ( -$maxR .. +$maxR ) {
     for my $z ( -$maxr .. +$maxr  ) {
         for my $x ( -$maxR .. +$maxR  ) {
@@ -49,14 +49,28 @@ for my $y ( -$maxR .. +$maxR ) {
     print "\n"  if DBG_LAYERS;
 }
 
+# add in GD:
+use GD;
+my $sz = 31;
+my $im = GD::Image::->new($sz*(2*$maxR+1), $sz*(2*$maxr+1));
+my $bg = $im->colorAllocate(63,63,63);
+my $clrA = $im->colorAllocate(0,0,255);
+my $clrV = $im->colorAllocate(0,63,0);
+my $clrC = $im->colorAllocate(255,0,0);
+
+
 # calculate the total directional acceleration (|1/r**2|*dir()) on any given point
 # only need one slice at y==0, because of symmetry
+
 $| = 1;
 my $maxa = 0;
+my $vOffsR = V($maxR,$maxr);
+my $vOffsPx = V(16,16);
 for my $y ( 0 .. 0 ) {
     for my $z ( -$maxr .. +$maxr  ) {
         for my $x ( -$maxR .. +$maxR  ) {
             my $pt = V($x,$y,$z);
+            my $px = (V($x,$z) + $vOffsR)*$sz + $vOffsPx;
             my $in = pointInsideTorus($pt, $R, $r);
             my $acc = V(0,0,0);
             for my $voxel ( @torus ) {
@@ -72,9 +86,19 @@ for my $y ( 0 .. 0 ) {
             my $ua = $aa ? $acc->versor() : V(0,0,0);
             if($aa > $maxa) { $maxa = $aa; }
             print "$pt => acc:$acc:$aa\t$maxa\n" if DBG_LAYERS;
+            $im->filledRectangle(@{$px - $vOffsPx}, @{$px + $vOffsPx}, $clrV) if $in;
+            $im->filledEllipse(@$px, 5,5, $clrC);
+            my $px2 = $px + V($acc->[0], $acc->[2]);
+            $im->line(@$px, @$px2, $clrA);
         }
     }
 }
 
-# so with my example $V=5000, looks like I could use a sliced voxel size of 30x30 pixels
+# so with my example $V=5000, looks like I could use a sliced voxel size of 31x31 pixels
 #   and be able to show the acceleration vector
+# so add in GD, make an image that holds the whole slice
+
+open my $fh, '>:raw', 'voxelTorus.png';
+print {$fh} $im->png();
+close $fh;
+system(1, 'voxelTorus.png');
