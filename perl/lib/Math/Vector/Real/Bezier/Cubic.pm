@@ -41,6 +41,7 @@ sub By {
     return $self->B($t)->[1];
 }
 
+# partial with respect to time
 sub dBdt {
     my ($self, $t) = @_;
     croak "need a time t" unless defined $t;
@@ -56,6 +57,12 @@ sub dBdt {
         +   1 * $c
         ;
 }
+
+# partials with respect to control-points
+sub dBdp0 { my ($self, $t) = @_;    return 1 * (1-$t)**3 *  1;      }
+sub dBdp1 { my ($self, $t) = @_;    return 3 * (1-$t)**2 * $t;      }
+sub dBdp2 { my ($self, $t) = @_;    return 3 * (1-$t)    * $t**2;   }
+sub dBdp3 { my ($self, $t) = @_;    return 1             * $t**3;   }
 
 # computes the t in the curve that gets closest to the given point
 #   No closed form, so just binary-search between t=0 and t=1
@@ -88,6 +95,9 @@ sub closestToPoint {
             $t0 = $t;
         }
     }
+    # in the end, return the closest of the three points
+    return ($t0, $dsq0, $self->B($t0)) if $dsq0 < $dsq and $dsq0 < $dsq1;
+    return ($t1, $dsq1, $self->B($t1)) if $dsq1 < $dsq;
     return ($t, $dsq, $V);
 }
 
