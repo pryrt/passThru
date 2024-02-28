@@ -7,6 +7,23 @@ use Math::Vector::Real qw/V/;
 our @EXPORT_OK = qw/CubicBezier V/; # the Bezier generator, and the MVR generator
 our @EXPORT = qw/CubicBezier/;      # by default, only export Bezier generator (so it's compatible with also importing MVR into caller)
 
+BEGIN {
+    unless(Math::Vector::Real->can('rotate_2d')) {
+        *Math::Vector::Real::rotate_2d = sub {
+            my ($v, $angle, @vecs) = @_;    # $v->rotate_2d($angle, @vecs) will rotate each of @vecs around center $v by ccw $angle
+            my $c = cos($angle);
+            my $s = sin($angle);
+            return map {
+                my $delta = $_ - $v;
+                my ($x,$y) = @$delta;
+                V( $x*$c-$y*$s, $x*$s+$y*$c ) + $v;
+            } @vecs;
+        };
+    }
+}
+
+
+
 sub CubicBezier {
     return __PACKAGE__->new(@_);
 }

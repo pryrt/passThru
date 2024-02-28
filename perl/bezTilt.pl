@@ -35,3 +35,13 @@ $t = $B->dBeq0('max', 'y', 0.3, 0.7);   printf "max y [ 0.3,0.7]\@ t:%+06.3f => 
 $t = $B->dBeq0('min', 'y', 0.3, 0.7);   printf "min y [ 0.3,0.7]\@ t:%+06.3f => Bez=<%+8.3f,%+8.3f>\n", $t, @{ $B->B($t) };
 $t = $B->dBeq0('min', 'y');             printf "min y [ 0.0,1.0]\@ t:%+06.3f => Bez=<%+8.3f,%+8.3f>\n", $t, @{ $B->B($t) };
 $t = $B->dBeq0('min', 'y',-2.3, 2.3);   printf "min y [-2.3,2.3]\@ t:%+06.3f => Bez=<%+8.3f,%+8.3f>\n", $t, @{ $B->B($t) };
+
+
+use Data::Dump qw/dd/;
+#dd \%::Math::;
+
+dd [$B->{p0}->rotate_2d( 0, $B->{p0}, $B->{p1}, $B->{p2}, $B->{p3} )];
+dd [$B->{p0}->rotate_2d( 2*atan2(1,1), $B->{p0}, $B->{p1}, $B->{p2}, $B->{p3} )];
+dd [$B->{p0}->rotate_2d( 4*atan2(1,1), $B->{p0}, $B->{p1}, $B->{p2}, $B->{p3} )];
+dd [$B->{p0}->rotate_2d( 6*atan2(1,1), $B->{p0}, $B->{p1}, $B->{p2}, $B->{p3} )];
+dd [$B->{p0}->rotate_2d( 8*atan2(1,1), $B->{p0}, $B->{p1}, $B->{p2}, $B->{p3} )];
