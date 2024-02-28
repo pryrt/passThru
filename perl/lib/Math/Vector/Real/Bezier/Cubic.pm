@@ -13,11 +13,16 @@ BEGIN {
             my ($v, $angle, @vecs) = @_;    # $v->rotate_2d($angle, @vecs) will rotate each of @vecs around center $v by ccw $angle
             my $c = cos($angle);
             my $s = sin($angle);
-            return map {
-                my $delta = $_ - $v;
+            my $rotated = sub {
+                my $delta = $_[0] - $v;
                 my ($x,$y) = @$delta;
-                V( $x*$c-$y*$s, $x*$s+$y*$c ) + $v;
-            } @vecs;
+                my $out = V( $x*$c-$y*$s, $x*$s+$y*$c ) + $v;
+                print STDERR "DEBUG: rotate_2d($v, $angle, $_[0]) => delta=<$x,$y> => out=$out\n";
+                $out;
+            };
+            return wantarray
+                ? map {$rotated->($_)} @vecs
+                : $rotated->($vecs[0]);
         };
     }
 }
@@ -171,6 +176,17 @@ sub closestToPoint {
     return ($t0, $dsq0, $self->B($t0)) if $dsq0 < $dsq and $dsq0 < $dsq1;
     return ($t1, $dsq1, $self->B($t1)) if $dsq1 < $dsq;
     return ($t, $dsq, $V);
+}
+
+# returns a new bezier that rotates the source bezier control points by ccw $angle about some $center
+sub rotate {
+    my ($source, $angle, $center) = @_;
+    my %new;
+    for my $pN ( qw/p0 p1 p2 p3/ ) {
+        $new{$pN} = $center->rotate_2d( $angle, $source->{$pN} );
+        printf "DEBUG: angle:%s center:%s new{%s}:%s\n", $angle, $center, $pN, $new{$pN};
+    }
+    return CubicBezier(@new{qw/p0 p1 p2 p3/});
 }
 
 __PACKAGE__;

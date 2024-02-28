@@ -40,8 +40,12 @@ $t = $B->dBeq0('min', 'y',-2.3, 2.3);   printf "min y [-2.3,2.3]\@ t:%+06.3f => 
 use Data::Dump qw/dd/;
 #dd \%::Math::;
 
-dd [$B->{p0}->rotate_2d( 0, $B->{p0}, $B->{p1}, $B->{p2}, $B->{p3} )];
-dd [$B->{p0}->rotate_2d( 2*atan2(1,1), $B->{p0}, $B->{p1}, $B->{p2}, $B->{p3} )];
-dd [$B->{p0}->rotate_2d( 4*atan2(1,1), $B->{p0}, $B->{p1}, $B->{p2}, $B->{p3} )];
-dd [$B->{p0}->rotate_2d( 6*atan2(1,1), $B->{p0}, $B->{p1}, $B->{p2}, $B->{p3} )];
-dd [$B->{p0}->rotate_2d( 8*atan2(1,1), $B->{p0}, $B->{p1}, $B->{p2}, $B->{p3} )];
+$| = 1;
+dd [0*atan2(1,1), $B->{p0}->rotate_2d( 0*atan2(1,1), $B->{p0}, $B->{p1}, $B->{p2}, $B->{p3} )];
+dd [2*atan2(1,1), $B->{p0}->rotate_2d( 2*atan2(1,1), $B->{p0}, $B->{p1}, $B->{p2}, $B->{p3} )];
+dd [4*atan2(1,1), $B->{p0}->rotate_2d( 4*atan2(1,1), $B->{p0}, $B->{p1}, $B->{p2}, $B->{p3} )];
+dd [6*atan2(1,1), $B->{p0}->rotate_2d( 6*atan2(1,1), $B->{p0}, $B->{p1}, $B->{p2}, $B->{p3} )];
+dd [8*atan2(1,1), $B->{p0}->rotate_2d( 8*atan2(1,1), $B->{p0}, $B->{p1}, $B->{p2}, $B->{p3} )];
+dd [-2*atan2(1,1), $B->{p0}->rotate_2d(-2*atan2(1,1),$B->{p0}, $B->{p1}, $B->{p2}, $B->{p3} )];
+
+dd {rotate_around_55 => [$B, $B->rotate(-2*atan2(1,1), V(50,50))] };
