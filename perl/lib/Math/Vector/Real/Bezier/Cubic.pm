@@ -3,7 +3,9 @@ use 5.014; # strict, //, s//r
 use warnings;
 use Carp qw/carp croak/;
 use Exporter 5.57 'import';
-our @EXPORT = qw/CubicBezier/;
+use Math::Vector::Real qw/V/;
+our @EXPORT_OK = qw/CubicBezier V/; # the Bezier generator, and the MVR generator
+our @EXPORT = qw/CubicBezier/;      # by default, only export Bezier generator (so it's compatible with also importing MVR into caller)
 
 sub CubicBezier {
     return __PACKAGE__->new(@_);
@@ -56,6 +58,59 @@ sub dBdt {
         +   2 * $b * $t
         +   1 * $c
         ;
+}
+
+# finding min/max with respect to time
+sub dBeq0 {
+    my ($self, $min_or_max, $x_or_y, $t0, $t1) = @_;
+
+    # make sure we chose min or max
+    my %h = (min=>0, max=>1);
+    croak "dBeq0: must choose min or max" unless exists $h{$min_or_max//'<undef>'};
+    # I will need to pick the right element $i from the vector:
+
+    # make sure we chose x or y
+    my %dir = (x=>0, y=>1);
+    croak "dBeq0: must choose x or y" unless exists $dir{$x_or_y//'<undef>'};
+    my $i = $dir{$x_or_y};
+
+    # make sure t0 and t1 are defined, defaulting to 0..1
+    $t0 //= 0;
+    $t1 //= 1;
+    ($t0,$t1) = ($t1,$t0)   if($t0 > $t1); # swap if out of order
+
+    # these are the ad=(3a), bd=(2b), cd=(1c) relative to the a,b,c from dBdt, above
+    #   note that a,b,c are _vectors_ still, because {pN} are vectors
+    my $a = -3*$self->{p0} + 9*$self->{p1} -9*$self->{p2} +3*$self->{p3};
+    my $b = +6*$self->{p0} -12*$self->{p1} +6*$self->{p2};
+    my $c = -3*$self->{p0} + 3*$self->{p1};
+
+    # solving for a*t^2 + b*t + c = 0 will give the t values for local minima/maxima
+    my $bb4ac = ($b->[$i])*($b->[$i]) - 4*($a->[$i])*($c->[$i]);
+    croak "b²-4ac<0, so t is unreal" if $bb4ac<0;
+    my $tp = (-($b->[$i]) + sqrt($bb4ac)) / (2*($a->[$i]));
+    my $tm = (-($b->[$i]) - sqrt($bb4ac)) / (2*($a->[$i]));
+
+    # x or y value for B(t) for the four different t values
+    my $B0 = $self->B($t0)->[$i];
+    my $B1 = $self->B($t1)->[$i];
+    my $Bm = $self->B($tm)->[$i];
+    my $Bp = $self->B($tp)->[$i];
+
+    my $t = $tp;
+    if( $h{$min_or_max} == $h{max} ) {  # max value
+        $t = $tm if $Bm > $Bp;
+        if($t0 > $t or $t > $t1) {
+            $t = ($B1 > $B0) ? $t1 : $t0;
+        }
+    } else {                            # min value
+        $t = $tm if $Bm < $Bp;
+        if($t0 > $t or $t > $t1) {
+            $t = ($B1 < $B0) ? $t1 : $t0;
+        }
+    }
+    return $t;
+
 }
 
 # partials with respect to control-points
