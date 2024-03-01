@@ -17,7 +17,7 @@ BEGIN {
                 my $delta = $_[0] - $v;
                 my ($x,$y) = @$delta;
                 my $out = V( $x*$c-$y*$s, $x*$s+$y*$c ) + $v;
-                print STDERR "DEBUG: rotate_2d($v, $angle, $_[0]) => delta=<$x,$y> => out=$out\n";
+                #print STDERR "DEBUG: rotate_2d($v, $angle, $_[0]) => delta=<$x,$y> => out=$out\n";
                 $out;
             };
             return wantarray
@@ -184,7 +184,7 @@ sub rotate {
     my %new;
     for my $pN ( qw/p0 p1 p2 p3/ ) {
         $new{$pN} = $center->rotate_2d( $angle, $source->{$pN} );
-        printf "DEBUG: angle:%s center:%s new{%s}:%s\n", $angle, $center, $pN, $new{$pN};
+        #printf "DEBUG: angle:%s center:%s new{%s}:%s\n", $angle, $center, $pN, $new{$pN};
     }
     return CubicBezier(@new{qw/p0 p1 p2 p3/});
 }
