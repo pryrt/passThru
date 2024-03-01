@@ -2,15 +2,13 @@
 
 use 5.014; # strict, //, s//r
 use warnings;
+use Data::Dump qw/dd pp/;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use Math::Vector::Real::Bezier::Cubic qw/CubicBezier V/;
 
-my $top = 100;
+my $top = 80;
 my $B = CubicBezier(V(100,$top), V(100,$top-50), V(50,$top-100), V(0,$top-100));
-for my $t ( map {$_/10} 0 .. 10) {
-    printf "print \@ t:%+06.3f => Bez=<%+8.3f,%+8.3f>\n", $t, @{ $B->B($t) };
-}
 
 # want to find the tilt angle such that the lowest point of B(t) is at y=0
 # to do so, I need to loop on tilt, and for each tilt, find dB(t)/dt = 0
@@ -29,4 +27,15 @@ for my $t ( map {$_/10} 0 .. 10) {
 
 # verify min and max are working:
 
-# TODO: start tilting...
+# tilt loop:
+my $err = 100;
+my $th = -$err/100;
+my ($R, $t);
+while(abs($err)>1e-9) {
+    $th += $err / 100;
+    $R = $B->rotate(-$th, $B->{p0});
+    $t = $R->dBeq0('min', 'y');
+    $err = 0 - $R->B($t)->[1];
+    # dd { '1_th' => $th, '1_th_deg' => $th*180/3.14159265358979, '2_R' => $R, '3_t' => $t, '4_err' => $err };
+}
+dd { '1_th' => $th, '1_th_deg' => $th*180/3.14159265358979, '2_R' => $R, '3_t' => $t, '4_err' => $err, '5_R(t)' => $R->B($t) };
