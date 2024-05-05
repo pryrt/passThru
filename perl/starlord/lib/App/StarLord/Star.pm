@@ -15,11 +15,13 @@ sub CreateStar {
 }
 
 sub new {
-    my ($class, $x,$y,$z, @extras) = @_;
+    my ($class, $x,$y,$z, %opts) = @_;
     if(!defined $x) {
         $x = $fnV->( int -16+32*rand(), int -16+32*rand(), int -4+8*rand() );
     } elsif (!ref $x and defined $y and defined $z) {
-        $x = $fnV->( $x, $y, $z, @extras );
+        $x = $fnV->( $x, $y, $z );
+        undef $y;
+        undef $z;
     } elsif (!Scalar::Util::blessed($x) and UNIVERSAL::isa($x,'ARRAY')) {
         $x = $fnV->(@$x);
     } elsif (!Scalar::Util::blessed($x) or !$x->isa('Math::Vector::Real')) {
@@ -30,13 +32,36 @@ sub new {
         croak __PACKAGE__ . "::new(): initial position must be three-dimensional: $x";
     }
 
-    my $self = bless { _pos => $x }, $class;
+    if(defined $y and defined $z) {
+        $opts{$y} = $z;
+    }
+
+    my %attribs = (
+        _name => undef,
+    );
+
+    for my $k (sort keys %opts) {
+        my $a = "_" . $k;
+        if( exists $attribs{$a} ) {
+            $attribs{$a} = $opts{$k};
+        } else {
+            croak __PACKAGE__ . "::new(): unknown attribute $k => $opts{$k}";
+        }
+    }
+
+    my $self = bless { _pos => $x , %attribs }, $class;
     return $self;
 }
 
 sub position {
     my ($self) = @_;
     return $self->{_pos};
+}
+
+sub name {
+    my ($self, $newname) = @_;
+    $self->{_name} = $newname if defined $newname;
+    return $self->{_name};
 }
 
 1;
