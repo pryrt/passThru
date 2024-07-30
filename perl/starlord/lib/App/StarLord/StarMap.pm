@@ -34,7 +34,7 @@ sub CreateDefaultStarMap {
     $self->append_star($fnV->(  3, -4, -3), name => 'Solex');
     $self->append_star($fnV->(  5,-10, -4), name => 'Thil');
     $self->append_star($fnV->(  3,-15,  2), name => 'Urdon');
-    $self->append_star($fnV->( 10, -3,  3), name => 'V'indil);
+    $self->append_star($fnV->( 10, -3,  3), name => "V'indil");
     $self->append_star($fnV->( 11,-11, -2), name => 'Wari');
     $self->append_star($fnV->( 16, -6,  0), name => 'Xeno');
     $self->append_star($fnV->(  0,  0,  0), name => 'Ylem');
