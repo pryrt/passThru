@@ -10,32 +10,35 @@ use POSIX qw/M_PI floor ceil/;
 #   V = (π⋅r²)⋅(2⋅π⋅R) = 2⋅π²⋅r²⋅R      = (4π/3)⋅R³
 #   r = R⋅√(2/(3⋅π))
 sub π { M_PI }
-my $V = 5000;       # want a big enough volume to fill about 1000 voxels to make up the torus
+my $V = 10000;       # want a big enough volume to fill about 10000 voxels to make up the torus
 my $R = ($V/4*3/π)**(1/3);
 my $r = $R*sqrt(2/(3*π));
 
 sub pointInsideTorus {
     my ($pt, $R, $r) = @_;
     my $psq = $pt->norm2;
-    return 0 if $psq < $r*$r;
+    return 0 if $psq < ($R-$r)**2;
     return 0 if $psq > ($R+$r)**2;
     my $vc = ($pt->[0] || $pt->[1]) ? V( $pt->[0], $pt->[1], 0 )->versor() * $R : V(0,0,0);
     my $dsq = $vc->dist2($pt);
-    return 0 if $dsq > $r;
+    #printf "\tpt:%s\n\tvc:%s\n\tdel:%s\n\tdsq=%s vs rsq=%s\n", $pt, $vc, $pt-$vc, $dsq, $r**2;
+    return 0 if $dsq > $r**2;
     return 1;
 }
 
 # verification
-my $p0 = V(0,0,0);          # printf "%-64.64s => %d\n", $p0, pointInsideTorus($p0, $R, $r);
-my $p3 = V($R,$R,$r);       # printf "%-64.64s => %d\n", $p3, pointInsideTorus($p3, $R, $r);
-my $p1 = V($R,0,0);         # printf "%-64.64s => %d\n", $p1, pointInsideTorus($p1, $R, $r);
-my $p2 = V($R,0,$r*1.1);    # printf "%-64.64s => %d\n", $p2, pointInsideTorus($p2, $R, $r);
+#my $p0 = V(0,0,0);          printf "p0: %-64.64s => %d\n", $p0, pointInsideTorus($p0, $R, $r);
+#my $p3 = V($R,$R,$r);       printf "p3: %-64.64s => %d\n", $p3, pointInsideTorus($p3, $R, $r);
+#my $p1 = V($R,0,0);         printf "p1: %-64.64s => %d\n", $p1, pointInsideTorus($p1, $R, $r);
+#my $p2 = V($R,0,$r*1.1);    printf "p2: %-64.64s => %d\n", $p2, pointInsideTorus($p2, $R, $r);
+#my $px = V($R,0,$r*0.5);    printf "px: %-64.64s => %d\n", $px, pointInsideTorus($px, $R, $r);  # this should be inside
+#exit;
 
 # load the torus with any voxels that are inside the torus
 sub DBG_LAYERS { 0 }
 my @torus = ();
-my $maxR = ceil($R) + 3;
-my $maxr = ceil($r) + 3;
+my $maxR = ceil($R+$r) + 2;
+my $maxr = ceil($r) + 2;
 for my $y ( -$maxR .. +$maxR ) {
     for my $z ( -$maxr .. +$maxr  ) {
         for my $x ( -$maxR .. +$maxR  ) {
@@ -48,10 +51,11 @@ for my $y ( -$maxR .. +$maxR ) {
     }
     print "\n"  if DBG_LAYERS;
 }
+print "Voxels in torus: ", scalar(@torus), "\n";
 
 # add in GD:
 use GD;
-my $sz = 31;
+my $sz = 19;
 my $im = GD::Image::->new($sz*(2*$maxR+1), $sz*(2*$maxr+1));
 my $bg = $im->colorAllocate(63,63,63);
 my $clrA = $im->colorAllocate(0,0,255);
@@ -65,7 +69,7 @@ my $clrC = $im->colorAllocate(255,0,0);
 $| = 1;
 my $maxa = 0;
 my $vOffsR = V($maxR,$maxr);
-my $vOffsPx = V(16,16);
+my $vOffsPx = V(ceil($sz/2),ceil($sz/2));
 for my $y ( 0 .. 0 ) {
     for my $z ( -$maxr .. +$maxr  ) {
         for my $x ( -$maxR .. +$maxR  ) {
