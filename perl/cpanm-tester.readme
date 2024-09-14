@@ -1,0 +1,55 @@
+http://wiki.cpantesters.org/wiki/QuickStart => explains how to get started...
+    -- this svn directory includes my metabase_id.json and config.ini...
+        QuickStart is a little ambiguous where it goes
+
+I had set this up Fall 2017 (based on dates), but apparently here, that perl install had been lost...
+
+Since I use cpanm, SETUP:
+0) per https://github.com/rjbs/Data-UUID/issues/24, bug in Data::UUID install process, so `mkdir c:\tmp`, then `cpanm Data::UUID` first
+1) install `cpanm App::cpanminus::reporter`
+2) run `cpanm-reporter --setup` (or copy this folder to either berrybrew\perls\#\data\.cpanreporter\ and/or %home%\data\.cpanreporter )
+
+* compatibility notes:
+    - 5.10: does not have its own cpanm, so it finds my default-PATH strawberry 5.26 cpanm and tries to use that, which won't work right;
+      Workaround = while strawberry 5.10 is selected,
+        * download tarball from "Download" link on https://metacpan.org/pod/cpanm
+        * tar xvzf App-cpanminus*.tar.gz
+        * cd  App-cpanminus[TAB]
+        * perl Makefile.PL
+        * edit Makefile to ensure it doesn't call out c:\strawberry, and instead always uses the specific 5.10 directory
+        * dmake
+        * #dmake test       # unneeded, because they don't have a real test suite
+        * dmake install
+        * where cpanm                       # make sure 5.10's cpanm occurs first
+        * cpanm --force App::cpanminus      # re-install with cpanm
+    - 5.10: at home
+        * had to use 5.10.1.2 portable, not berrybrew's 5.10.1.5 zip :-(
+        * approximately the following sequence worked for getting reporter installed (there were more atttemps at the main ::reporter package in between):
+            cpanm Test::More
+            cpanm IO::Prompt::Tiny
+            cpanm http://cpan.metacpan.org/authors/id/G/GA/GARU/App-cpanminus-reporter-0.10.tar.gz
+            cpanm --notest CPAN::Testers::Common::Client
+            cpanm http://cpan.metacpan.org/authors/id/G/GA/GARU/App-cpanminus-reporter-0.10.tar.gz
+        * Also having problems with SSL
+            try .cpanmreporter/config.ini with http:// instead of https:// => yep, I can send reports now
+        * might need to check portable.perl for duplicate 'installbin' or other tags...
+
+Every time I install a package, need to manually run cpanm-reporter afterward...
+1) `cpanm Package(s)`
+2) `cpanm-reporter`
+    -- with my cpanm setup in berrybrew, might have to go into individual %HOME%\.cpanm\work and do `cpanm-reporter --build_dir=.`
+    -- oh, maybe it always copies the most recent build.log into %home%\.cpanm\build.log... run some experiments...
+        -- 5.12 and 5.16 seemed to update it live
+        -- 5.20 seems to copy after the build is completes
+        -- 5.26.1_32 -- wouldn't build Data::UUID, even with c:\tmp existing (different error message: 193)
+    -- thus, I can use `cpanm-reporter --build_dir=%HOME%\.cpanm` ir
+    -- At $work, I have the %HOME% environment variable set (not a default windows variable, but some $work-apps use it);
+        * if that's set, then cpanm uses %HOME%\.cpanm...
+        * if it's not set (like on my personal home PC), then each portable strawberry hierarchy uses its own .cpanm folder for build.log,
+          similar to the own .cpanreporter directory I mentioned above.  using `cpanm --look Some::Distro` will tell you where this .cpanm
+          directory is when it opens up a cmd.exe shell in the temporary work directory, which is in the correct .cpanm hierarchy.
+    -- I have been known to make a cpanm-with-reporter.bat file, placed next to the cpanm.bat and cpanm-reporter.bat, which contains something like
+        @call path\to\cpanm.bat %*
+        @call path\to\cpanm-reporter
+
+3) check http://metabase.cpantesters.org/tail/log.txt -- should update every 5-10 minutes
