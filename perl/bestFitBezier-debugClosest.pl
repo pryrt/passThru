@@ -73,3 +73,20 @@ The closestToPoint($samples[2]) is finding
 In the 400px square, that's s:<258.24,238.64> -> <262.24,242.75>, which is <4px,4.11px> away (d=5.74)
 So I need to debug.  Add the DEBUG_CLOSEST in the module.
 Ah, okay, the distances from $samples[2] to BEZ(t) are _not_ linear, so the linear binary search doesn't work
+
+Tried Newton's Method on F=dsq (t_new = t - F(t)/F'(t)),
+    but newton's method tries to converge on 0, rather than finding minimum
+        approximation:
+            F' using [F(t+d)-F(t-d)]/[2d]
+Next, tried Newton's Method on the slope, because I'm trying to find where slope=0:
+    which should work for Newton's Method, since it crosses 0 somewhere.
+        approximations:
+            F using [dsq(t+d)-dsq(t-d)]/[2d]
+            Fm = [dsq(t)-dsq(t-d)]/[d]
+            Fp = [dsq(t)-dsq(t-d)]/[d]
+            F' = [Fp-Fm]/[2d]
+    but it wouldn't converge, whether I clamp 0<=t<=1 or not, and whether I
+    scale F/F' by m or not.
+Newton's Method on the F=dsq, with my clamping, was probably working better, but neither are working great.
+
+Not sure what to try next.
