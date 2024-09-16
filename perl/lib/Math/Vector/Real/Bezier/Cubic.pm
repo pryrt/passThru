@@ -141,25 +141,27 @@ sub dBdp1 { my ($self, $t) = @_;    return 3 * (1-$t)**2 * $t;      }
 sub dBdp2 { my ($self, $t) = @_;    return 3 * (1-$t)    * $t**2;   }
 sub dBdp3 { my ($self, $t) = @_;    return 1             * $t**3;   }
 
+our $DEBUG_CLOSEST = 0;
 # computes the t in the curve that gets closest to the given point
 #   No closed form, so just binary-search between t=0 and t=1
 #   Returns ($t time, $dsq square dist, $V vector)
-sub closestToPoint {
+sub old_closestToPoint {
     my ($self, $pt) = @_;
     my ($t0,$t1,$t) = (0,1);
     my $V = $self->B($t0);
     my $dsq0 = $V->dist2($pt);
-    #printf STDERR "dbg: B(0=%+6.3f) = [%+6.3f,%+6.3f] => dsq:%.3f\n", $t0, @$V, $dsq0;
+    printf STDERR "dbg: B(0=%+9.6f) = [%+9.6f,%+9.6f] => dsq:%.6f\n", $t0, @$V, $dsq0   if $DEBUG_CLOSEST;
     return ($t0, $dsq0, $V) if !$dsq0;  # found it exactly if distance is 0
     $V = $self->B($t1);
     my $dsq1 = $V->dist2($pt);
-    #printf STDERR "dbg: B(1=%+6.3f) = [%+6.3f,%+6.3f] => dsq:%.3f\n", $t1, @$V, $dsq1;
+    printf STDERR "dbg: B(1=%+9.6f) = [%+9.6f,%+9.6f] => dsq:%.6f\n", $t1, @$V, $dsq1   if $DEBUG_CLOSEST;
     return ($t1, $dsq1, $V) if !$dsq1;  # found it exactly if distance is 0
     my $dsq = $dsq1;
     for(1..10) {
         $t = ($t0 + $t1)/2;
         $V = $self->B($t);
         $dsq = $V->dist2($pt);
+        printf STDERR "dbg: B(1=%+9.6f) = [%+9.6f,%+9.6f] => dsq:%.6f vs %.6f...%.6f\n", $t, @$V, $dsq, $dsq0, $dsq1 if $DEBUG_CLOSEST;
         return ($t, $dsq, $V) if !$dsq; # found it exactly if distance is 0
 
         if($dsq0 <= $dsq1) {
@@ -171,7 +173,68 @@ sub closestToPoint {
             $dsq0 = $dsq;
             $t0 = $t;
         }
+        printf STDERR "\tNEXT t range:%+9.6f...%+9.6f\n", $t0, $t1 if $DEBUG_CLOSEST;
     }
+    # in the end, return the closest of the three points
+    return ($t0, $dsq0, $self->B($t0)) if $dsq0 < $dsq and $dsq0 < $dsq1;
+    return ($t1, $dsq1, $self->B($t1)) if $dsq1 < $dsq;
+    return ($t, $dsq, $V);
+}
+
+# computes the t in the curve that gets closest to the given point
+#   No closed form, and binary search doesn't work on distance
+#   try to use Newton's method (t{n+1}=t{n} - f(t{n})/f'(t{n}) to come close.
+#   Since the dist2 doesn't go to 0, and what I'm really looking for is the
+#   _slope_ of dist2 going to 0, which will always happen (or it will hit an edge)
+#   in which case, f=slope(dist2(t)), and df(t)/dt will be how that changes near t
+sub closestToPoint {
+    my ($self, $pt) = @_;
+    my ($t0,$t1) = (0,1);
+    my $t = ($t0 + $t1)/2;
+    my $V = $self->B($t0);
+    my $dsq0 = $V->dist2($pt);
+    printf STDERR "dbg: B(0=%+9.6f) = [%+9.6f,%+9.6f] => dsq:%.6f\n", $t0, @$V, $dsq0   if $DEBUG_CLOSEST;
+    return ($t0, $dsq0, $V) if !$dsq0;  # found it exactly if distance is 0
+    $V = $self->B($t1);
+    my $dsq1 = $V->dist2($pt);
+    printf STDERR "dbg: B(1=%+9.6f) = [%+9.6f,%+9.6f] => dsq:%.6f\n", $t1, @$V, $dsq1   if $DEBUG_CLOSEST;
+    return ($t1, $dsq1, $V) if !$dsq1;  # found it exactly if distance is 0
+    my $dsq = $dsq1;
+    my $m = 0.1;
+    for(1..25) {
+        $V = $self->B($t);
+        $dsq = $V->dist2($pt);
+        printf STDERR "dbg: B(1=%+9.6f) = [%+9.6f,%+9.6f] => dsq:%.6f vs %.6f...%.6f\n", $t, @$V, $dsq, $dsq0, $dsq1 if $DEBUG_CLOSEST;
+        return ($t, $dsq, $V) if !$dsq; # found it exactly if distance is 0
+
+        # newton's method needs a slope; since I don't have an easy formula for dist2
+        #   it's simplest to just take a couple points near the current, and use the
+        #   secant of those two as the tangent of the center
+        my $tm = ($t<=0.01) ? $t0 : 0.999*$t;
+        my $dsqm = $self->B($tm)->dist2($pt);
+        my $tp = ($t>=0.99) ? $t1 : 1.001*$t;
+        my $dsqp = $self->B($tp)->dist2($pt);
+
+        # approximate the main F = secant@t using F(tp)-F(tm);
+        my $F = ($dsqp - $dsqm) / ($tp - $tm);
+
+        # approximate the dF between secant@tm (F(t)-F(tm)) and secant@tp (F(tp)-F(t))
+        my $Fm = ($dsq - $dsqm) / ($t - $tm);
+        my $Fp = ($dsqp - $dsq) / ($tp - $t);
+        my $dFdt = ($Fp-$Fm)/($t ? $tp-$tm : 0.01);
+        printf STDERR "\tsecants: %+9.6f...%+9.6f...%+9.6f => dF/dt=%+9.6f\n", $Fm,$F,$Fp,$dFdt if $DEBUG_CLOSEST;
+        my $delta_t = $dFdt ? $m * $F / $dFdt : 0;          # F/F', with scaling to limit overshoot
+        if($t-$delta_t < 0) { $delta_t = 0.99*$t; }         # don't go negative
+        if($t-$delta_t > 1) { $delta_t = 0.99*($t - 1); }   # or above 1
+
+        # new t
+        $t -= $delta_t;
+        printf STDERR "\titer %d: t -= %+9.6f => %+9.6f\n", $_, $delta_t, $t if $DEBUG_CLOSEST;
+        my $dsqnew = $self->B($t)->dist2($pt);
+        #if ($dsqnew > $dsq) { $m *= 0.5; }  # smaller steps every time I increase
+        last if abs($delta_t)<1e-6;
+    }
+
     # in the end, return the closest of the three points
     return ($t0, $dsq0, $self->B($t0)) if $dsq0 < $dsq and $dsq0 < $dsq1;
     return ($t1, $dsq1, $self->B($t1)) if $dsq1 < $dsq;
@@ -189,4 +252,4 @@ sub rotate {
     return CubicBezier(@new{qw/p0 p1 p2 p3/});
 }
 
-__PACKAGE__;
+1;
