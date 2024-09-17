@@ -187,7 +187,7 @@ sub old_closestToPoint {
 #   Since the dist2 doesn't go to 0, and what I'm really looking for is the
 #   _slope_ of dist2 going to 0, which will always happen (or it will hit an edge)
 #   in which case, f=slope(dist2(t)), and df(t)/dt will be how that changes near t
-sub closestToPoint {
+sub newt_closestToPoint {
     my ($self, $pt) = @_;
     my ($t0,$t1) = (0,1);
     my $t = ($t0 + $t1)/2;
@@ -233,6 +233,50 @@ sub closestToPoint {
         my $dsqnew = $self->B($t)->dist2($pt);
         #if ($dsqnew > $dsq) { $m *= 0.5; }  # smaller steps every time I increase
         last if abs($delta_t)<1e-6;
+    }
+
+    # in the end, return the closest of the three points
+    return ($t0, $dsq0, $self->B($t0)) if $dsq0 < $dsq and $dsq0 < $dsq1;
+    return ($t1, $dsq1, $self->B($t1)) if $dsq1 < $dsq;
+    return ($t, $dsq, $V);
+}
+
+# computes the t in the curve that gets closest to the given point
+#   No closed form, and binary search doesn't work on distance
+#   Newton's method didn't converge well
+#   Trying an iterative sampling approach
+sub closestToPoint {
+    my ($self, $pt) = @_;
+    my ($t0,$t1,$t) = (0,1);
+    my $V = $self->B($t0);
+    my $dsq0 = $V->dist2($pt);
+    printf STDERR "dbg: B(0=%+9.6f) = [%+9.6f,%+9.6f] => dsq:%.6f\n", $t0, @$V, $dsq0   if $DEBUG_CLOSEST;
+    return ($t0, $dsq0, $V) if !$dsq0;  # found it exactly if distance is 0
+    $V = $self->B($t1);
+    my $dsq1 = $V->dist2($pt);
+    printf STDERR "dbg: B(1=%+9.6f) = [%+9.6f,%+9.6f] => dsq:%.6f\n", $t1, @$V, $dsq1   if $DEBUG_CLOSEST;
+    return ($t1, $dsq1, $V) if !$dsq1;  # found it exactly if distance is 0
+    my $dsq = $dsq1;
+    my $m = 0.1;
+
+    my ($tleft, $tright) = ($t0,$t1);
+    for my $il (0..7) {     # 8 loops
+        my @keep = (undef,0+'Inf',undef,undef);
+        for my $ip (0..5) { # 6 points per loop => 48 points
+            my $tt = $tleft + ($ip)/5*($tright-$tleft);
+            $V = $self->B($tt);
+            $dsq = $V->dist2($pt);
+            printf STDERR "dbg[%d,%d]: B(1=%+9.6f) = [%+9.6f,%+9.6f] => dsq:%.6f\n", $il,$ip,$tt, @$V, $dsq if $DEBUG_CLOSEST;
+            return ($tt, $dsq, $V) if !$dsq; # found it exactly if distance is 0
+            if($dsq < $keep[1]) {   # if this is the lowest for this loop, keep it
+                @keep = ($tt, $dsq, $V, $ip);
+            }
+        }
+        my $tlnew = $tleft + ( ($keep[3]>0) ? $keep[3]-1 : $keep[3] )/5*($tright-$tleft);
+        my $trnew = $tleft + ( ($keep[3]<5) ? $keep[3]+1 : $keep[3] )/5*($tright-$tleft);
+        ($tleft,$tright) = ($tlnew,$trnew);
+        ($t, $dsq, $V) = @keep;
+        printf STDERR "dbg[%d,-]: B(1=%+9.6f) = [%+9.6f,%+9.6f] => dsq:%.6f, new rng=%+9.6f...%+9.6f \n", $il,$t, @$V, $dsq, $tlnew, $trnew if $DEBUG_CLOSEST;
     }
 
     # in the end, return the closest of the three points
