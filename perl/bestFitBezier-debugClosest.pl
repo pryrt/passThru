@@ -56,7 +56,7 @@ for (1 .. 10) {
     my $p = $guess->B($prev);
     $im->line(v2px($p), v2px($v), $c_plot);
 }
-$Math::Vector::Real::Bezier::Cubic::DEBUG_CLOSEST = 1;
+$Math::Vector::Real::Bezier::Cubic::DEBUG_CLOSEST = 0;
 for my $s (@samples) {
     $im->filledEllipse(v2px($s), 8,8, $c_samp);
     my ($t, $d, $v) = $guess->closestToPoint($s);
@@ -89,4 +89,7 @@ Next, tried Newton's Method on the slope, because I'm trying to find where slope
     scale F/F' by m or not.
 Newton's Method on the F=dsq, with my clamping, was probably working better, but neither are working great.
 
-Not sure what to try next.
+Next, try doing 8 loops of 6 points each -- in each loop, find the smallest of the 6 values,
+then narrow the range to be +/-1 point from the smallest, and loop again.  This searches 48
+total values, and should narrow in close enough to the smallest distance, thus finding the
+closest point.
