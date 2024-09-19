@@ -30,18 +30,9 @@ sub v2px {
     return @{V(400*$v->[0], 400*$v->[1])};
 }
 
-my @samples = (
-    V(+0.5475, +0.6075),
-    V(+0.5873, +0.6059),
-    V(+0.6456, +0.5966),
-    V(+0.7052, +0.5761),
-    V(+0.7629, +0.5403),
-    V(+0.7775, +0.5276),
-    V(+0.8246, +0.4698),
-    V(+0.8523, +0.4124),
-    V(+0.8687, +0.3523),
-    V(+0.8750, +0.2825),
-);
+my $gen = CubicBezier(V(0.25,0.75), V(0.50,0.75), V(0.75,0.50), V(0.75,0.25));
+
+my @samples = map { $gen->B($_/10) } 0..10;
 my $P0 = $samples[0];
 my $P3 = $samples[-1];
 my $PM = V( $P3->[0], $P0->[1] );
@@ -111,31 +102,5 @@ for my $s (@samples) {
     $im->filledEllipse(v2px($Q+$v), 4,4, $c_close);
 }
 
-
 __END__
-GUESS BEZ({0.5475, 0.6075},{0.875, 0.6075},{0.875, 0.6075},{0.875, 0.2825})
-The closestToPoint($samples[2]) is finding
-    s:[+0.645600,+0.596600] -> B(t:+0.125000) = [+0.655601,+0.606865] => dsq:0.000205
-In the 400px square, that's s:<258.24,238.64> -> <262.24,242.75>, which is <4px,4.11px> away (d=5.74)
-So I need to debug.  Add the DEBUG_CLOSEST in the module.
-Ah, okay, the distances from $samples[2] to BEZ(t) are _not_ linear, so the linear binary search doesn't work
-
-Tried Newton's Method on F=dsq (t_new = t - F(t)/F'(t)),
-    but newton's method tries to converge on 0, rather than finding minimum
-        approximation:
-            F' using [F(t+d)-F(t-d)]/[2d]
-Next, tried Newton's Method on the slope, because I'm trying to find where slope=0:
-    which should work for Newton's Method, since it crosses 0 somewhere.
-        approximations:
-            F using [dsq(t+d)-dsq(t-d)]/[2d]
-            Fm = [dsq(t)-dsq(t-d)]/[d]
-            Fp = [dsq(t)-dsq(t-d)]/[d]
-            F' = [Fp-Fm]/[2d]
-    but it wouldn't converge, whether I clamp 0<=t<=1 or not, and whether I
-    scale F/F' by m or not.
-Newton's Method on the F=dsq, with my clamping, was probably working better, but neither are working great.
-
-Next, try doing 8 loops of 6 points each -- in each loop, find the smallest of the 6 values,
-then narrow the range to be +/-1 point from the smallest, and loop again.  This searches 48
-total values, and should narrow in close enough to the smallest distance, thus finding the
-closest point.
+Now that it's working, clean out the old and bring in
