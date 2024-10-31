@@ -1,0 +1,29 @@
+-se                             # errors to standard error output
+-w                              # show all warnings
+-l=110 -vmll                    # maximum line length, but don't count leading whitespace (4indents = 16 => 126 total)
+-nbl -sbl                       # only do new braces for subs
+-ce                             # cuddled else `} else {`
+-noll                           # don't outdent long quotes or comments
+-nlp                            # don't do extra indent to align indent beyond parens
+-nsfs                           # no space for semicolon (`a; b; c` vs `a ; b ; c`)
+-nbos                           # no isolated semicolons
+-iscl                           # ignore side comment length: allows `statement; # long comment`
+-kis                            # keep interior semicolon: allows `statement; statement;` if it's in the source
+
+# https://metacpan.org/pod/perltidy             https://perltidy.sourceforge.net/tutorial.html
+# -gnu = --gnu-style = -lp -bl -noll -pt=2 -bt=2 -sbt=2 -icp
+#       -lp makes indentation inside parens deeper than normal; don't want that one (-nlp)
+#       -bl forces _all_ braces on next line... (except sort map grep eval)
+#           you can use -bll=XXX or -blxl=XXX to set inclusions or exclusions
+#           you can use -nbl to turn it off completely, or -nbl -sbl to turn it off for everything then on for subs
+#       -noll = "no outdent long lines" = -nolq -nolc (no outdent long quotes, no outdent long comments)
+#       -pt = paren tightness: 0=always space, 1=sometimes space, 2=no space
+#           -bt = brace tightness, -sbt = square bracket tightness, -bbt = block brace tightness; -act=# means set all the same
+#       -icp = indent closing paren -- definitely NO on this one
+# -pbp = --perl-best-practices = -l=78 -i=4 -ci=4 -st -se -vt=2 -cti=0 -pt=1 -bt=1 -sbt=1 -bbt=1 -nsfs -nolq -wbb="% + - * / x != == >= <= =~ !~ < > | & = **= += *= &= <<= &&= -= /= |= >>= ||= //= .= %= ^= x="
+#       78 lines, indent 4, continue-indent=4
+#       -st -se # use stdout for _all_ outputs and stderr for _all_ errors (normally separate files)
+#       -vt = vertical tightness: 0=always break after open block; 2=never
+#       -cti = closing token indentation = extra indent  (-nlp makes this irrelevant)
+#       -nsfs = no space for semicolon (`a; b; c` vs `a ; b ; c`)
+#       -wbb = want break before those characters, rather than after
