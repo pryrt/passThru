@@ -28,3 +28,17 @@ $comm->forAllUsersDo(sub {
     return 1 if ++$counter < 7;
     return undef;
 });
+
+$comm->forAllTopicsDo(sub {
+    my ($topic) = @_;
+    state $counter = 0;
+    printf "- %-8d %-30.30s: %-32.32s %-32.32s => %d | %s\n",
+        $topic->{tid}, $topic->{title},
+        $topic->{timestampISO},
+        $topic->{lastposttimeISO},
+        $topic->{postcount},
+        $topic->{deleted},
+        ;
+    return undef if $topic->{deleted};
+    return 1;
+});
