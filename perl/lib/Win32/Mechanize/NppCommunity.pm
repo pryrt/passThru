@@ -306,6 +306,8 @@ sub forAllTopicsDo
     my ($self, $cref) = @_;
     my $page = 1;
     while(defined $page) {
+        # originally /api/recent, but that only gives 10 pages (200 topics)
+        # /api/top also limited to 10 pages
         my $response = $self->client()->get('https://community.notepad-plus-plus.org/api/recent?page='.$page);
         die "$response->{status} $response->{reason}" unless $response->{success};
         my $data = JSON::decode_json($response->{content});
@@ -316,6 +318,23 @@ sub forAllTopicsDo
         }
         if(++$page > $lastpage) { undef $page; }
     }
+}
+
+=item getTopicDetails
+
+    $community->getTopicDetails($topicID);
+
+C<forAllTopicsDo>'s loop only gets the simplified topic details from the C</api/recent> endpoint.
+This method gets the more detailed results, which includes the information about each post inside the topic.
+
+=cut
+
+sub getTopicDetails
+{
+    my ($self, $topicID) = @_;
+    my $response = $self->client()->get('https://community.notepad-plus-plus.org/api/topic/'.$topicID);
+    die "$response->{status} $response->{reason}" unless $response->{success};
+    return my $data = JSON::decode_json($response->{content});
 }
 
 =back
