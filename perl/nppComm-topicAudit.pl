@@ -110,14 +110,6 @@ $comm->forAllCategoriesDo(sub {
         $category->{totalTopicCount},
         $category->{post_count},
         ;
-    return 0 if $category->{post_count} > 1000;
     $comm->forAllTopicsInCategoryDo($category->{cid},\&auditThisTopic);
     return 1;
-}) if 0;
-
-# the big categories are 1:Announcements, 2:General, 4:Help, 5:Plugins
-$gDoDryRun = 1;
-#$comm->forAllTopicsInCategoryDo(5,\&auditThisTopic);   # a couple, looks like the logic is right
-#$comm->forAllTopicsInCategoryDo(1,\&auditThisTopic);
-#$comm->forAllTopicsInCategoryDo(2,\&auditThisTopic);    # a few hundred; random audit looks like it's right
-$comm->forAllTopicsInCategoryDo(4,\&auditThisTopic);
+});
