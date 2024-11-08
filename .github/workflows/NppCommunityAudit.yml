@@ -1,0 +1,23 @@
+name: NppCommunityAudit
+
+on:
+  # allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Audit and Clean Notepad++ Community Forum
+    runs-on: windows-latest
+
+    steps:
+      - name: 🚚 Checkout code
+        uses: actions/checkout@v4
+      - name: 📡 Install Perl
+        uses: shogo82148/actions-setup-perl@v1
+        with:
+          perl-version: '5.40'
+      - name: 🔨 Audit Topics
+        working-directory: ./perl
+        env:
+          NPPCOMM_TOKEN: ${{ secrets.NPPCOMM_TOKEN }}
+        run: perl nppComm-topicAudit.pl
