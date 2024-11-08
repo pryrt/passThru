@@ -24,7 +24,8 @@ Win32::Mechnize::NppCommunity - Automate Admin/Moderator tasks for the Notepad++
 
 =item new
 
-    my $community = Win32::Mechnize::NppCommunity::->new($tokenFile);
+    my $community = Win32::Mechnize::NppCommunity::->new(file => $tokenFile);
+    my $community = Win32::Mechnize::NppCommunity::->new(env => $envVarName);
 
 Creates the new NppCommunity object, and initializes the HTTP client for the REST API
 
@@ -34,16 +35,23 @@ Creates the new NppCommunity object, and initializes the HTTP client for the RES
 
 sub new
 {
-    my ( $class, $tokenFile ) = @_;
-    $tokenFile //= './~$token';    # default
+    my ( $class, %args ) = @_;
     my $self = bless {}, $class;
 
     my $token;
-    if ( !-f $tokenFile ) {
-        die "Could not find token in '$tokenFile'";
+    if( exists($args{file})) {
+        $args{file} //= './~$token';    # default
+        if ( !-f $args{file} ) {
+            die "Could not find token in '$args{file}'";
+        } else {
+            open my $fh, '<', $args{file};
+            chomp($token = <$fh>);
+        }
+    } elsif (exists $args{env}) {
+        die "Could not find ENV{$args{env}}" unless exists $ENV{$args{env}};
+        $token = $ENV{$args{env}};
     } else {
-        open my $fh, '<', $tokenFile;
-        chomp($token = <$fh>);
+        die "Must specify a token through the file or env argument";
     }
 
     $self->{_client} = HTTP::Tiny->new(
@@ -53,6 +61,8 @@ sub new
             'Authorization' => "Bearer $token",
         },
     );
+
+    $self->login();
 
     return $self;
 }
@@ -70,6 +80,28 @@ Gives direct access to the HTTP client.  (Allows extending for when there isn't 
 =cut
 
 sub client { $_[0]->{_client}; }
+
+=item login
+
+    $community->client()->login();  # verifies you can log in
+
+Verifies you can log in.  Actually run by C<-E<gt>new()> as well.
+
+=cut
+
+sub login
+{
+    my ($self) = @_;
+    my $response = $self->client()->get('https://community.notepad-plus-plus.org/api/login');
+    die "$response->{status} $response->{reason}" unless $response->{success};
+    my $data = ($response->{headers}{'content-type'} =~ /json/) ?
+        JSON::decode_json($response->{content}) :
+        $response->{content};
+    if(ref $data) {
+        die "Does not appear to have logged in correctly.  Check your API token."
+    }
+    return $data;
+}
 
 =item forAllUsersDo
 

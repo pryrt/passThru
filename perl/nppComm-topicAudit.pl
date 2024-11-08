@@ -18,8 +18,15 @@ use lib './lib';
 use Win32::Mechanize::NppCommunity;
 $| = 1;
 
-my $comm = Win32::Mechanize::NppCommunity::->new('~$token');
+#my $comm = Win32::Mechanize::NppCommunity::->new(file => '~$token');
+my $comm = Win32::Mechanize::NppCommunity::->new(
+    exists $ENV{NPPCOMM_TOKEN} ? (env => 'NPPCOMM_TOKEN') :
+       -f '~$token' ? (file => '~$token') :
+       (unknown => 'token')
+);
 my $client = $comm->client();
+
+our $gDoDryRun = 0;
 
 # ugh: unfortunately, the /api/recent or /api/top or /api/popular all limit to 10 pages (200 topics),
 #   so I am not sure how to actually loop through all.
@@ -27,7 +34,7 @@ my $client = $comm->client();
 sub auditThisTopic {
     my ($topic) = @_;
     state $counter = 0;
-    my $str = sprintf "    - %-8d %-30.30s: %-32.32s %-32.32s => %d | %s\n",
+    my $str = sprintf "    - %-8d %-30.30s: %-32.32s %-32.32s => posts:%d | topic-deleted:%s\n",
         $topic->{tid},
         $topic->{title},
         $topic->{timestampISO},
@@ -37,36 +44,46 @@ sub auditThisTopic {
         ;
     my $posts = $comm->getTopicDetails($topic->{tid})->{posts};
     if($topic->{deleted}) {
-        my $postsToDelete = [];
+        my $postsToPurge = [];
         for my $post (@$posts) {
             if(! $post->{deleted}) {
-                die "why was string empty" unless length($str);
-                $str .= sprintf "        - %-8d by %-8d: %-32.32s | TO DELETE POST\n",
+                $str .= sprintf "        - %-37.37s | %-8d by %-8d: %-32.32s | \n",
+                    "TO PURGE POST",
                     $post->{pid},
                     $post->{uid},
                     $post->{timestampISO},
                     ;
 
-                push @$postsToDelete, $post->{pid};
+                push @$postsToPurge, $post->{pid};
+            } else {
+                $str .= sprintf "        - %-37.37s | %-8d by %-8d: %-32.32s\n",
+                    "TO PURGE PREVIOUSLY-DELETED POST",
+                    $post->{pid},
+                    $post->{uid},
+                    $post->{timestampISO},
+                    ;
+
+                push @$postsToPurge, $post->{pid};
             }
         }
-        if(@$postsToDelete) {
+        if(@$postsToPurge) {
             #++$counter;
-            for my $pid ( reverse @$postsToDelete )  {      # cannot purge first post in topic unless all others deleted, so go in reverse order
+            for my $pid ( reverse @$postsToPurge )  {      # cannot purge first post in topic unless all others deleted, so go in reverse order
                 # now permanently delete each post
-                $comm->purgePost($pid);
+                eval { $comm->purgePost($pid) unless $gDoDryRun; 1 } or do { warn $@ }
             }
         }
-        $str .= "        - PURGING TOPIC\n";
+        $str .= "        - TO PURGE TOPIC\n";
         print STDERR $str;
         # ... and purge the topic
-        $comm->purgeTopic($topic->{tid});
+        eval { $comm->purgeTopic($topic->{tid}) unless $gDoDryRun; 1 } or do { warn $@ }
     } else {
         my $undeletedCount = 0;
         for my $post (@$posts) {
             $undeletedCount++ if !$post->{deleted};
         }
-        $str .= sprintf "        - postcount: %d, array size: %d, undeleted: %d\t\t | TO DELETE TOPIC\n",
+        $str .= sprintf "        - %-37.37s | postcount: %d, array size: %d, undeleted: %d\t\t\n",
+            "TO PURGE ALREADY-EMPTY TOPIC",
             $topic->{postcount},
             scalar @$posts,
             $undeletedCount;
@@ -75,7 +92,7 @@ sub auditThisTopic {
             ++$counter;
 
             # ... and purge the empty topic
-            $comm->purgeTopic($topic->{tid});
+            eval { $comm->purgeTopic($topic->{tid}) unless $gDoDryRun; 1 } or do { warn $@ }
         }
     }
 
@@ -96,4 +113,11 @@ $comm->forAllCategoriesDo(sub {
     return 0 if $category->{post_count} > 1000;
     $comm->forAllTopicsInCategoryDo($category->{cid},\&auditThisTopic);
     return 1;
-});
+}) if 0;
+
+# the big categories are 1:Announcements, 2:General, 4:Help, 5:Plugins
+$gDoDryRun = 1;
+#$comm->forAllTopicsInCategoryDo(5,\&auditThisTopic);   # a couple, looks like the logic is right
+#$comm->forAllTopicsInCategoryDo(1,\&auditThisTopic);
+#$comm->forAllTopicsInCategoryDo(2,\&auditThisTopic);    # a few hundred; random audit looks like it's right
+$comm->forAllTopicsInCategoryDo(4,\&auditThisTopic);
