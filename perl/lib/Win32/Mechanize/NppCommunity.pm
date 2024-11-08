@@ -484,6 +484,40 @@ sub purgePost
 }
 
 
+=item deleteTopic
+
+    $community->deleteTopic($topicID);
+
+Deletes topic using "soft delete", so it does not purge the topic from the database.
+
+=cut
+
+sub deleteTopic
+{
+    my ($self, $topicID) = @_;
+    my $response = $self->client()->delete("https://community.notepad-plus-plus.org/api/v3/topics/$topicID/state");
+    #   the /state argument causes it to be soft-delete rather than purge, if I read API correctly
+    die "$response->{url}\n\t=> $response->{status} $response->{reason}" unless $response->{success};
+    return my $data = JSON::decode_json($response->{content});
+}
+
+=item purgeTopic
+
+    $community->purgeTopic($topicID);
+
+Deletes topic and purges from the database.
+
+=cut
+
+sub purgeTopic
+{
+    my ($self, $topicID) = @_;
+    my $response = $self->client()->delete("https://community.notepad-plus-plus.org/api/v3/topics/$topicID");
+    die "$response->{url}\n\t=> $response->{status} $response->{reason}" unless $response->{success};
+    return my $data = JSON::decode_json($response->{content});
+}
+
+
 
 =back
 

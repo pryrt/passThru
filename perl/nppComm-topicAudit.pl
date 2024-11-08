@@ -24,7 +24,7 @@ my $client = $comm->client();
 # ugh: unfortunately, the /api/recent or /api/top or /api/popular all limit to 10 pages (200 topics),
 #   so I am not sure how to actually loop through all.
 # Still, this is enough to find a couple deleted topics that have undeleted posts
-$comm->forAllTopicsInCategoryDo(3, sub {
+sub auditThisTopic {
     my ($topic) = @_;
     state $counter = 0;
     my $str = sprintf "    - %-8d %-30.30s: %-32.32s %-32.32s => %d | %s\n",
@@ -50,18 +50,17 @@ $comm->forAllTopicsInCategoryDo(3, sub {
                 push @$postsToDelete, $post->{pid};
             }
         }
-        if(@$postsToDelete or $topic->{tid}==26038) {
-            print STDERR $str;
+        if(@$postsToDelete) {
             #++$counter;
             for my $pid ( reverse @$postsToDelete )  {      # cannot purge first post in topic unless all others deleted, so go in reverse order
                 # now permanently delete each post
                 $comm->purgePost($pid);
             }
-        } else {
-            $str .= "        - PURGE TOPIC NEXT?\n";
-            print STDERR $str;
         }
-        # TODO: ... and delete the topic
+        $str .= "        - PURGING TOPIC\n";
+        print STDERR $str;
+        # ... and purge the topic
+        $comm->purgeTopic($topic->{tid});
     } else {
         my $undeletedCount = 0;
         for my $post (@$posts) {
@@ -75,12 +74,15 @@ $comm->forAllTopicsInCategoryDo(3, sub {
             print STDERR $str;
             ++$counter;
 
-            # TODO: ... and delete the topic
+            # ... and purge the empty topic
+            $comm->purgeTopic($topic->{tid});
         }
     }
 
     return 1;# if $counter < 5;
-});
+}
+
+$comm->forAllTopicsInCategoryDo(3,\&auditThisTopic);
 
 ##### my $known = $comm->getTopicDetails(20942);  # 26243=deleted with 2 deleted; 20942=undeleted topic with 1 deleted post and N undeleted
 #####
