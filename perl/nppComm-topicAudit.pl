@@ -70,13 +70,13 @@ sub auditThisTopic {
             #++$counter;
             for my $pid ( reverse @$postsToPurge )  {      # cannot purge first post in topic unless all others deleted, so go in reverse order
                 # now permanently delete each post
-                eval { $comm->purgePost($pid) unless $gDoDryRun; 1 } or do { warn $@ }
+                eval { $comm->purgePost($pid) unless $gDoDryRun; 1 } or do { warn "PURGE DELETED TOPIC'S POSTS:", $@; };
             }
         }
         $str .= "        - TO PURGE TOPIC\n";
         print $str;
         # ... and purge the topic
-        eval { $comm->purgeTopic($topic->{tid}) unless $gDoDryRun; 1 } or do { warn $@ }
+        eval { $comm->purgeTopic($topic->{tid}) unless $gDoDryRun or @$postsToPurge; 1 } or do { warn "PURGE DELETED TOPIC:", $@; };
     } else {
         my $undeletedCount = 0;
         for my $post (@$posts) {
@@ -92,7 +92,7 @@ sub auditThisTopic {
             ++$counter;
 
             # ... and purge the empty topic
-            eval { $comm->purgeTopic($topic->{tid}) unless $gDoDryRun; 1 } or do { warn $@ }
+            eval { $comm->purgeTopic($topic->{tid}) unless $gDoDryRun; 1 } or do { warn "PURGE ALREADY-EMPTY TOPIC:", $@; };
         }
     }
 
