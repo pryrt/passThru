@@ -74,7 +74,7 @@ sub auditThisTopic {
             }
         }
         $str .= "        - TO PURGE TOPIC\n";
-        print STDERR $str;
+        print $str;
         # ... and purge the topic
         eval { $comm->purgeTopic($topic->{tid}) unless $gDoDryRun; 1 } or do { warn $@ }
     } else {
@@ -88,7 +88,7 @@ sub auditThisTopic {
             scalar @$posts,
             $undeletedCount;
         if(!$undeletedCount) {
-            print STDERR $str;
+            print $str;
             ++$counter;
 
             # ... and purge the empty topic
@@ -103,7 +103,7 @@ sub auditThisTopic {
 
 $comm->forAllCategoriesDo(sub {
     my ($category) = @_;
-    printf STDERR "Category %2d: \"%s\": topic_count:%d vs totalTopicCount:%d, with post_count:%d\n",
+    printf "Category %2d: \"%s\": topic_count:%d vs totalTopicCount:%d, with post_count:%d\n",
         $category->{cid},
         $category->{name},
         $category->{topic_count},
