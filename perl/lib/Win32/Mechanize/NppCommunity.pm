@@ -433,6 +433,113 @@ sub forAllTopicsInCategoryDo
     }
 }
 
+
+=item forAllCategoriesDo
+
+    $community->forAllCategoriesDo($categoryID, sub {
+        my ($category) = @_;
+        return 0 if ...; # return 0 if you want to skip the action on this topic
+        return 1 if ...; # return 1 if you performed the action on this topic
+        return undef;    # return undef if you want to stop processing any more topics
+    });
+
+Runs a subroutine for each category in the forum.  The subroutine needs to take in the L<$category> object
+as the first argument.  It should return a true value if the action was performed for the category;
+it should return 0 or "" if the action was skipped for the category; it should return L<undef>
+if the loop needs to stop (don't process the remaining categories).
+
+=for HTML <img src="NppCommunity-AllCategories.png" class="uml">
+
+=begin PlantUML
+
+@startuml NppCommunity-AllCategories
+
+skinparam caption {
+    FontName monospaced
+    FontSize 16
+}
+Title Category Object
+Legend left
+**Key:**
+| <&info> | structures defined elsewhere |
+| ... | same structure as the entry above |
+| $var | variable value rather than exact text |
+| # | comment |
+
+More description down here
+endlegend
+Caption $data
+label EncapsulateYaml [
+{{yaml
+categories:
+    -
+        backgroundImage: "string"
+        bgColor: "string"
+        children: ""[]"" 
+        cid: 0
+        class: "string"
+        color: "string"
+        description: "string"
+        descriptionParsed: "string"
+        disabled: 0
+        icon: "fa-comments-o"
+        imageClass: "string"
+        isSection: 0
+        link: "string"
+        maxTags: 0
+        minTags: 0
+        name: "string"
+        numRecentReplies: 0
+        order: 0
+        parentCid: 0
+        postQueue: 0
+        post_count: 0
+        posts: ""[]"" 
+        slug: "string"
+        subCategoriesPerPage: 0
+        tagWhitelist: ""[]"" 
+        teaser: ""{}"" 
+        topic_count: 0
+        totalPostCount: 0
+        totalTopicCount: 0
+        unread-class: "string"
+        unread: true
+    - ...
+    - $categoryN
+pagination:
+    page: 0,
+    currentPage: 0,
+    pageCount: 0,
+    first: ""{...}"" 
+    last: ""{...}"" 
+...: ...
+}}
+]
+
+@enduml
+
+=end PlantUML
+
+=cut
+
+
+sub forAllCategoriesDo
+{
+    my ($self, $cref) = @_;
+    my $page = 1;
+    while(defined $page) {
+        my $response = $self->client()->get("https://community.notepad-plus-plus.org/api/categories?page=$page");
+        die "$response->{status} $response->{reason}" unless $response->{success};
+        my $data = JSON::decode_json($response->{content});
+        my $lastpage = $data->{pagination}{last}{page};
+        printf "pg %4d/%-4d:\t%6d categories on this page\n", $page, $lastpage, scalar @{$data->{categories}};
+        for my $category ( @{$data->{categories}} ) {
+            return unless defined $cref->($category);
+        }
+        if(++$page > $lastpage) { undef $page; }
+    }
+}
+
 =item getTopicDetails
 
     $community->getTopicDetails($topicID);

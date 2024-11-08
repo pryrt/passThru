@@ -82,18 +82,18 @@ sub auditThisTopic {
     return 1;# if $counter < 5;
 }
 
-$comm->forAllTopicsInCategoryDo(3,\&auditThisTopic);
+#$comm->forAllTopicsInCategoryDo(3,\&auditThisTopic);
 
-##### my $known = $comm->getTopicDetails(20942);  # 26243=deleted with 2 deleted; 20942=undeleted topic with 1 deleted post and N undeleted
-#####
-##### #print $known->{postcount}, scalar( @{$known->{posts}});
-##### printf "%-30.30s => %s\n", $_//'<undef>', $known->{$_}//'<undef>' for sort keys %$known;
-##### my $undeletedCount = 0;
-##### for my $post ( @{ $known->{posts} } ) {
-#####     $undeletedCount++ if !$post->{deleted};
-##### }
-##### print "undeleted = $undeletedCount\n";
-#####
-
-# Data::Dump::dd($comm->deletePost(18509)); # confirmed working
-# Data::Dump::dd($comm->purgePost(18509));  # confirmed working, whether post is already soft-deleted or not
+$comm->forAllCategoriesDo(sub {
+    my ($category) = @_;
+    printf STDERR "Category %2d: \"%s\": topic_count:%d vs totalTopicCount:%d, with post_count:%d\n",
+        $category->{cid},
+        $category->{name},
+        $category->{topic_count},
+        $category->{totalTopicCount},
+        $category->{post_count},
+        ;
+    return 0 if $category->{post_count} > 1000;
+    $comm->forAllTopicsInCategoryDo($category->{cid},\&auditThisTopic);
+    return 1;
+});
