@@ -46,7 +46,7 @@ $comm->forAllUsersDo(sub {
         $yrs, $dys, $hrs, $min,
         ;
     eval { $comm->deleteUserAndContent($user->{uid}); 1 } or do {
-        die "deleteUserAndContent ERROR: ", $@;
+        warn "deleteUserAndContent ERROR: ", $@;
     };
     #return 1 if ++$counter < 100;   # only delete 100 users per run
     return 1;
