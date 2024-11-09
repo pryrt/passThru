@@ -668,7 +668,7 @@ Deletes user and data from the database.
 sub deleteUserAndContent
 {
     my ($self, $userID) = @_;
-    my $response = $self->client()->delete("https://community.notepad-plus-plus.org/api/v3/users/$userID/content");
+    my $response = $self->client()->delete("https://community.notepad-plus-plus.org/api/v3/users/$userID");
     die "$response->{url}\n\t=> $response->{status} $response->{reason}" unless $response->{success};
     return my $data = JSON::decode_json($response->{content});
 }
