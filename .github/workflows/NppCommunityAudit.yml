@@ -33,4 +33,4 @@ jobs:
         working-directory: ./perl
         env:
           NPPCOMM_TOKEN: ${{ secrets.NPPCOMM_TOKEN }}
-        run: echo TBA
+        run: perl nppComm-userAudit.pl
