@@ -16,7 +16,11 @@ use lib './lib';
 use Win32::Mechanize::NppCommunity;
 $| = 1;
 
-my $comm = Win32::Mechanize::NppCommunity::->new(file => '~$token');
+my $comm = Win32::Mechanize::NppCommunity::->new(
+    exists $ENV{NPPCOMM_TOKEN} ? (env => 'NPPCOMM_TOKEN') :
+           -f '~$token' ? (file => '~$token') :
+           (unknown => 'token')
+);
 my $client = $comm->client();
 
 $comm->forAllUsersDo(sub {
