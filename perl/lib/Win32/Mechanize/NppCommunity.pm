@@ -657,6 +657,23 @@ sub purgeTopic
 }
 
 
+=item deleteUserAndContent
+
+    $community->deleteUserAndContent($userID);
+
+Deletes user and data from the database.
+
+=cut
+
+sub deleteUserAndContent
+{
+    my ($self, $userID) = @_;
+    my $response = $self->client()->delete("https://community.notepad-plus-plus.org/api/v3/users/$userID/content");
+    die "$response->{url}\n\t=> $response->{status} $response->{reason}" unless $response->{success};
+    return my $data = JSON::decode_json($response->{content});
+}
+
+
 
 =back
 
