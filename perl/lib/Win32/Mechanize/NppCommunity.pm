@@ -668,8 +668,14 @@ Deletes user and data from the database.
 sub deleteUserAndContent
 {
     my ($self, $userID) = @_;
-    my $response = $self->client()->delete("https://community.notepad-plus-plus.org/api/v3/users/$userID");
+    my $response = $self->client()->delete("https://community.notepad-plus-plus.org/api/v3/users/$userID/content");
     die "$response->{url}\n\t=> $response->{status} $response->{reason}" unless $response->{success};
+    $response = $self->client()->delete("https://community.notepad-plus-plus.org/api/v3/users/$userID/account");
+    die "$response->{url}\n\t=> $response->{status} $response->{reason}" unless $response->{success};
+    #my $response = $self->client()->delete("https://community.notepad-plus-plus.org/api/v3/users/$userID");
+    #die "$response->{url}\n\t=> $response->{status} $response->{reason}" unless $response->{success};
+    # when I did it with /users/$userID, with no /content and no /account, it would claim to delete, but the next run, they would be back
+    #   when I switched to deleting the content first, then just the account, they seem to be really deleted.
     return my $data = JSON::decode_json($response->{content});
 }
 
