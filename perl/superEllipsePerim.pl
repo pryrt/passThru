@@ -14,6 +14,11 @@ use utf8;
 use open ':std', ':encoding(utf8)';
 use POSIX qw/M_PI M_PI_2 M_PI_4 M_SQRT2 M_SQRT1_2/;
 
+our $DEBUG_P_DETL = 0;
+our $DEBUG_P_LMTD = 0;
+our $DEBUG_P_SOLV = 0;
+our $DEBUG_GRAD = 0;
+
 =head3 unit
 
 returns unit vector
@@ -24,7 +29,15 @@ sub unit
 {
     my ($x,$y) = @_;
     my $m = sqrt($x**2+$y**2);
-    $_ /= $m for $x,$y;
+    if($m==+'Inf') {
+        $x = ($x==+'Inf') ? +1 : ($x==-'Inf') ? -1 : 0;
+        $y = ($y==+'Inf') ? +1 : ($y==-'Inf') ? -1 : 0;
+        $m=1;
+    }
+    if($m) {    # avoid divide-by-zero
+        $_ /= $m for $x,$y;
+    }
+
     return ($x,$y);
 }
 
@@ -65,13 +78,14 @@ sub superellipse_grad
     my $dx = $a * (2/$n) * abs(cos($t))**(2/$n-1) * -sin($t);
     my $dy = $b * (2/$n) * abs(sin($t))**(2/$n-1) * +cos($t);
 
-    #printf STDERR "grad(%+06.3f,%+06.3f,%+06.3f,%+06.3f) = <%+06.3f,%+06.3f>\n", $t, $a, $b, $n, $dx, $dy;
+    printf STDERR "grad(%+06.3f,%+06.3f,%+06.3f,%+06.3f) = <%+06.3f,%+06.3f>\n", $t, $a, $b, $n, $dx, $dy if $DEBUG_GRAD;
     state $depth=0;
     if(!$dx and !$dy) {
         die "superellipse_grad(): deep recursion" if $depth;
         ++$depth;
-        #printf STDERR "orig: grad(%+012.9f,%+06.3f,%+06.3f,%+06.3f) = <%+06.3f,%+06.3f>\nrecall: grad(%+012.9f,...)\n", $t, $a, $b, $n, $dx, $dy, $t+1e-9;
+        printf STDERR "orig: grad(%+012.9f,%+06.3f,%+06.3f,%+06.3f) = <%+06.3f,%+06.3f>\n", $t, $a, $b, $n, $dx, $dy if $DEBUG_GRAD;
         ($dx,$dy) = superellipse_grad($t+1e-9, $a, $b, $n);
+        printf STDERR "redo: grad(%+012.9f,%+06.3f,%+06.3f,%+06.3f) = <%+06.3f,%+06.3f>\n", $t+1e-9, $a, $b, $n, $dx, $dy if $DEBUG_GRAD;
         --$depth;
     }
     return ($dx,$dy);
@@ -97,7 +111,7 @@ sub superellipse_quarter_perim
     # the big estimation is the outer polygon, with imax+1 segments
     my $inner = 0;
     my $outer = 0;
-    #printf STDERR "perim(%d,%d,%d,%d):\n", $a, $b, $n, $imax;
+    printf STDERR "perim(%d,%d,%d,%d):\n", $a, $b, $n, $imax if $DEBUG_P_DETL or $DEBUG_P_SOLV;
     for my $i (1 .. $imax) {
         # for the inner, I just need the coordinates of the previous point and ith point, and compute distance between
         my ($t0,$t1) = map {M_PI_2 / $imax * $_} $i-1,$i;
@@ -108,6 +122,9 @@ sub superellipse_quarter_perim
         # for the outer, I need to compute the intersection of P0+G0*u = P1-G1*v (for point vector P# and grad vector G#)
         my ($dx0,$dy0) = unit(superellipse_grad($t0, $a, $b, $n));
         my ($dx1,$dy1) = unit(superellipse_grad($t1, $a, $b, $n));
+        if($DEBUG_GRAD) {
+            printf STDERR "unit(grad0): <%+06.3f,%+06.3f>\n"x2, $dx0, $dy0, $dx1, $dy1;
+        }
         # x0+dx0*u = x1-dx1*v   =>   [ dx0 dx1 | x1-x0 ]    =>  [ A B C ]
         # y0+dy0*u = y1-dy1*v   =>   [ dy0 dy1 | y1-y0 ]    =>  [ D E F ]
         my ($xc,$yc);
@@ -122,28 +139,28 @@ sub superellipse_quarter_perim
             $xc = ($x0+$x1) / 2;
             $yc = ($y0+$y1) / 2;
         } else {
-            #printf STDERR "\n\t%s=[%+09.3f %+09.3f %+09.3f]\n\t     [%+09.3f %+09.3f %+09.3f]\n", $isSwapped?"swpd":"orig",$A,$B,$C,$D,$E,$F;
+            printf STDERR "\n\t%s=[%+09.3f %+09.3f %+09.3f]\n\t     [%+09.3f %+09.3f %+09.3f]\n", $isSwapped?"swpd":"orig",$A,$B,$C,$D,$E,$F if $DEBUG_P_SOLV;
             # normalize row1 by A
             my $tmp = $A;
             $_ /= $tmp for $A,$B,$C;
-            #printf STDERR "\n\t%s=[%+09.3f %+09.3f %+09.3f]\n\t     [%+09.3f %+09.3f %+09.3f]\n", "nrm1",$A,$B,$C,$D,$E,$F;
+            printf STDERR "\n\t%s=[%+09.3f %+09.3f %+09.3f]\n\t     [%+09.3f %+09.3f %+09.3f]\n", "nrm1",$A,$B,$C,$D,$E,$F if $DEBUG_P_SOLV;
             # zero out first column of row2
             $tmp = $D;
             $D -= $tmp*$A;
             $E -= $tmp*$B;
             $F -= $tmp*$C;
-            #printf STDERR "\n\t%s=[%+09.3f %+09.3f %+09.3f]\n\t     [%+09.3f %+09.3f %+09.3f]\n", "zro1",$A,$B,$C,$D,$E,$F;
+            printf STDERR "\n\t%s=[%+09.3f %+09.3f %+09.3f]\n\t     [%+09.3f %+09.3f %+09.3f]\n", "zro1",$A,$B,$C,$D,$E,$F if $DEBUG_P_SOLV;
             # normalize row2 by E
             die "divide by 0" if !$E;
             $tmp = $E;
             $_ /= $tmp for $D, $E, $F;
-            #printf STDERR "\n\t%s=[%+09.3f %+09.3f %+09.3f]\n\t     [%+09.3f %+09.3f %+09.3f]\n", "nrm2",$A,$B,$C,$D,$E,$F;
+            printf STDERR "\n\t%s=[%+09.3f %+09.3f %+09.3f]\n\t     [%+09.3f %+09.3f %+09.3f]\n", "nrm2",$A,$B,$C,$D,$E,$F if $DEBUG_P_SOLV;
             # zero out second column of row1
             $tmp = $B;
             $A -= $tmp*$D;
             $B -= $tmp*$E;
             $C -= $tmp*$F;
-            #printf STDERR "\n\tslvd:[%+09.3f %+09.3f %+09.3f]\n\t     [%+09.3f %+09.3f %+09.3f]\n", $A,$B,$C,$D,$E,$F;
+            printf STDERR "\n\tslvd:[%+09.3f %+09.3f %+09.3f]\n\t     [%+09.3f %+09.3f %+09.3f]\n", $A,$B,$C,$D,$E,$F if $DEBUG_P_SOLV;
 
             # doesn't matter whether swapped or not, the u value will always end up in C, and the v value in F
             $xc = $x0 + $C*$dx0;
@@ -154,13 +171,15 @@ sub superellipse_quarter_perim
         $outer += sqrt(($xc-$x0)**2 + ($yc-$y0)**2);
         $outer += sqrt(($xc-$x1)**2 + ($yc-$y1)**2);
 
-        # full debug output
-        #printf STDERR "* %d: %+06.3f:(%+06.3f,%+06.3f) %.3f:(%+06.3f,%+06.3f) => inner:%+06.3f", $i, $t0, $x0, $y0, $t1, $x1, $y1, $inner;
-        #printf STDERR "\tG0:(%+06.3f,%.3f) G1:(%+06.3f,%.3f) u:%+06.3f v:%+06.3f C:(%+06.3f,%+06.3f) => outer:%.3f\n", $dx0,$dy0, $dx1,$dy1, $C,$F, $xc, $yc, $outer;
-
-        # limited debug output
-        #printf STDERR "%+06.3f\t%+06.3f\n", $x0, $y0 if $i==1;
-        #printf STDERR "%+06.3f\t%+06.3f\n%+06.3f\t%+06.3f\n", $xc, $yc, $x1, $y1;
+        if($DEBUG_P_DETL) {
+            # full debug output
+            printf STDERR "* %d: %+06.3f:(%+06.3f,%+06.3f) %.3f:(%+06.3f,%+06.3f) => inner:%+06.3f", $i, $t0, $x0, $y0, $t1, $x1, $y1, $inner;
+            printf STDERR "\tG0:(%+06.3f,%.3f) G1:(%+06.3f,%.3f) u:%+06.3f v:%+06.3f C:(%+06.3f,%+06.3f) => outer:%.3f\n", $dx0,$dy0, $dx1,$dy1, $C,$F, $xc, $yc, $outer;
+        } elsif ($DEBUG_P_LMTD) {
+            # limited debug output
+            printf STDERR "%+06.3f\t%+06.3f\n", $x0, $y0 if $i==1;
+            printf STDERR "%+06.3f\t%+06.3f\n%+06.3f\t%+06.3f\n", $xc, $yc, $x1, $y1;
+        }
 
     }
     return ($inner,$outer);
@@ -263,9 +282,17 @@ subtest "SE[1,1,4]: Squircle" => sub {
 
     my ($qpi,$qpo) = superellipse_quarter_perim(1,1,4,1);
     is($qpi, float(M_SQRT2), 'inner quarter perim with imax=1');
+    is($qpo, float(2), 'outer quarter perim with imax=1');
 
-    todo "outer quarter-perim with squircle is not calculating reasonably" => sub {
-        is($qpo, float(2), 'outer quarter perim with imax=1');
+    $DEBUG_P_DETL = 1;
+    ($qpi,$qpo) = superellipse_quarter_perim(1,1,4,2);
+    # inner is easy with geometry; outer is harder so just put in the approximate value
+    #   The gradient at <$qr,$qr> is unit(-1,+1); it's 1-$qr from the x=1 right wall, so it will drop 1-$qr => yitc=qr-(1-qr)=2qr-1
+    #   symmetry says it's same length along top, so that's L(horiz+vert)=2qr-1
+    #   the diagonal has each edge = 1-$yitc as well, so its L(diag) = sqrt( 2 * (1-$yitc)**2 )
+    is($qpi, float(2*sqrt((1-$quadroot)**2+$quadroot**2)), 'inner quarter perim with imax=2');
+    todo 'trying to figure out the manual geometry calcs to get $expected correct' => sub {
+        is($qpo, float(2*$quadroot-1 + sqrt(2*((2*$quadroot-2)**2)), tolerance=>1e-4), 'outer quarter perim with imax=2');
     }
 };
 
