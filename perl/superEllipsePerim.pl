@@ -28,6 +28,14 @@ sub unit
     return ($x,$y);
 }
 
+=head3 sgn
+
+returns sign of argument
+
+=cut
+
+sub sgn { $_[0]<0 ? -1 : $_[0]>0 ? +1 : 0 }
+
 =head3 superellipse_point
 
 returns the (x,y) for the superellipse with parameters a,b,n, evaluated at t
@@ -37,11 +45,10 @@ sub superellipse_point
 {
     my ($t, $a, $b, $n) = @_;
     die "meaningless ellipse" if !$a or !$b or !$n;
-    die "not implemented yet" unless $n == 2;   # right now, stick with normal ellipse only
 
-    # for normal ellipse:
-    my $x = $a * cos($t);
-    my $y = $b * sin($t);
+    my $x = $a * sgn(cos($t)) * abs(cos($t))**(2/$n);
+    my $y = $b * sgn(sin($t)) * abs(sin($t))**(2/$n);
+
     return ($x,$y);
 }
 
@@ -54,11 +61,19 @@ sub superellipse_grad
 {
     my ($t, $a, $b, $n) = @_;
     die "meaningless ellipse" if !$a or !$b or !$n;
-    die "not implemented yet" unless $n == 2;   # right now, stick with normal ellipse only
 
-    # for normal ellipse:
-    my $dx = $a * -sin($t);
-    my $dy = $b * cos($t);
+    my $dx = $a * (2/$n) * abs(cos($t))**(2/$n-1) * -sin($t);
+    my $dy = $b * (2/$n) * abs(sin($t))**(2/$n-1) * +cos($t);
+
+    #printf STDERR "grad(%+06.3f,%+06.3f,%+06.3f,%+06.3f) = <%+06.3f,%+06.3f>\n", $t, $a, $b, $n, $dx, $dy;
+    state $depth=0;
+    if(!$dx and !$dy) {
+        die "superellipse_grad(): deep recursion" if $depth;
+        ++$depth;
+        #printf STDERR "orig: grad(%+012.9f,%+06.3f,%+06.3f,%+06.3f) = <%+06.3f,%+06.3f>\nrecall: grad(%+012.9f,...)\n", $t, $a, $b, $n, $dx, $dy, $t+1e-9;
+        ($dx,$dy) = superellipse_grad($t+1e-9, $a, $b, $n);
+        --$depth;
+    }
     return ($dx,$dy);
 }
 
@@ -70,10 +85,10 @@ Tries to approximate the quarter-perimeter for the superellipse
 sub superellipse_quarter_perim
 {
     my ($a, $b, $n, $imax) = @_;
-    die "meaningless ellipse" if !$a or !$b or !$n;
-    die "not implemented yet" unless $n == 2;   # right now, stick with normal ellipse only
     $imax ||= 100;
+    die "meaningless ellipse" if !$a or !$b or !$n;
 
+    # for a true circle, just use math rather than iteration
     if($n==2 and $a==$b) {
         return $a*M_PI_2, $b*M_PI_2;
     }
@@ -95,38 +110,45 @@ sub superellipse_quarter_perim
         my ($dx1,$dy1) = unit(superellipse_grad($t1, $a, $b, $n));
         # x0+dx0*u = x1-dx1*v   =>   [ dx0 dx1 | x1-x0 ]    =>  [ A B C ]
         # y0+dy0*u = y1-dy1*v   =>   [ dy0 dy1 | y1-y0 ]    =>  [ D E F ]
+        my ($xc,$yc);
         my ($A,$B,$C,$D,$E,$F,$isSwapped) = $dx0 ?
             ( $dx0, $dx1, $x1-$x0, $dy0, $dy1, $y1-$y0, 0 ) :
             $dy0 ?
             ( $dy0, $dy1, $y1-$y0, $dx0, $dx1, $x1-$x0, 1 ) :
             die "point(0) has gradient=(0,0)";
 
-        #printf STDERR "\n\t%s=[%+09.3f %+09.3f %+09.3f]\n\t     [%+09.3f %+09.3f %+09.3f]\n", $isSwapped?"swpd":"orig",$A,$B,$C,$D,$E,$F;
-        # normalize row1 by A
-        my $tmp = $A;
-        $_ /= $tmp for $A,$B,$C;
-        #printf STDERR "\n\t%s=[%+09.3f %+09.3f %+09.3f]\n\t     [%+09.3f %+09.3f %+09.3f]\n", "nrm1",$A,$B,$C,$D,$E,$F;
-        # zero out first column of row2
-        $tmp = $D;
-        $D -= $tmp*$A;
-        $E -= $tmp*$B;
-        $F -= $tmp*$C;
-        #printf STDERR "\n\t%s=[%+09.3f %+09.3f %+09.3f]\n\t     [%+09.3f %+09.3f %+09.3f]\n", "zro1",$A,$B,$C,$D,$E,$F;
-        # normalize row2 by E
-        die "divide by 0" if !$E;
-        $tmp = $E;
-        $_ /= $tmp for $D, $E, $F;
-        #printf STDERR "\n\t%s=[%+09.3f %+09.3f %+09.3f]\n\t     [%+09.3f %+09.3f %+09.3f]\n", "nrm2",$A,$B,$C,$D,$E,$F;
-        # zero out second column of row1
-        $tmp = $B;
-        $A -= $tmp*$D;
-        $B -= $tmp*$E;
-        $C -= $tmp*$F;
-        #printf STDERR "\n\tslvd:[%+09.3f %+09.3f %+09.3f]\n\t     [%+09.3f %+09.3f %+09.3f]\n", $A,$B,$C,$D,$E,$F;
+        if($A==$B and $D==$E) {
+            # if the grads are parallel, then just average between the two points
+            $xc = ($x0+$x1) / 2;
+            $yc = ($y0+$y1) / 2;
+        } else {
+            #printf STDERR "\n\t%s=[%+09.3f %+09.3f %+09.3f]\n\t     [%+09.3f %+09.3f %+09.3f]\n", $isSwapped?"swpd":"orig",$A,$B,$C,$D,$E,$F;
+            # normalize row1 by A
+            my $tmp = $A;
+            $_ /= $tmp for $A,$B,$C;
+            #printf STDERR "\n\t%s=[%+09.3f %+09.3f %+09.3f]\n\t     [%+09.3f %+09.3f %+09.3f]\n", "nrm1",$A,$B,$C,$D,$E,$F;
+            # zero out first column of row2
+            $tmp = $D;
+            $D -= $tmp*$A;
+            $E -= $tmp*$B;
+            $F -= $tmp*$C;
+            #printf STDERR "\n\t%s=[%+09.3f %+09.3f %+09.3f]\n\t     [%+09.3f %+09.3f %+09.3f]\n", "zro1",$A,$B,$C,$D,$E,$F;
+            # normalize row2 by E
+            die "divide by 0" if !$E;
+            $tmp = $E;
+            $_ /= $tmp for $D, $E, $F;
+            #printf STDERR "\n\t%s=[%+09.3f %+09.3f %+09.3f]\n\t     [%+09.3f %+09.3f %+09.3f]\n", "nrm2",$A,$B,$C,$D,$E,$F;
+            # zero out second column of row1
+            $tmp = $B;
+            $A -= $tmp*$D;
+            $B -= $tmp*$E;
+            $C -= $tmp*$F;
+            #printf STDERR "\n\tslvd:[%+09.3f %+09.3f %+09.3f]\n\t     [%+09.3f %+09.3f %+09.3f]\n", $A,$B,$C,$D,$E,$F;
 
-        # doesn't matter whether swapped or not, the u value will always end up in C, and the v value in F
-        my $xc = $x0 + $C*$dx0;
-        my $yc = $y0 + $C*$dy0;
+            # doesn't matter whether swapped or not, the u value will always end up in C, and the v value in F
+            $xc = $x0 + $C*$dx0;
+            $yc = $y0 + $C*$dy0;
+        }
 
         # now do distance from 0 to C and C to 1
         $outer += sqrt(($xc-$x0)**2 + ($yc-$y0)**2);
@@ -169,12 +191,82 @@ subtest "SE[3,2,2]" => sub {
     is($dx, float(-3*sqrt(0.25)), 'dx(π/6)');
     is($dy, float(+2*sqrt(0.75)), 'dy(π/6)');
     my ($qpi,$qpo) = superellipse_quarter_perim(3,2,2,1);
-    is($qpi, float(sqrt(3**2+2**2)), '[tmp] inner quarter perim with imax=1 (diagonal from <3,0> to <0,2>)');
-    is($qpo, float(2+3), '[tmp] outer quarter perim with imax=1 (up 2 from <3,0> to <3,2>; over 3 to <0,2>)');
+    is($qpi, float(sqrt(3**2+2**2)), 'inner quarter perim with imax=1 (diagonal from <3,0> to <0,2>)');
+    is($qpo, float(2+3), 'outer quarter perim with imax=1 (up 2 from <3,0> to <3,2>; over 3 to <0,2>)');
     ($qpi,$qpo) = superellipse_quarter_perim(3,2,2);
-    is($qpi, float(3.9664, tolerance=>1e-4), '[tmp] inner quarter perim with imax=default(100)');
-    is($qpo, float(3.9664, tolerance=>1e-4), '[tmp] outer quarter perim with imax=default(100)');
-    is($qpo, float($qpi  , tolerance=>2e-4), '[tmp] inner and outer quarter perim equivalent with imax=default(100)');
+    is($qpi, float(3.9664, tolerance=>1e-4), 'inner quarter perim with imax=default(100)');
+    is($qpo, float(3.9664, tolerance=>1e-4), 'outer quarter perim with imax=default(100)');
+    is($qpo, float($qpi  , tolerance=>2e-4), 'inner and outer quarter perim equivalent with imax=default(100)');
+};
+
+subtest "SE[3,3,1]" => sub {
+    my($x,$y) = superellipse_point(M_PI_4, 3, 3, 1);
+    is($x, float(1.5), 'x(π/4)');
+    is($y, float(1.5), 'y(π/4)');
+    my($dx,$dy) = superellipse_grad(M_PI_4, 3, 3, 1);
+    is($dx, float(-3.0), 'dx(π/4)');
+    is($dy, float(+3.0), 'dy(π/4)');
+    my ($qpi,$qpo) = superellipse_quarter_perim(3,3,1,1);
+    is($qpi, float(sqrt(3**2+3**2)), 'inner quarter perim with imax=1');
+    is($qpo, float(2*sqrt(1.5**2+1.5**2)), 'outer quarter perim with imax=1');
+
+    # Edgecase checking: θ=0 originally gave unit(grad)==divide-by-zero-error; θ=π/4 cames close, but not actually
+    #   reworked grad() to call itself with t+1e-9 if it's going to return exactly <0,0>
+    ($dx,$dy) = superellipse_grad(0, 3, 3, 1);
+    is([$dx,$dy], [(float(0,tolerance=>1e-6))x2], '[edgecase] grad(rhombus,right)');
+    ($dx,$dy) = superellipse_grad(M_PI_2, 3, 3, 1);
+    is([$dx,$dy], [(float(0,tolerance=>1e-6))x2], '[edgecase] grad(rhombus,top)');
+    ($dx,$dy) = superellipse_grad(M_PI, 3, 3, 1);
+    is([$dx,$dy], [(float(0,tolerance=>1e-6))x2], '[edgecase] grad(rhombus,left)');
+    ($dx,$dy) = superellipse_grad(3*M_PI_2, 3, 3, 1);
+    is([$dx,$dy], [(float(0,tolerance=>1e-6))x2], '[edgecase] grad(rhombus,bottom)');
+};
+
+subtest "SE[1,1,4]: Squircle" => sub {
+    # the squircle is geometric mean of circle (✓0.5,✓0.5) and square(1,1), so corners will be at ✓(✓0.5*1)
+    my $quadroot = sqrt(M_SQRT1_2);
+
+    # use the squircle to test all four quadrants for _point
+    my($x,$y) = superellipse_point(M_PI_4, 1, 1, 4);
+    is($x, float($quadroot), 'x(π/4)');
+    is($y, float($quadroot), 'y(π/4)');
+
+    ($x,$y) = superellipse_point(3*M_PI_4, 1, 1, 4);
+    is($x, float(-$quadroot), 'x(3π/4)');
+    is($y, float(+$quadroot), 'y(3π/4)');
+
+    ($x,$y) = superellipse_point(5*M_PI_4, 1, 1, 4);
+    is($x, float(-$quadroot), 'x(5π/4)');
+    is($y, float(-$quadroot), 'y(5π/4)');
+
+    ($x,$y) = superellipse_point(7*M_PI_4, 1, 1, 4);
+    is($x, float(+$quadroot), 'x(7π/4)');
+    is($y, float(-$quadroot), 'y(7π/4)');
+
+    # use the squircle to test all four quadrants for _grad
+    my $deriv = 0.5*M_SQRT1_2 / $quadroot;
+    my($dx,$dy) = superellipse_grad(M_PI_4, 1, 1, 4);
+    is($dx, float(-$deriv), 'dx(π/4)');
+    is($dy, float(+$deriv), 'dy(π/4)');
+
+    ($dx,$dy) = superellipse_grad(3*M_PI_4, 1, 1, 4);
+    is($dx, float(-$deriv), 'dx(3π/4)');
+    is($dy, float(-$deriv), 'dy(3π/4)');
+
+    ($dx,$dy) = superellipse_grad(5*M_PI_4, 1, 1, 4);
+    is($dx, float(+$deriv), 'dx(5π/4)');
+    is($dy, float(-$deriv), 'dy(5π/4)');
+
+    ($dx,$dy) = superellipse_grad(7*M_PI_4, 1, 1, 4);
+    is($dx, float(+$deriv), 'dx(7π/4)');
+    is($dy, float(+$deriv), 'dy(7π/4)');
+
+    my ($qpi,$qpo) = superellipse_quarter_perim(1,1,4,1);
+    is($qpi, float(M_SQRT2), 'inner quarter perim with imax=1');
+
+    todo "outer quarter-perim with squircle is not calculating reasonably" => sub {
+        is($qpo, float(2), 'outer quarter perim with imax=1');
+    }
 };
 
 done_testing();
