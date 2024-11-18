@@ -284,16 +284,16 @@ subtest "SE[1,1,4]: Squircle" => sub {
     is($qpi, float(M_SQRT2), 'inner quarter perim with imax=1');
     is($qpo, float(2), 'outer quarter perim with imax=1');
 
-    $DEBUG_P_DETL = 1;
+    #$DEBUG_P_DETL = 1;
     ($qpi,$qpo) = superellipse_quarter_perim(1,1,4,2);
     # inner is easy with geometry; outer is harder so just put in the approximate value
     #   The gradient at <$qr,$qr> is unit(-1,+1); it's 1-$qr from the x=1 right wall, so it will drop 1-$qr => yitc=qr-(1-qr)=2qr-1
     #   symmetry says it's same length along top, so that's L(horiz+vert)=2qr-1
     #   the diagonal has each edge = 1-$yitc as well, so its L(diag) = sqrt( 2 * (1-$yitc)**2 )
     is($qpi, float(2*sqrt((1-$quadroot)**2+$quadroot**2)), 'inner quarter perim with imax=2');
-    todo 'trying to figure out the manual geometry calcs to get $expected correct' => sub {
-        is($qpo, float(2*$quadroot-1 + sqrt(2*((2*$quadroot-2)**2)), tolerance=>1e-4), 'outer quarter perim with imax=2');
-    }
+    my $yitc = 2*$quadroot - 1;
+    my $v = 1-$yitc;
+    is($qpo, float(2*$yitc + sqrt(2*($v**2))), 'outer quarter perim with imax=2');
 };
 
 done_testing();
