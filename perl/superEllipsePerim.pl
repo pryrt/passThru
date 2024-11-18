@@ -281,8 +281,8 @@ subtest "SE[1,1,4]: Squircle" => sub {
     is($dy, float(+$deriv), 'dy(7π/4)');
 
     my ($qpi,$qpo) = superellipse_quarter_perim(1,1,4,1);
-    is($qpi, float(M_SQRT2), 'inner quarter perim with imax=1');
-    is($qpo, float(2), 'outer quarter perim with imax=1');
+    is($qpi, float(M_SQRT2), 'inner quarter perim with imax=1 (one diagonal)');
+    is($qpo, float(2), 'outer quarter perim with imax=1 (vert+horiz)');
 
     #$DEBUG_P_DETL = 1;
     ($qpi,$qpo) = superellipse_quarter_perim(1,1,4,2);
@@ -290,10 +290,13 @@ subtest "SE[1,1,4]: Squircle" => sub {
     #   The gradient at <$qr,$qr> is unit(-1,+1); it's 1-$qr from the x=1 right wall, so it will drop 1-$qr => yitc=qr-(1-qr)=2qr-1
     #   symmetry says it's same length along top, so that's L(horiz+vert)=2qr-1
     #   the diagonal has each edge = 1-$yitc as well, so its L(diag) = sqrt( 2 * (1-$yitc)**2 )
-    is($qpi, float(2*sqrt((1-$quadroot)**2+$quadroot**2)), 'inner quarter perim with imax=2');
+    is($qpi, float(2*sqrt((1-$quadroot)**2+$quadroot**2)), 'inner quarter perim with imax=2 (two diagonals)');
     my $yitc = 2*$quadroot - 1;
     my $v = 1-$yitc;
-    is($qpo, float(2*$yitc + sqrt(2*($v**2))), 'outer quarter perim with imax=2');
+    is($qpo, float(2*$yitc + sqrt(2*($v**2))), 'outer quarter perim with imax=2 (vert+diag+horiz)');
+
+    ($qpi,$qpo) = superellipse_quarter_perim(1,1,4);
+    is($qpo, float($qpi, tolerance=>100e-6), 'convergence: inner vs outer quarter perim');
 };
 
 done_testing();
