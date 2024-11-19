@@ -78,14 +78,14 @@ sub superellipse_grad
     my $dx = $a * (2/$n) * abs(cos($t))**(2/$n-1) * -sin($t);
     my $dy = $b * (2/$n) * abs(sin($t))**(2/$n-1) * +cos($t);
 
-    printf STDERR "grad(%+06.3f,%+06.3f,%+06.3f,%+06.3f) = <%+06.3f,%+06.3f>\n", $t, $a, $b, $n, $dx, $dy if $DEBUG_GRAD;
+    printf STDERR "  grad(%+06.3f,%+06.3f,%+06.3f,%+06.3f) = <%+06.3f,%+06.3f>\n", $t, $a, $b, $n, $dx, $dy if $DEBUG_GRAD;
     state $depth=0;
     if(!$dx and !$dy) {
         die "superellipse_grad(): deep recursion" if $depth;
         ++$depth;
-        printf STDERR "orig: grad(%+012.9f,%+06.3f,%+06.3f,%+06.3f) = <%+06.3f,%+06.3f>\n", $t, $a, $b, $n, $dx, $dy if $DEBUG_GRAD;
+        printf STDERR "  - orig: grad(%+012.9f,%+06.3f,%+06.3f,%+06.3f) = <%+06.3f,%+06.3f>\n", $t, $a, $b, $n, $dx, $dy if $DEBUG_GRAD;
         ($dx,$dy) = superellipse_grad($t+1e-9, $a, $b, $n);
-        printf STDERR "redo: grad(%+012.9f,%+06.3f,%+06.3f,%+06.3f) = <%+06.3f,%+06.3f>\n", $t+1e-9, $a, $b, $n, $dx, $dy if $DEBUG_GRAD;
+        printf STDERR "  - redo: grad(%+012.9f,%+06.3f,%+06.3f,%+06.3f) = <%+06.3f,%+06.3f>\n", $t+1e-9, $a, $b, $n, $dx, $dy if $DEBUG_GRAD;
         --$depth;
     }
     return ($dx,$dy);
@@ -123,7 +123,8 @@ sub superellipse_quarter_perim
         my ($dx0,$dy0) = unit(superellipse_grad($t0, $a, $b, $n));
         my ($dx1,$dy1) = unit(superellipse_grad($t1, $a, $b, $n));
         if($DEBUG_GRAD) {
-            printf STDERR "unit(grad0): <%+06.3f,%+06.3f>\n"x2, $dx0, $dy0, $dx1, $dy1;
+            printf STDERR "\tunit(grad0): <%+06.3f,%+06.3f>\n", $dx0, $dy0;
+            printf STDERR "\tunit(grad1): <%+06.3f,%+06.3f>\n", $dx1, $dy1;
         }
         # x0+dx0*u = x1-dx1*v   =>   [ dx0 dx1 | x1-x0 ]    =>  [ A B C ]
         # y0+dy0*u = y1-dy1*v   =>   [ dy0 dy1 | y1-y0 ]    =>  [ D E F ]
@@ -241,6 +242,22 @@ subtest "SE[3,3,1]" => sub {
     is([$dx,$dy], [(float(0,tolerance=>1e-6))x2], '[edgecase] grad(rhombus,bottom)');
 };
 
+subtest "SE[1,1,1] edgecase" => sub {
+    my($x,$y) = superellipse_point(M_PI_4, 1, 1, 1);
+    is($x, float(0.5), 'x(π/4)');
+    is($y, float(0.5), 'y(π/4)');
+    my($dx,$dy) = superellipse_grad(M_PI_4, 1, 1, 1);
+    is($dx, float(-1.0), 'dx(π/4)');
+    is($dy, float(+1.0), 'dy(π/4)');
+    todo "need to improve diamond handling" => sub {
+    $DEBUG_P_SOLV=1; $DEBUG_GRAD=1;
+    my ($qpi,$qpo) = eval { superellipse_quarter_perim(1,1,1,1); } or do { warn $@; (undef,undef); };
+    is($qpi, float(sqrt(1**2+1**2)), 'inner quarter perim with imax=1');
+    is($qpo, float(2*sqrt(0.5**2+0.5**2)), 'outer quarter perim with imax=1');
+    $DEBUG_P_SOLV=0; $DEBUG_GRAD=0;
+    };
+};
+
 subtest "SE[1,1,4]: Squircle" => sub {
     # the squircle is geometric mean of circle (✓0.5,✓0.5) and square(1,1), so corners will be at ✓(✓0.5*1)
     my $quadroot = sqrt(M_SQRT1_2);
@@ -297,6 +314,27 @@ subtest "SE[1,1,4]: Squircle" => sub {
 
     ($qpi,$qpo) = superellipse_quarter_perim(1,1,4);
     is($qpo, float($qpi, tolerance=>100e-6), 'convergence: inner vs outer quarter perim');
+};
+
+# not a test, but just noting results:
+do {
+    for my $b (1 .. 10) {
+        my ($qpi,$qpo) = superellipse_quarter_perim(1,$b,2);
+        my $qp = ($qpi+$qpo)/2;
+        note sprintf "SE[1,%2d,2] => q=%+010.6f=%+010.6fπ\t[circle->ellipse]\n", $b, $qp, $qp/M_PI;
+    }
+
+    for my $p (map {$_/2} 2 .. 8) {   # 1.5 to 4 by 0.5; $p=1 gives divide-by-zero
+        my ($qpi,$qpo) = superellipse_quarter_perim(1,1,$p);
+        my $qp = ($qpi+$qpo)/2;
+        note sprintf "SE[1,1,%03.1f] => q=%+010.6f=%+010.6fπ\t[circle->squircle]\n", $p, $qp, $qp/M_PI;
+    }
+
+    for my $b (1 .. 10) {
+        my ($qpi,$qpo) = superellipse_quarter_perim(1,$b,4);
+        my $qp = ($qpi+$qpo)/2;
+        note sprintf "SE[1,%2d,4] => q=%+010.6f=%+010.6fπ\t[squircle->superellipse]\n", $b, $qp, $qp/M_PI;
+    }
 };
 
 done_testing();
