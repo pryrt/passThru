@@ -125,6 +125,7 @@ sub superellipse_quarter_perim
         if($DEBUG_GRAD) {
             printf STDERR "\tunit(grad0): <%+06.3f,%+06.3f>\n", $dx0, $dy0;
             printf STDERR "\tunit(grad1): <%+06.3f,%+06.3f>\n", $dx1, $dy1;
+            printf STDERR "\tequivalence: eq:(%d, %d) del:(%+.12f,%+.12f)\n", $dx0==$dx1, $dy0==$dy1, $dx0-$dx1, $dy0-$dy1;
         }
         # x0+dx0*u = x1-dx1*v   =>   [ dx0 dx1 | x1-x0 ]    =>  [ A B C ]
         # y0+dy0*u = y1-dy1*v   =>   [ dy0 dy1 | y1-y0 ]    =>  [ D E F ]
@@ -135,7 +136,7 @@ sub superellipse_quarter_perim
             ( $dy0, $dy1, $y1-$y0, $dx0, $dx1, $x1-$x0, 1 ) :
             die "point(0) has gradient=(0,0)";
 
-        if($A==$B and $D==$E) {
+        if((abs($A-$B)<1e-9 and abs($D-$E)<1e-9) or (abs($A+$B)<1e-9 and abs($D+$E)<1e-9)) {
             # if the grads are parallel, then just average between the two points
             $xc = ($x0+$x1) / 2;
             $yc = ($y0+$y1) / 2;
@@ -249,13 +250,13 @@ subtest "SE[1,1,1] edgecase" => sub {
     my($dx,$dy) = superellipse_grad(M_PI_4, 1, 1, 1);
     is($dx, float(-1.0), 'dx(π/4)');
     is($dy, float(+1.0), 'dy(π/4)');
-    todo "need to improve diamond handling" => sub {
-    $DEBUG_P_SOLV=1; $DEBUG_GRAD=1;
     my ($qpi,$qpo) = eval { superellipse_quarter_perim(1,1,1,1); } or do { warn $@; (undef,undef); };
     is($qpi, float(sqrt(1**2+1**2)), 'inner quarter perim with imax=1');
     is($qpo, float(2*sqrt(0.5**2+0.5**2)), 'outer quarter perim with imax=1');
-    $DEBUG_P_SOLV=0; $DEBUG_GRAD=0;
-    };
+    ($qpi,$qpo) = eval { superellipse_quarter_perim(1,1,1); } or do { warn $@; (undef,undef); };
+    is($qpi, float(sqrt(1**2+1**2)), 'inner quarter perim (full)');
+    is($qpo, float(2*sqrt(0.5**2+0.5**2)), 'outer quarter perim (full)');
+    is($qpi, float($qpo), 'matching quarter perim (full)');
 };
 
 subtest "SE[1,1,4]: Squircle" => sub {
@@ -324,7 +325,7 @@ do {
         note sprintf "SE[1,%2d,2] => q=%+010.6f=%+010.6fπ\t[circle->ellipse]\n", $b, $qp, $qp/M_PI;
     }
 
-    for my $p (map {$_/2} 2 .. 8) {   # 1.5 to 4 by 0.5; $p=1 gives divide-by-zero
+    for my $p (map {$_/2} 2 .. 8) {   # 1 to 4 by 0.5
         my ($qpi,$qpo) = superellipse_quarter_perim(1,1,$p);
         my $qp = ($qpi+$qpo)/2;
         note sprintf "SE[1,1,%03.1f] => q=%+010.6f=%+010.6fπ\t[circle->squircle]\n", $p, $qp, $qp/M_PI;
