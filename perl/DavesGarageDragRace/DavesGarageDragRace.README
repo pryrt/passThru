@@ -1,18 +1,44 @@
-From YouTube Channel "Dave's Garage", doing a prime-sieve drag race across multiple languages,
-his E02 episode contained Perl vs PHP:
+From YouTube Channel "Dave's Garage", doing a prime-sieve drag race across multiple languages, his E02 episode contained Perl vs PHP:
     https://www.youtube.com/watch?v=Yl9OegOorYM&list=PLF2KJ6Gy3cZ5Er-1eF9fN1Hgw_xkoD9V1&index=2&pp=iAQB
-... But the Perl was abysmal, which tells me that whoever implemented the version he specified on his
-channel was either trying to make Perl look bad, or had no clue how to code efficiently in Perl.
+... But the Perl was abysmal, which tells me that whoever implemented the version he specified on his channel was either trying to make Perl look bad, or had no clue how to code efficiently in Perl.
 
-However, his rules (in other videos) say that you cannot change the fundamentals, where it has to run
-a sieve starting with any odd >= 3, so cannot use the 6n+/-1 optimization
+However, his rules (in other videos) say that you cannot change the fundamentals, where it has to run a sieve starting with any odd >= 3, so cannot use the 6n+/-1 optimization
 
-He has a repo with two Perl solutions here: https://github.com/PlummersSoftwareLLC/Primes/blob/drag-race/PrimePerl/
-So I want to run them both on my machine, and then see if I can tweak one or the other to make a faster answer,
-following the original rules.
+He has a repo with two Perl solutions here: https://github.com/PlummersSoftwareLLC/Primes/blob/drag-race/PrimePerl/ So I want to run them both on my machine, and then see if I can tweak one or the other to make a faster answer, following the original rules.
 
-At my quick glance through the code yesterday (which wasn't detailed, so maybe I'm wrong), I had noticed that at least
-one was using an array of strings, rather than bit manipulation like in most languages -- though even the vec() solution
-suggested in the comments would probably have been faster than the raw one-char-per-entry that I think is there.
+At my quick glance through the code yesterday (which wasn't detailed, so maybe I'm wrong), I had noticed that at least one was using an array of strings, rather than bit manipulation like in most languages -- though even the vec() solution suggested in the comments would probably have been faster than the raw one-char-per-entry that I think is there.
 
 So without further ado, I will grab those two as solution_1.pl and solution_2.pl and race them head-to-head.
+
+> solution_1.pl
+marghidanu;36;5.076168;1;algorithm=base,faithful=yes
+> solution_2.pl
+kjetillll;169;5.027718;1;algorithm=base,faithful=yes
+
+Oddly, solution_1 at least starts with an array rather than the string, so I'll have to dig in more.  Okay, it's an array with a single value per element, so again, not a bit array like the other languages.  Also, it makes a copy of the array every time the sieve is run -- it's empty to start with, so that wouldn't matter, but it returns a copy of the temporary, which seems a waste of effort.
+
+The solution_2 seems to be using a single string for all of it (like I said before), but I get confused by its setting/clearing of the values...
+
+For now, let's see if I can optimize the solution_1.  First, try to get rid of the copy of the array: nope, consistently dropped from 35-36 to 29.  Oh, because it was actually just setting it to a reference to the temporary, so I didn't help (though I'm surprised it hurt).  I tried avoiding the pre-allocate, but that was slightly harmful (or at least, not helpful) at 34 vs 35-36.
+
+Okay, next, let's see if 8 bits per element (vs 1 bit per element) is faster... Nope, it's slower.  Even going to 32 bits per element is slow.
+
+I have the idea for using vec(), but I'm really not good at it... with `perlfunc vec`, `perlfunc pack`, and https://stackoverflow.com/questions/51548322/in-perl-how-do-i-count-bits-in-a-bit-vector-which-has-bits-set-higher-than-2-14, able to get the following:
+
+    C:\usr\local\share\passThru\perl\DavesGarageDragRace
+    > perl -le "$_=pack'B*','0'x64;vec($_,$ARGV[0], 1)=1;$a=unpack('V*',$_);$b=unpack('b*',$_);print qq($a,$b)" 3
+    8,0001000000000000000000000000000000000000000000000000000000000000
+
+
+    C:\usr\local\share\passThru\perl\DavesGarageDragRace
+    > perl -le "$_=pack'B*','0'x64;vec($_,$ARGV[0], 1)=1;$a=unpack('V*',$_);$b=unpack('b*',$_);print qq($a,$b)" 63
+    0,0000000000000000000000000000000000000000000000000000000000000001
+
+    > perl -le "$_=pack'B*','0'x128; vec($_, 123, 1)=1; vec($_, 127, 1)=1; vec($_,1000,1)=1;print unpack 'b*', $_; print unpack '%32b*', $_"
+    3
+
+    > perl -le "$_=pack'B*','0'x128; vec($_, 123, 1)=1; vec($_, 127, 1)=1; vec($_,1000,1)=1; vec($_,2_147_483_639,1)=1; vec($_, 3_000_000_000,1)=1; print unpack '%32b*', $_"
+    5
+
+As choroba said, it's been fixed in recent versions of perl, so the bit counter works great, even with 3Gb.  So that's probably
+the way to move forward without an array
