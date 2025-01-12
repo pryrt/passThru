@@ -1,0 +1,18 @@
+From YouTube Channel "Dave's Garage", doing a prime-sieve drag race across multiple languages,
+his E02 episode contained Perl vs PHP:
+    https://www.youtube.com/watch?v=Yl9OegOorYM&list=PLF2KJ6Gy3cZ5Er-1eF9fN1Hgw_xkoD9V1&index=2&pp=iAQB
+... But the Perl was abysmal, which tells me that whoever implemented the version he specified on his
+channel was either trying to make Perl look bad, or had no clue how to code efficiently in Perl.
+
+However, his rules (in other videos) say that you cannot change the fundamentals, where it has to run
+a sieve starting with any odd >= 3, so cannot use the 6n+/-1 optimization
+
+He has a repo with two Perl solutions here: https://github.com/PlummersSoftwareLLC/Primes/blob/drag-race/PrimePerl/
+So I want to run them both on my machine, and then see if I can tweak one or the other to make a faster answer,
+following the original rules.
+
+At my quick glance through the code yesterday (which wasn't detailed, so maybe I'm wrong), I had noticed that at least
+one was using an array of strings, rather than bit manipulation like in most languages -- though even the vec() solution
+suggested in the comments would probably have been faster than the raw one-char-per-entry that I think is there.
+
+So without further ado, I will grab those two as solution_1.pl and solution_2.pl and race them head-to-head.
