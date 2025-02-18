@@ -85,12 +85,12 @@ package PrimeSieve {
 
         print "" if ($show_results);
 
-        printf "pryrt3;%d;%f;%d;algorithm=base,faithful=yes\n", $passes, $duration, 1;
-        printf STDERR
-          "Passes: %d, Time: %f, Avg: %f, Limit: %d, Count1: %d, Count2: %d, Valid: %d\n",
-          $passes, $duration, $duration / $passes,
-          $self->{sieve_size}, $count, $self->count_primes(),
-          $self->validate_results();
+        printf "pryrt_bitarray;%d;%f;%d;algorithm=base,faithful=yes\n", $passes, $duration, 1;
+#        printf STDERR
+#          "Passes: %d, Time: %f, Avg: %f, Limit: %d, Count1: %d, Count2: %d, Valid: %d\n",
+#          $passes, $duration, $duration / $passes,
+#          $self->{sieve_size}, $count, $self->count_primes(),
+#          $self->validate_results();
     }
 
     sub count_primes {
