@@ -19,39 +19,45 @@ package PrimeSieve {
 
     sub new {
         my ( $class, $sieve_size ) = @_;
-        my $sieve_bytes = $sieve_size / 8;
+        my $sieve_bytes = ($sieve_size + 1) / 8;
         bless {
             sieve_size => $sieve_size,
-            #bits       => '0' x ($sieve_size+1),
-            bits       => '000' . '01' x (($sieve_size-1)/2),
+            #bits      => '0' x ($sieve_size+1),
+            ##bits     => '000' . '01' x (($sieve_size-1)/2),
+            vec        => "\0" x ($sieve_bytes+1),
         }, $class;
     }
 
     sub run_sieve {
-        my $self   = shift;
-        my $size   = $self->{sieve_size};
-        my $bits   = \$self->{bits};
-        my $q      = sqrt $size;
-        my $factor = 1;
+        my $self    = shift;
+        my $size    = $self->{sieve_size};
+        ##my $bits   = \$self->{bits};
+        my $rvec    = \$self->{vec};
+        my $q       = sqrt $size;
+        my $factor  = 1;
+        my $offs    = 0;
+        my $step    = 0;
 #printf "\t%s\n", join'',(0..9)x($self->{sieve_size}/10);
-#printf "\t%s\n", $$bits;
-        while ( $factor <= $q ) {
+#printf "BEFORE\t%s\n", unpack 'b*', $$rvec;
+         while ( $factor <= $q ) {
             $factor += 2;
-            $factor += 2 while $factor < $size and substr($$bits,$factor,1);
-            my $repeat = '1'  .  '0' x (2*$factor-1);
-            my $times = (length($$bits)-$factor**2)/2/$factor + 1;
-            my $s = ('0' x $factor**2)  .  ($repeat x $times);
-#printf "%-15d r:%-40s\n\t%s\n", $factor, $repeat, $s;
-            $$bits |= $s;
-#printf "\t%s\n", $$bits;
-        }
-#printf "\t%s\n", join'',(0..9)x11;
+            $factor += 2 while $factor < $size and vec($$rvec,$factor,1);
+            $offs = $factor**2;
+            $step = 2*$factor;
+#printf "f: %d, o:%d\n", $factor, $offs;
+            while ($offs < $size) {
+                vec($$rvec, $offs, 1) = 1;
+                $offs += $step;
+            }
+#printf "AFTER\t%s\n", unpack 'b*', $$rvec;
+         }
+#printf "\t%s\n", join'',(0..9)x($self->{sieve_size}/10);
     }
 
     sub primes {
         my $self = shift;
-        my $bits=\ $self->{bits};
-        grep!substr($$bits,$_,1),2,grep$_%2,3..$self->{sieve_size};
+        my $rvec = \$self->{vec};
+        grep!vec($$rvec,$_,1),2,grep$_%2,3..$self->{sieve_size};
     }
 
     sub print_results {
