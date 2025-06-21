@@ -37,6 +37,21 @@ Returns the `std::string` message describing whether the most recent validation 
 
 Returns the `std::wstring` message describing whether the most recent validation passed or failed.
 
+## Notes
+
+### E1696 on the `#import` line: cannot find `*.tlh` file
+
+When you first add the `ValidateXML.h` to the project, IntelliSense will likely claim it cannot find the `*.tlh` file for one of the DLL.  
+
+The required steps to get rid of that false error:
+1. Make sure you have `#include "ValidateXML.h"` somewhere in the project, otherwise the TLH won't be generated on a build
+2. **Build > Rebuild Solution** to make sure everything (including the TLH) is built
+3. **Project > Rescan Solution** to have IntelliSense rescan and fix its error
+   - Alternative: RightClick on the project in Solution Explorer, and select **Rescan Solution**
+   - Alternative: **Tools > Options > Text Editor > C/C++ > Advanced > Browsing/Navigation section > Recreate Database = `True`**, then exit and restart VisualStudio
+
+After that, the IntelliSense error should be gone.
+
 ## TODO
 
 - [ ] Eventually, I should wrap it as a class, instead, so different validators can track states separately.
