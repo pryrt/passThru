@@ -29,33 +29,86 @@ sub one_game {
             last MAINLOOP;
         }
 
-        # check if any foundations need starting, and fill them immediately
+        # check if any tableaus need starting, and fill them immediately
         my $any = 0;
-        for my $f ( 0 .. 3 ) {
-            if( 0 == scalar @{ $foundation[$f] } ) {
-                push @{ $foundation[$f] }, pop @reserve;
-                $any = 1;
+        for my $t ( 0 .. 3 ) {
+            if( 0 == scalar @{ $tableau[$t] } ) {
+                # can only do the auto-fill if there is something left in the reserve
+                if(scalar @reserve) {
+                    push @{ $tableau[$t] }, pop @reserve;
+                    $any = 1;
+                }
             }
         }
         if($any) { next MAINLOOP; }
 
+        # if there's still an empty tableau, _may_ choose to fill it from stock
+        for my $t ( 0 .. 3 ) {
+            if( 0 == scalar @{ $tableau[$t] } ) {
+                if(scalar(@stock) and rand() < 0.5) {
+                    push @{ $tableau[$t] }, pop @stock;
+                    next MAINLOOP;
+                }
+            }
+        }
 
+        # check if next reserve can be moved onto its foundation:
+        if(scalar @reserve) {
+            my $card = $reserve[-1];
+            my $v = cardval($card);
+            my $f = suitval($card);    # foundation number is suit value
+            if($v == 1 + scalar @{ $foundation[$f] }) {     # if the foundation has 1 card (A) and the value is 1+1=2, then the 2 of that suit can be added to the foundation
+                if(rand() < 0.5) {
+                    push @{ $foundation[$f] }, pop @reserve;
+                    next MAINLOOP;
+                }
+            }
+        }
+
+        # check if next stock can be moved onto its foundation:
+        if(scalar @stock) {
+            # TODO: this is duplicated from above, need to separate it out into a function to follow DRY
+            my $card = $stock[-1];
+            my $v = cardval($card);
+            my $f = suitval($card);    # foundation number is suit value
+            if($v == 1 + scalar @{ $foundation[$f] }) {     # if the foundation has 1 card (A) and the value is 1+1=2, then the 2 of that suit can be added to the foundation
+                if(rand() < 0.5) {
+                    push @{ $foundation[$f] }, pop @reserve;
+                    next MAINLOOP;
+                }
+            }
+        }
+
+        # TODO: here
+        # look for fillable foundations
+        for my $f ( 0 .. 3 ) {
+            1;
+        }
 
         # probably never get here
-        print "this next line should exit\n";
         last MAINLOOP;
     }
 
     dd { seed => $seed, reserve => \@reserve, stock => \@stock, foundation => \@foundation, tableau => \@tableau};
 }
 
+sub cardval {
+    my($card) = @_;
+    state %vals = ('?' => 0, 'A' => 1, 'T' => 10, 'J' => 11, 'Q' => 12, 'K' => 13); $vals{$_} = $_ for 0..13;
+    return $vals{ substr($card,0,1) };
+}
+
+sub suitval {
+    my ($card) = @_;
+    state %sval = ('C'=>0, 'H'=>1, 'S'=>2, 'D'=>3); $sval{$_} = $_ for 0..3;
+    return $sval{ substr($card,1,1) };
+}
+
 sub cardsort {
     my ($va,$sa) = split //, $a;
     my ($vb,$sb) = split //, $b;
-    state %vals = ('A' => 1, 'T' => 10, 'J' => 11, 'Q' => 12, 'K' => 13); $vals{$_} = $_ for 1..13;
-    state %sval = ('C'=>1, 'H'=>2, 'S'=>3, 'D'=>4);
-    $_ = $vals{$_} for $va,$vb;
-    $_ = $sval{$_} for $sa,$sb;
+    $_ = cardval($_) for $va,$vb;
+    $_ = suitval{$_} for $sa,$sb;
     return ($va <=> $vb) || ($sa <=> $sb);
 }
 
