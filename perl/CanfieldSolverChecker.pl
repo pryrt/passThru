@@ -9,21 +9,31 @@ use 5.014; # //, strict, say, s///r
 use warnings;
 use Data::Dump qw/pp/;
 $| = 1;
+use Time::HiRes qw/time/;
 
 my @init_reserve = ('?','?','?','?','?','?','?','?','8C','7D','9S','8H','AD','7H','JH','TD','5D','JD');
 my @init_stock = ('TH','2H','9H','KC','5H','7S','7C','JC','4C','8S','TS','4H','KD','3H','AH','2C','9D','4D','AC','6C','3D','QD','3S','QC','6S','AS','5S','QH','2D','QS','8D','3C','9C','JS');
 
-my @seeds = map {int 32768*rand()} 1 .. 10000;
+my @seeds = map {int 32768*rand()} 1 .. 100000;
 my $best = 53;
-for(@seeds) {
-    my $ret = one_game($_, \@init_reserve, \@init_stock, [[],[],[],[]], [[],[],[],[]]);
+my $best_save = {};
+my $t0 = my $t00 = time;
+for(0 .. $#seeds) {
+    my $seed = $seeds[$_];
+    my $ret = one_game($seed, \@init_reserve, \@init_stock, [[],[],[],[]], [[],[],[],[]]);
     my $reserve_remaining = scalar @{ $ret->{reserve} };
     if($reserve_remaining < $best) {
+        $best_save = $ret;
         $best = $reserve_remaining;
         print pp $ret;
     }
-    printf "== END OF GAME #%9d: reserve still has %d vs best=%d ==\n", $_, $reserve_remaining, $best;
+    my $t1 = time;
+    my $rate = ($t1 - $t0) * 1000; # ms/game
+    printf "== END OF GAME #%5d:s%09d: reserve still has %d vs best=%d (%013.9fms/game at %9.1fs total) ==\n", $_, $seed, $reserve_remaining, $best, $rate, $t1-$t00;
+    $t0 = time;
 }
+print "BEST => ", pp $best_save;
+
 
 sub one_game {
     my ($seed, $rreserve, $rstock, $rfoundation, $rtableau) = @_;
