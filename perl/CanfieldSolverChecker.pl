@@ -5,6 +5,8 @@
 #   - Tableau's initially get populated from the last four cards of the initial Reserve, alternating color descending rank
 #   - Foundations from A,2,...,Q,K of single suit
 
+# TODO: the one thing I noticed while it was running 100k is that I don't think I ever allow combining two tableau into one; that _might_ open a door that doesn't currently exist
+
 use 5.014; # //, strict, say, s///r
 use warnings;
 use Data::Dump qw/pp/;
