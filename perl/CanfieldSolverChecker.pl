@@ -7,13 +7,23 @@
 
 use 5.014; # //, strict, say, s///r
 use warnings;
-use Data::Dump;
+use Data::Dump qw/pp/;
 $| = 1;
 
 my @init_reserve = ('?','?','?','?','?','?','?','?','8C','7D','9S','8H','AD','7H','JH','TD','5D','JD');
 my @init_stock = ('TH','2H','9H','KC','5H','7S','7C','JC','4C','8S','TS','4H','KD','3H','AH','2C','9D','4D','AC','6C','3D','QD','3S','QC','6S','AS','5S','QH','2D','QS','8D','3C','9C','JS');
 
-one_game(undef, \@init_reserve, \@init_stock, [[],[],[],[]], [[],[],[],[]]);
+my @seeds = map {int 32768*rand()} 1 .. 10000;
+my $best = 53;
+for(@seeds) {
+    my $ret = one_game($_, \@init_reserve, \@init_stock, [[],[],[],[]], [[],[],[],[]]);
+    my $reserve_remaining = scalar @{ $ret->{reserve} };
+    if($reserve_remaining < $best) {
+        $best = $reserve_remaining;
+        print pp $ret;
+    }
+    printf "== END OF GAME #%9d: reserve still has %d vs best=%d ==\n", $_, $reserve_remaining, $best;
+}
 
 sub one_game {
     my ($seed, $rreserve, $rstock, $rfoundation, $rtableau) = @_;
@@ -23,85 +33,164 @@ sub one_game {
     my @foundation = @$rfoundation;
     my @tableau = @$rtableau;
 
+    my @moves;
+    my $count = 0;
+
     MAINLOOP: while(1) {
         # check for unknown reserve, and exit, because we've found a viable path to the next card
         if ($reserve[-1] eq '?') {
-            last MAINLOOP;
+            print pp { seed => $seed, reserve => \@reserve, stock => \@stock, foundation => \@foundation, tableau => \@tableau, zz_moves => \@moves};
+            die "found the next '?'";
         }
 
-        # check if any tableaus need starting, and fill them immediately
+        # check if each tableau needs starting, and fill it immediately
         my $any = 0;
         for my $t ( 0 .. 3 ) {
-            if( 0 == scalar @{ $tableau[$t] } ) {
-                # can only do the auto-fill if there is something left in the reserve
-                if(scalar @reserve) {
-                    push @{ $tableau[$t] }, pop @reserve;
-                    $any = 1;
-                }
+            if(try_move_to_empty_tableau($tableau[$t], \@reserve, 1)) { # the 1 means no randomization
+                push @moves, { "R->T[$t]" => $tableau[$t][-1] };
+                $any = 1;
             }
         }
         if($any) { next MAINLOOP; }
 
         # if there's still an empty tableau, _may_ choose to fill it from stock
         for my $t ( 0 .. 3 ) {
-            if( 0 == scalar @{ $tableau[$t] } ) {
-                if(scalar(@stock) and rand() < 0.5) {
-                    push @{ $tableau[$t] }, pop @stock;
-                    next MAINLOOP;
-                }
+            if(try_move_to_empty_tableau($tableau[$t], \@stock)) {
+                push @moves, { "S->T[$t]" => $tableau[$t][-1] };
+                next MAINLOOP;
             }
         }
 
-        # check if next reserve can be moved onto its foundation:
-        if(scalar @reserve) {
-            my $card = $reserve[-1];
-            my $v = cardval($card);
-            my $f = suitval($card);    # foundation number is suit value
-            if($v == 1 + scalar @{ $foundation[$f] }) {     # if the foundation has 1 card (A) and the value is 1+1=2, then the 2 of that suit can be added to the foundation
-                if(rand() < 0.5) {
-                    push @{ $foundation[$f] }, pop @reserve;
-                    next MAINLOOP;
-                }
+        # check if next reserve can be moved onto that suit's foundation:
+        if(defined (my $f = try_move_to_foundation_f(\@foundation, \@reserve))) {
+            push @moves, { "R->F[$f]" => $foundation[$f][-1] };
+            next MAINLOOP;
+        }
+
+        # check if next stock can be moved onto that suit's foundation:
+        if(defined (my $f = try_move_to_foundation_f(\@foundation, \@stock))) {
+            push @moves, { "S->F[$f]" => $foundation[$f][-1] };
+            next MAINLOOP;
+        }
+
+        # check if any of the bottom tableau cards can be moved onto its foundation:
+        for my $t ( 0 .. 3 ) {
+            if(defined (my $f = try_move_to_foundation_f(\@foundation, $tableau[$t]))) {
+                push @moves, { "T[$t]->F[$f]" => $foundation[$f][-1] };
+                next MAINLOOP;
             }
         }
 
-        # check if next stock can be moved onto its foundation:
-        if(scalar @stock) {
-            # TODO: this is duplicated from above, need to separate it out into a function to follow DRY
-            my $card = $stock[-1];
-            my $v = cardval($card);
-            my $f = suitval($card);    # foundation number is suit value
-            if($v == 1 + scalar @{ $foundation[$f] }) {     # if the foundation has 1 card (A) and the value is 1+1=2, then the 2 of that suit can be added to the foundation
-                if(rand() < 0.5) {
-                    push @{ $foundation[$f] }, pop @reserve;
-                    next MAINLOOP;
-                }
+        # check if the next reserve can be moved onto each tableau
+        for my $t (0 .. 3) {
+            if(try_move_to_tableau_t($tableau[$t], \@reserve)) {
+                push @moves, { "R->T[$t]" => $tableau[$t][-1] };
+                next MAINLOOP;
             }
         }
 
-        # TODO: here
-        # look for fillable foundations
-        for my $f ( 0 .. 3 ) {
-            1;
+        # check if the next stock can be moved onto each tableau
+        for my $t (0 .. 3) {
+            if(try_move_to_tableau_t($tableau[$t], \@stock)) {
+                push @moves, { "S->T[$t]" => $tableau[$t][-1] };
+                next MAINLOOP;
+            }
         }
 
-        # probably never get here
-        last MAINLOOP;
+        # if you get here, it means that there are no obvious moves (or it didn't take that move), so will (probably) rotate the stock:
+        #   though if there's nothing to rotate, it's game-over at this point
+        if(!scalar @stock) { last MAINLOOP; }
+
+        # don't rotate stock more than N times
+        if(++$count > 999 ) { last MAINLOOP; }
+
+        # now rotate
+        unshift @stock, pop @stock; # move card from end to beginning, which puts new card at end
+        printf "ROTATED STOCK #%9d: prev=%-2s new=%-2s\n", $count, $stock[0], $stock[-1] unless $count % 1e3;
+
     }
 
-    dd { seed => $seed, reserve => \@reserve, stock => \@stock, foundation => \@foundation, tableau => \@tableau};
+    my $ret = { seed => $seed, reserve => \@reserve, stock => \@stock, foundation => \@foundation, tableau => \@tableau, zz_moves => \@moves};
+    #print pp $ret;
+    return $ret;
+}
+
+sub try_move_to_empty_tableau {
+    my ($dst, $src, $doMove) = @_;
+    $doMove ||= (rand() < 0.5);        # if doMove was already set true, it will already move; otherwise, it has a 50% chance of moving.
+
+    if( 0 == scalar @$dst) {
+        if(scalar(@$src) and $doMove) {
+            push @$dst, pop @$src;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+sub try_move_to_foundation_f {
+    my ($dst, $src, $doMove) = @_;
+    $doMove ||= (rand() < 0.5);        # if doMove was already set true, it will already move; otherwise, it has a 50% chance of moving.
+
+    if(!scalar @$src) { return 0; } # don't try with an empty source
+
+    my $card = $src->[-1];
+    my $v = cardval($card);
+    my $f = suitval($card);    # foundation number is suit value
+    #printf "TMTF: %s = v:%-2s f:%s, 1+d:%s", $card, $v, $f, 1 + scalar(@{$dst->[$f]});
+    if($v == 1 + scalar @{ $dst->[$f] }) {     # if the foundation has 1 card (A) and the value is 1+1=2, then the 2 of that suit can be added to the foundation
+        if($doMove) {
+            push @{ $dst->[$f] }, pop @$src;
+            #print " => $f\n";
+            return $f;
+        }
+    }
+    #print "\n";
+    return undef;
+}
+
+sub try_move_to_tableau_t {
+    my ($dst, $src, $doMove) = @_;
+    $doMove ||= (rand() < 0.5);        # if doMove was already set true, it will already move; otherwise, it has a 50% chance of moving.
+
+    if(!scalar @$src) { return 0; } # don't try with an empty source
+
+    my $srccard = $src->[-1];
+    my $srcv = cardval($srccard);
+    my $srcf = suitval($srccard);    # foundation number is suit value
+    my $srcc = cardclr($srccard);
+
+    my $dstcard = $dst->[-1];
+    my $dstv = cardval($dstcard);
+    my $dstf = suitval($dstcard);
+    my $dstc = cardclr($dstcard);
+
+    #printf "TMTTT src(%s = v:%-2s f:%s c:%s) vs dst(%s = v:%-2s f:%s c:%s)", $srccard, $srcv, $srcf, $srcc, $dstcard, $dstv, $dstf, $dstc;
+    if($doMove and $srcc != $dstc and $srcv == $dstv - 1) { # if they have different colors, and the source is one lower than the destination, may do the move
+        push @$dst, pop @$src;
+        #print " => 1\n";
+        return 1;
+    }
+    #print "\n";
+    return undef;
 }
 
 sub cardval {
     my($card) = @_;
-    state %vals = ('?' => 0, 'A' => 1, 'T' => 10, 'J' => 11, 'Q' => 12, 'K' => 13); $vals{$_} = $_ for 0..13;
+    state %vals = ('?' => 0, 'A' => 1, 'T' => 10, 'J' => 11, 'Q' => 12, 'K' => 13); $vals{$_} = $_ for 2..9;
     return $vals{ substr($card,0,1) };
 }
 
 sub suitval {
     my ($card) = @_;
-    state %sval = ('C'=>0, 'H'=>1, 'S'=>2, 'D'=>3); $sval{$_} = $_ for 0..3;
+    state %sval = ('C'=>0, 'H'=>1, 'S'=>2, 'D'=>3);
     return $sval{ substr($card,1,1) };
+}
+
+sub cardclr { # 0 is black (C/S), 1 is red (H/D)
+    my ($card) = @_;
+    state %sclr = ('C'=>0, 'H'=>1, 'S'=>0, 'D'=>1);
+    return $sclr{ substr($card,1,1) };
 }
 
 sub cardsort {
