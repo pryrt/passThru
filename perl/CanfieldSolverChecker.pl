@@ -124,12 +124,12 @@ sub one_game {
         #   though if there's nothing to rotate, it's game-over at this point
         if(!scalar @stock) { last MAINLOOP; }
 
-        # don't rotate stock more than N times
-        if(++$count > 999 ) { last MAINLOOP; }
+        # don't rotate stock more than N times: 6000 is more than 200 times through the stock, so that's plenty
+        if(++$count > 5999 ) { last MAINLOOP; }
 
         # now rotate
         unshift @stock, pop @stock; # move card from end to beginning, which puts new card at end
-        printf "ROTATED STOCK #%9d: prev=%-2s new=%-2s\n", $count, $stock[0], $stock[-1] unless $count % 1e3;
+        #printf "ROTATED STOCK #%9d: prev=%-2s new=%-2s\n", $count, $stock[0], $stock[-1] unless $count % 1e3;
 
     }
 
