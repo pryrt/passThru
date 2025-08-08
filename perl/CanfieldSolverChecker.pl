@@ -5,8 +5,6 @@
 #   - Tableau's initially get populated from the last four cards of the initial Reserve, alternating color descending rank
 #   - Foundations from A,2,...,Q,K of single suit
 
-# TODO: the one thing I noticed while it was running 100k is that I don't think I ever allow combining two tableau into one; that _might_ open a door that doesn't currently exist
-
 use 5.014; # //, strict, say, s///r
 use warnings;
 use Data::Dump qw/pp/;
@@ -16,7 +14,7 @@ use Time::HiRes qw/time/;
 my @init_reserve = ('?','?','?','?','?','?','?','?','8C','7D','9S','8H','AD','7H','JH','TD','5D','JD');
 my @init_stock = ('TH','2H','9H','KC','5H','7S','7C','JC','4C','8S','TS','4H','KD','3H','AH','2C','9D','4D','AC','6C','3D','QD','3S','QC','6S','AS','5S','QH','2D','QS','8D','3C','9C','JS');
 
-my @seeds = map {int 32768*rand()} 1 .. 100000;
+my @seeds = map {int 32768*rand()} 1 .. 10000;
 my $best = 53;
 my $best_save = {};
 my $t0 = my $t00 = time;
