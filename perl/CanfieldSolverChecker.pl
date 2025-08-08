@@ -109,6 +109,17 @@ sub one_game {
             }
         }
 
+        # can the top of one tableau be moved to the bottom of another
+        for my $st (0..3) {
+            for my $dt (0..3) {
+                next if $st eq $dt;
+                if(try_move_tableau_across($tableau[$dt], $tableau[$st])) {
+                    push @moves, { "T[$st]->T[$dt]" => $tableau[$dt][-1]};
+                    next MAINLOOP;
+                }
+            }
+        }
+
         # if you get here, it means that there are no obvious moves (or it didn't take that move), so will (probably) rotate the stock:
         #   though if there's nothing to rotate, it's game-over at this point
         if(!scalar @stock) { last MAINLOOP; }
@@ -178,9 +189,42 @@ sub try_move_to_tableau_t {
     my $dstc = cardclr($dstcard);
 
     #printf "TMTTT src(%s = v:%-2s f:%s c:%s) vs dst(%s = v:%-2s f:%s c:%s)", $srccard, $srcv, $srcf, $srcc, $dstcard, $dstv, $dstf, $dstc;
-    if($doMove and $srcc != $dstc and $srcv == $dstv - 1) { # if they have different colors, and the source is one lower than the destination, may do the move
+    my $isLower = ($srcv == $dstv - 1) || (($srcv==13) && ($dstv==1));  # src is one lower than dst, or src is King and dst is Ace (allows wraparound)
+    if($doMove and $srcc != $dstc and $isLower) { # if they have different colors, and the source is one lower than the destination, may do the move
         push @$dst, pop @$src;
         #print " => 1\n";
+        return 1;
+    }
+    #print "\n";
+    return undef;
+}
+
+sub try_move_tableau_across { # ($tableau[$dt], $tableau[$st])
+    my ($dst, $src, $doMove) = @_;
+    $doMove ||= (rand() < 0.5);     # if doMove was already set true, it will already move; otherwise, it has a 50% chance of moving.
+
+    if(!scalar @$src) { return 0; } # don't try with an empty source
+
+    # need to check the TOP of the src
+    my $srccard = $src->[0];
+    my $srcv = cardval($srccard);
+    my $srcf = suitval($srccard);
+    my $srcc = cardclr($srccard);
+
+    # need to check the BOTTOM of the dst
+    my $dstcard = $dst->[-1];
+    my $dstv = cardval($dstcard);
+    my $dstf = suitval($dstcard);
+    my $dstc = cardclr($dstcard);
+
+    #printf "TMTA src_top(%s = v:%-2s f:%s c:%s) vs dst_bot(%s = v:%-2s f:%s c:%s) do?%d", $srccard, $srcv, $srcf, $srcc, $dstcard, $dstv, $dstf, $dstc, $doMove//0;
+    my $isLower = ($srcv == $dstv - 1) || (($srcv==13) && ($dstv==1));  # src is one lower than dst, or src is King and dst is Ace (allows wraparound)
+    if($doMove and $srcc != $dstc and $isLower) { # if they have different colors, isLower
+        #print " => 1\n";
+        #print pp { orig_src => $src, orig_dst => $dst }; print "\n";
+        push @$dst, @$src;  # push ALL of SRC onto DST
+        @$src = (); # empty SRC, since it was all moved
+        #print pp { src => $src, dst => $dst }; print "\n";
         return 1;
     }
     #print "\n";
