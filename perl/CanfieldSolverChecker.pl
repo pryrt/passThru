@@ -14,7 +14,7 @@ use Time::HiRes qw/time/;
 my @init_reserve = ('?','?','?','?','?','?','?','?','8C','7D','9S','8H','AD','7H','JH','TD','5D','JD');
 my @init_stock = ('TH','2H','9H','KC','5H','7S','7C','JC','4C','8S','TS','4H','KD','3H','AH','2C','9D','4D','AC','6C','3D','QD','3S','QC','6S','AS','5S','QH','2D','QS','8D','3C','9C','JS');
 
-my @seeds = map {int 32768*rand()} 1 .. 10000;
+my @seeds = (1 .. 65535); # map {int 32768*rand()} 1 .. 10000;
 my $best = 53;
 my $best_save = {};
 my $t0 = my $t00 = time;
@@ -122,8 +122,8 @@ sub one_game {
         #   though if there's nothing to rotate, it's game-over at this point
         if(!scalar @stock) { last MAINLOOP; }
 
-        # don't rotate stock more than N times: 6000 is more than 200 times through the stock, so that's plenty
-        if(++$count > 5999 ) { last MAINLOOP; }
+        # don't rotate stock more than N times: 2000 is more than 65 times through the stock (and probably >100, as the stock shrinks), so that's plenty
+        if(++$count > 1999 ) { last MAINLOOP; }
 
         # now rotate
         unshift @stock, pop @stock; # move card from end to beginning, which puts new card at end
