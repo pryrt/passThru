@@ -73,3 +73,4 @@ __END__
 (-814, 517, 549) => -74/47
 (214367, 6721, 217812) => 4561/143
 (83804, 39900, 121871) => 2993/1425
+so far, checked through b=±45500 and not found any besides those
