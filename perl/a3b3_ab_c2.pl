@@ -18,7 +18,7 @@ $| = 1;
 my $t0 = time;
 
 my %fractions = ();
-for my $absb (10001 .. 100000) {
+for my $absb (55501 .. 100000) {
     my $two_b_cubed = 2 * ($absb**3);
     my @m = @{divisors($two_b_cubed)};
     for my $absm (@m) {
@@ -47,12 +47,12 @@ for my $absb (10001 .. 100000) {
                 next if $rr != $rs;
 
                 # print if it's real
-                printf "(%s, %s, %s) => %s\n", $a, $b, $c, $rf;
+                printf "%75s\r(%s, %s, %s) => %s\n", "", $a, $b, $c, $rf;
                 $fractions{$rf} = [$a,$b,$c];
             }
         }
     }
-    printf "...%-7d t=%-7d per=%6.4f\n", $absb, (time()-$t0), (time()-$t0)/$absb if 0 == $absb % 500;
+    printf "...%-7d t=%-7d per=%6.4f\r", $absb, (time()-$t0), (time()-$t0)/$absb if (0 == $absb % 500) || (0 == (time()-$t0) % 10);
 }
 
 sub divisors {
