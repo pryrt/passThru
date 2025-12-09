@@ -52,7 +52,7 @@ for my $absb (55501 .. 100000) {
             }
         }
     }
-    printf "...%-7d t=%-7d per=%6.4f\r", $absb, (time()-$t0), (time()-$t0)/$absb if (0 == $absb % 500) || (0 == (time()-$t0) % 10);
+    printf "...%-7d t=%-7d per=%6.4f\r", $absb, (time()-$t0), (time()-$t0)/$absb if (0 == $absb % 500) || (0 == (time()-$t0) % 60);
 }
 
 sub divisors {
