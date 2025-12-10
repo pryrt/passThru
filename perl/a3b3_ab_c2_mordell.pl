@@ -3,20 +3,118 @@
 use 5.014; # //, strict, say, s///r
 use warnings;
 use Math::BigInt;
+use Data::Dump;
 
 # https://hhr-m.de/mordell/
 # https://hhr-m.de/mordell/big_table.txt
 
+if(0) {
+    for (8, -216, 192) {
+        dd {$_ => pfactors($_) };
+    }
+}
+
+
 while(<DATA>){
     my ($k, $s) = $_ =~ /(-?\d+)(.*)$/;
     $k = Math::BigInt->new("$k");
-    for my $entry ( m/\((.*?)\)/ ) {
-        my ($X,$Y) = split /,/, $entry;
-        $_ = Math::BigInt->new("$_") for ($X, $Y);
-        printf "k<%s> x<%s> y<%s>\n", $k, $X, $Y;
-        # TODO: start filtering for K=q^3, and extract u=X-q, and check for square u...
+    #last if abs($k) > 99;    # for shortening for debug...
+
+    # filter for k = cubic
+    my $q = abs($k)->broot(3) * $k->copy->bsgn;
+    next unless $k == $q**3;
+
+    # now go through each (x,y) pair for that cubic k
+    for my $entry ( m/\((.*?)\)/g ) {
+        my ($X,$Y) = map { Math::BigInt->new("$_") } split /,/, $entry;
+
+        # extract u=X-q, and check for square u...
+        my $u = $X - $q;
+        next if $u<0;
+        next unless $u == ($u->copy->bsqrt)**2;
+        printf "k<%-12s:(%12s,%12s)> q:%-12s u:%-12s", $k, $X, $Y, $q, $u;
+        my $pfact = pfactors($u);   #dd { "DEBUG_$u" => $pfact };
+        my $zero = !$u;
+        my $neg1 = exists($pfact->{-1}); # ? 1 : "1"; delete($pfact->{-1});
+        my $one = 0 == scalar keys %$pfact;
+        delete($pfact->{-1}) if $neg1;
+        my $prefix = ($zero || $neg1 || $one) ? " * " : "";
+        printf "\tfactor(u=%-12s) = %s", $u, $zero ? '0' : $neg1 ? "-1" : $one ? "1" : "";
+        my $p = $zero ? Math::BigInt->new(0) : $neg1 ? Math::BigInt->new(-1) : Math::BigInt->new(1);
+        my $t = Math::BigInt->new(1);
+        my $r = $t->copy();
+        for my $b (sort keys %$pfact) {
+            my $e = $pfact->{$b};
+            $p *= (Math::BigInt->new($b) ** Math::BigInt->new($e/2)) if 0==$e % 2;
+            print "${prefix}($b**$e)";
+            $prefix = " * ";
+        };
+        my $b = $r * $t * $p * $q;
+        my $m = ($r**2) * $t * ($q**3);
+        my $d = $r * ($t**2) * ($p**3);
+        my $a1 = $b + $d;
+        my $a2 = $b + 2*$d;
+        my $ratio1 = ($a1**3 + $b**3) / ($a1 - $b);
+        my $c1 = sqrt($ratio1); if($c1**2 != $ratio1) {$c1 = "NaN";}
+        my $ratio2 = ($a2**3 + $b**3) / ($a2 - $b);
+        my $c2 = sqrt($ratio2); if($c2**2 != $ratio2) {$c2 = "NaN";}
+
+        printf " => (p,q,r,t) => 2*(m*d) = (%s,%s,%s,%s) => 2*(%s*%s)\t\t2m=>(%s,%s,%s)\t2d=>(%s,%s,%s)\n", $p,$q,$r,$t, $m,$d, $a1,$b,$c1, $a2,$b,$c2;
     }
 }
+
+sub pfactors
+{
+    my ($v) = @_;
+    my $factors = {};
+    return $factors if !$v;
+    #dd {__LINE__.".DEBUG_$_" => $factors };
+    if($v < 0) {
+        $v *= -1;
+        $factors->{-1} = 1;
+    }
+    my $s = Math::BigInt->new(1);  # used for pseudo-prime p = s*6 +/- 1
+    my $f = Math::BigInt->new(2);
+    #dd {__LINE__.".DEBUG_$_" => $factors };
+    while($v > 1) {
+        # count the number of each pseudo-prime factor
+        while(0==$v % $f) {
+            ++ $factors->{$f};
+            $v /= $f;
+        }
+
+        # move to the next psuedo-prime factor:
+        if($f==2) {
+            $f = 3;
+        } elsif($f==3) {
+            $f = 5;
+        } elsif($f == $s*6 - 1) {   # if it was the 6s-1, move to 6s+1
+            $f = $s*6 + 1;
+        } else {                    # otherwise, move to _next_ s, 6s-1
+            ++$s;
+            $f = $s*6 - 1;
+        }
+    }
+    return $factors;
+}
+
+=begin cleaned up table
+
+K      X   Y  q   u     factor           (p,q,r,t) => 2*m*d         m gets 2    d gets 2
+1      2   3  1   1     1                (1,1,1,1) => 2*1*1         2,1,3       3,1,NaN
+8      2   4  2   0     0                (0,2,1,1) => 2*8*0         0,0,NaN     0,0,NaN
+-8     2   0  -2  4     (2**2)           (2,-2,1,1) => 2*-8*8       4,-4,0      12,-4,NaN
+64     8  24  4   4     (2**2)           (2,4,1,1) => 2*64*8        16,8,24     24,8,NaN
+-216  10  28  -6  16    (2**4)           (4,-6,1,1) => 2*-216*64    40,-24,28   104,-24,NaN
+512    8  32  8   0     0                (0,8,1,1) => 2*512*0       0,0,NaN     0,0,NaN
+-512   8   0  -8  16    (2**4)           (4,-8,1,1) => 2*-512*64    32,-32,0    96,-32,NaN
+729   18  81  9   9     (3**2)           (3,9,1,1) => 2*729*27      54,27,81    81,27,NaN
+4096  32 192  16  16    (2**4)           (4,16,1,1) => 2*4096*64    128,64,192  192,64,NaN
+5832  18 108  18  0     0                (0,18,1,1) => 2*5832*0     0,0,NaN     0,0,NaN
+-5832 18   0  -18 36    (2**2) * (3**2)  (6,-18,1,1) => 2*-5832*216 108,-108,0  324,-108,NaN
+
+=cut
+
 
 __DATA__
 1(-1,0)(0,1)(2,3)
