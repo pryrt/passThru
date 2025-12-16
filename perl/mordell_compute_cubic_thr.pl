@@ -73,6 +73,7 @@ if(0) {
     # enqueue everything
     for(1..100) {
         $Q->enqueue($_);
+        $Q->enqueue(-$_);
     }
 
     # done
