@@ -29,7 +29,7 @@ for my $id (1..100) {
 
 # 5. Signal workers to stop and wait for completion
 $q->end();
-$q->join() for @workers;
+$_->join() for @workers;
 
 say "All 100 items processed.";
 
