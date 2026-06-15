@@ -4,9 +4,9 @@ use Win32::API;
 use Win32::API::Callback;
 
 # 1. Bind Necessary Core Windows APIs
-my $RegisterClassW   = Win32::API->new('user32', 'RegisterClassW', 'P', 'I');
-my $GetModuleHandleW = Win32::API->new('kernel32', 'GetModuleHandleW', 'P', 'J'); # 'J' handles 32/64-bit pointer sizing natively
-my $GetLastError     = Win32::API->new('kernel32', 'GetLastError', '', 'I');
+my $RegisterClassW   = Win32::API->new('user32', 'RegisterClassW', 'P', 'N');
+my $GetModuleHandleW = Win32::API->new('kernel32', 'GetModuleHandleW', 'P', 'N'); # 'J' handles 32/64-bit pointer sizing natively
+my $GetLastError     = Win32::API->new('kernel32', 'GetLastError', '', 'N');
 
 unless ($RegisterClassW && $GetModuleHandleW) {
     die "Fatal: Failed to map core Windows API endpoints: $^E\n";
@@ -21,7 +21,7 @@ my $wnd_proc = Win32::API::Callback->new(
         my ($hwnd, $msg, $wparam, $lparam) = @_;
         return Win32::API::Call('user32', 'DefWindowProcW', $hwnd, $msg, $wparam, $lparam);
     },
-    'JJJJ', 'J' # Universal native pointer integers
+    'NNNN', 'N' # Universal native pointer integers
 );
 
 # Crucial: Extract the actual native memory address pointer from the callback object
@@ -65,6 +65,8 @@ if ($is_64bit) {
         $class_name_w
     );
 }
+printf STDERR "wc_packed = %s\n", unpack("H*", $wndclass_struct);
+printf STDERR "            ^style_^^x4____^^_proc ptr_____^^cls xt^^wnd xt^^hInstance_____^^hIcon_________^^hCursor_______^^hBkgrnd_______^^lpszMenuName__^^class name ptr^";
 
 # 6. Fire the API
 my $atom = $RegisterClassW->Call($wndclass_struct);

@@ -74,12 +74,13 @@ my $SetWindowLongPtrW = Win32::API->new('user32', 'SetWindowLongPtrW', 'NNN', 'N
 my $GetWindowLongPtrW = Win32::API->new('user32', 'GetWindowLongPtrW', 'NN', 'N')           or die "GetWindowLongPtrW: $^E";
 my $LoadCursorW       = Win32::API->new('user32', 'LoadCursorW', 'NP', 'N')                 or die "LoadCursorW: $^E";
 my $CreateWindowW   = sub { $CreateWindowExW->Call(0, @_); };
+my $GetLastError     = Win32::API->new('kernel32', 'GetLastError', '', 'I')                 or die "GetLastError: $^E";
 
 sub WindowProc_fn
 {
     my ($hwnd, $uMsg, $wParam, $lParam) = @_;
     printf STDERR "WindowProc_fn(0x%016lx, 0x%016lx, 0x%016lx, 0x%016lx)\n", $hwnd, $uMsg, $wParam, $lParam;
-    return 0;   # pretend I've handled every possible message
+    return Win32::API::Call('user32', 'DefWindowProcW', $hwnd, $uMsg, $wParam, $lParam);
 }
 my $WindowProc_cb = Win32::API::Callback->new(\&WindowProc_fn, 'NNNN', 'N') or die "Unable to create WindowProc callback: $^E";
 
@@ -99,9 +100,13 @@ printf STDERR "hInstance = 0x%016lx\n", $hInstance;
 ##   LPCSTR    lpszClassName;
 ## } WNDCLASSA, *PWNDCLASSA, *NPWNDCLASSA, *LPWNDCLASSA;
 
-my $class_name_w = to_wide_bytes("PromptDialog");
+my $class_name = "MyPromptClass\0";
+my $class_name_w = pack('v*', unpack('C*', $class_name));
 
-my $wc_packed = pack('L> Q> l> l> Q> Q> Q> Q> Q> Q>',
+my $is_64bit = (length(pack('P', 0)) == 8) ? 1 : 0;
+
+my $wc_packed = pack(
+    ($is_64bit) ? 'I x4 Q i i Q Q Q Q Q P' : 'I L i i L L L L L P',
     0,                          # style
     $WindowProc_cb,             # lpfnWndProc (callback pointer)
     3,                          # cbClsExtra
@@ -110,24 +115,39 @@ my $wc_packed = pack('L> Q> l> l> Q> Q> Q> Q> Q> Q>',
     0,                          # hIcon
     0x10003,                    # hCursor       = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);    IDC_ARROW=32512=0x7F00
     0x10,                       # hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1) = 15+1 = 16 = 0x10
-    0,                          # lpszMenuName
-    unpack('Q', pack('P', $class_name_w))  # lpszClassName (pointer to our string)
+    0,                          # lpszMenuName  ## Use Q/L if lpszMenuName==0, else use P
+    $class_name_w               # lpszClassName (pointer to our string)
 );
 printf STDERR "wc_packed = %s\n", unpack("H*", $wc_packed);
 #              wc_packed = 00000000c8e85a3e1402000000000000000000000000b465f67f000000000000000000000000000000000000000000000000000000000000000000007039583e14020000
-printf STDERR "            ^style_^^_proc ptr_____^^cls xt^^wnd xt^^hInstance_____^^hIcon_________^^hCursor_______^^hBkgrnd_______^^lpszMenuName__^^class name ptr^";
+printf STDERR "            ^style_^^x4____^^_proc ptr_____^^cls xt^^wnd xt^^hInstance_____^^hIcon_________^^hCursor_______^^hBkgrnd_______^^lpszMenuName__^^class name ptr^";
 
-eval {
-    warn "\nhere";
-$RegisterClassW->Call($wc_packed) or die "RegisterClassW failed: $^E";
-    warn "\nthere";
-1;
-} or do {
-die "RegisterClassW failed: $@";
-};
-print STDERR "Hit ENTER: "; <STDIN>;
+my $atom = $RegisterClassW->Call($wc_packed);
+die "RegisterClassW failed: $^E" unless $atom;
+printf STDERR "RegisterClassW: atom=%d\n", $atom;
 
-__END__
-perl 0000000000000245209af568000000000000000000007ff665b4000000000000000000000000000000000000000000000000000000000000000000000000024520972a70
-c    000000000000000024e117c100000000000000000000000024e1000000000000000000000000000000010003000000000000001000000000000000000000000024e150b0
-expl ^style_^^_proc ptr_____^^cls xt^^wnd xt^^hInstance_____^^hIcon_________^^hCursor_______^^hBkgrnd_______^^lpszMenuName__^^class name ptr^
+=begin comments
+
+Packing of the structure: compare c vs perl
+
+Perl Prints:
+hInstance = 0x0000000065b40000
+wc_packed = 0000000000000000003bfa429f02000003000000050000000000b465f67f000000000000000000000300010000000000100000000000000070d3f6429f02000040caf8429f020000
+            ^style_^^x4____^^_proc ptr_____^^cls xt^^wnd xt^^hInstance_____^^hIcon_________^^hCursor_______^^hBkgrnd_______^^lpszMenuName__^^class name ptr^
+c (below)   0000000000000000C117B033F77F000000000000000000000000B033F77F000000000000000000000300010000000000100000000000000000000000000000007251B033F77F0000
+
+C Prints:
+hInstance = 0x0000000033b00000
+Address          | 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F |
+-----------------|-------------------------------------------------|
+00000052E3BFF600 | 00 00 00 00 00 00 00 00 C1 17 B0 33 F7 7F 00 00 |
+00000052E3BFF610 | 00 00 00 00 00 00 00 00 00 00 B0 33 F7 7F 00 00 |
+00000052E3BFF620 | 00 00 00 00 00 00 00 00 03 00 01 00 00 00 00 00 |
+00000052E3BFF630 | 10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 |
+00000052E3BFF640 | 72 51 B0 33 F7 7F 00 00                         |
+
+Google AI helped me figure out how to get the RegisterClassW packed and registered correctly without crashing
+(see w32_register_class)
+
+=cut
+
