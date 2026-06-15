@@ -13,7 +13,8 @@ END   { print STDERR "\n\n"; }
 
 # Constants
 use constant {
-    WS_OVERLAPPEDWINDOW => 0x00CF0000,
+    WS_OVERLAPPED       => 0x00000000,
+    WS_OVERLAPPEDWINDOW => 0x00CF0000,  # https://learn.microsoft.com/en-us/windows/win32/winmsg/window-styles
     WS_POPUP            => 0x80000000,
     WS_CAPTION          => 0x00C00000,
     WS_SYSMENU          => 0x00080000,
@@ -55,7 +56,7 @@ sub from_wide_bytes {
 
 # Load APIs (wide variants where applicable)
 my $GetModuleHandleW = Win32::API->new('kernel32', 'GetModuleHandleW', 'P', 'N')            or die "GetModuleHandleW: $^E";
-my $RegisterClassW    = Win32::API->new('user32', 'RegisterClassW', 'P', 'N')              or die "RegisterClassExW: $^E";
+my $RegisterClassW    = Win32::API->new('user32', 'RegisterClassW', 'P', 'N')               or die "RegisterClassExW: $^E";
 my $CreateWindowExW   = Win32::API->new('user32', 'CreateWindowExW', 'NPPNNNNNNNPP', 'N')   or die "CreateWindowExW: $^E";
 my $ShowWindow        = Win32::API->new('user32', 'ShowWindow', 'NN', 'N')                  or die "ShowWindow: $^E";
 my $UpdateWindow      = Win32::API->new('user32', 'UpdateWindow', 'N', 'N')                 or die "UpdateWindow: $^E";
@@ -100,8 +101,8 @@ printf STDERR "hInstance = 0x%016lx\n", $hInstance;
 ##   LPCSTR    lpszClassName;
 ## } WNDCLASSA, *PWNDCLASSA, *NPWNDCLASSA, *LPWNDCLASSA;
 
-my $class_name = "MyPromptClass\0";
-my $class_name_w = pack('v*', unpack('C*', $class_name));
+my $class_name = "PromptDialog";
+my $class_name_w = to_wide_bytes($class_name); # pack('v*', unpack('C*', $class_name));
 
 my $is_64bit = (length(pack('P', 0)) == 8) ? 1 : 0;
 
@@ -151,3 +152,67 @@ Google AI helped me figure out how to get the RegisterClassW packed and register
 
 =cut
 
+## CreateWindow: needs Class Name and Title as wchar_t* -- ie,
+my $title_str = "PROMPT";
+my $title_str_w = to_wide_bytes($title_str); #pack('v*', unpack('C*', $title_str));
+printf STDERR "class_str=%-32s => packed_w='%s'\n", "'$class_name'", unpack("H*", $class_name_w);
+printf STDERR "title_str=%-32s => packed_w='%s'\n", "'$title_str'", unpack("H*", $title_str_w);
+    my $s_inp = '#32770';
+    my $s_twb = to_wide_bytes($s_inp);
+    my $s_pup = pack('v*', unpack('C*', $s_inp)) . "\0\0";
+    printf STDERR "compare encodings: inp=%-32s => \n\ttwb='%s'\n\tpup='%s'\n", "'$s_inp'", unpack("H*", $s_twb), unpack("H*", $s_pup);
+
+my $dlgW = 320;
+my $dlgH = 150;
+
+# Create the main dialog window
+my $hwnd = $CreateWindowExW->Call(
+    WS_EX_DLGMODALFRAME,
+    $class_name_w, # to_wide_bytes("#32770"),
+    $title_str_w,
+    WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
+    0, 0, $dlgW, $dlgH,
+    0, 0, $hInstance, 0
+);
+
+warn "Failed to create dialog: $^E" unless $hwnd;
+
+=begin comments
+
+why can't it find the class name?
+I tried the encoding experiment above, but even when I use the to_wide_bytes,
+it still doesn't find it.
+
+add in dumps from C:
+hInstance = 0x00000000d0290000
+Address          | 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F |
+-----------------|-------------------------------------------------|
+00000003005FFAE0 | 00 00 00 00 00 00 00 00 C1 17 29 D0 F7 7F 00 00 |
+00000003005FFAF0 | 00 00 00 00 00 00 00 00 00 00 29 D0 F7 7F 00 00 |
+00000003005FFB00 | 00 00 00 00 00 00 00 00 03 00 01 00 00 00 00 00 |
+00000003005FFB10 | 10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 |
+00000003005FFB20 | 72 51 29 D0 F7 7F 00 00                         |
+Address          | 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F |
+-----------------|-------------------------------------------------|
+00007FF7D0295172 | 50 00 72 00 6F 00 6D 00 70 00 74 00 44 00 69 00 |
+00007FF7D0295182 | 61 00 6C 00 6F 00 67 00 00 00                   |
+Address          | 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F |
+-----------------|-------------------------------------------------|
+00007FF7D029518C | 50 00 52 00 4F 00 4D 00 50 00 54 00 00 00       |
+The text was, 'x'
+
+and dumps from perl:
+hInstance = 0x0000000065b40000
+wc_packed = 0000000000000000a024a0aa9e02000003000000050000000000b465f67f0000000000000000000003000100000000001000000000000000000000000000000050528ea89e020000
+            ^style_^^x4____^^_proc ptr_____^^cls xt^^wnd xt^^hInstance_____^^hIcon_________^^hCursor_______^^hBkgrnd_______^^lpszMenuName__^^class name ptr^
+RegisterClassW: atom=49548
+class_str='PromptDialog'                   => packed_w='500072006f006d00700074004400690061006c006f0067000000'
+title_str='PROMPT'                         => packed_w='500052004f004d00500054000000'
+compare encodings: inp='#32770'                         =>
+        twb='2300330032003700370030000000'
+        pup='2300330032003700370030000000'
+Failed to create dialog: Cannot find window class at C:\usr\local\share\github\passThru\perl\w32prompt.pl line 178.
+
+Maybe it's not encoding things properly (ie, wrong Win32::API type characters).  I wish I had a way to see what it was doing inside the Win32::API calls
+
+=cut
