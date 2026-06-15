@@ -120,7 +120,7 @@ my $wc_packed = pack(
 );
 printf STDERR "wc_packed = %s\n", unpack("H*", $wc_packed);
 #              wc_packed = 00000000c8e85a3e1402000000000000000000000000b465f67f000000000000000000000000000000000000000000000000000000000000000000007039583e14020000
-printf STDERR "            ^style_^^x4____^^_proc ptr_____^^cls xt^^wnd xt^^hInstance_____^^hIcon_________^^hCursor_______^^hBkgrnd_______^^lpszMenuName__^^class name ptr^";
+printf STDERR "            ^style_^^x4____^^_proc ptr_____^^cls xt^^wnd xt^^hInstance_____^^hIcon_________^^hCursor_______^^hBkgrnd_______^^lpszMenuName__^^class name ptr^\n";
 
 my $atom = $RegisterClassW->Call($wc_packed);
 die "RegisterClassW failed: $^E" unless $atom;
