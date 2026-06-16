@@ -55,32 +55,30 @@ sub from_wide_bytes {
 }
 
 # Load APIs (wide variants where applicable)
-my $GetModuleHandleW = Win32::API->new('kernel32', 'GetModuleHandleW', 'P', 'N')            or die "GetModuleHandleW: $^E";
-my $RegisterClassW    = Win32::API->new('user32', 'RegisterClassW', 'P', 'N')               or die "RegisterClassW: $^E";
-my $RegisterClassExW  = Win32::API->new('user32', 'RegisterClassExW', 'P', 'N')             or die "RegisterClassExW: $^E";
-my $GetClassInfoW     = Win32::API->new('user32', 'GetClassInfoW', 'PPP', 'N')              or die "GetClassInfoW: $^E";
-my $GetClassInfoW_NPP = Win32::API->new('user32', 'GetClassInfoW', 'NPP', 'N')             or die "GetClassInfoW: $^E";
-my $GetClassInfoW_atom = Win32::API->new('user32', 'GetClassInfoW', 'NNP', 'N')             or die "GetClassInfoW: $^E";
-my $CreateWindowExW   = Win32::API->new('user32', 'CreateWindowExW', 'NPPNNNNNNNPP', 'N')   or die "CreateWindowExW: $^E";
-my $CreateWindowExW_atom = Win32::API->new('user32', 'CreateWindowExW', 'NNPNNNNNNNPP', 'N')   or die "CreateWindowExW: $^E";
-my $ShowWindow        = Win32::API->new('user32', 'ShowWindow', 'NN', 'N')                  or die "ShowWindow: $^E";
-my $UpdateWindow      = Win32::API->new('user32', 'UpdateWindow', 'N', 'N')                 or die "UpdateWindow: $^E";
-my $SetWindowPos      = Win32::API->new('user32', 'SetWindowPos', 'NNNNNNN', 'N')           or die "SetWindowPos: $^E";
-my $GetSystemMetrics  = Win32::API->new('user32', 'GetSystemMetrics', 'N', 'N')             or die "GetSystemMetrics: $^E";
-my $CreateWindowExW_ctrl = $CreateWindowExW; # reuse signature
-my $DefWindowProcW    = Win32::API->new('user32', 'DefWindowProcW', 'NNNN', 'N')            or die "DefWindowProcW: $^E";
-my $DispatchMessageW  = Win32::API->new('user32', 'DispatchMessageW', 'P', 'N')             or die "DispatchMessageW: $^E";
-my $TranslateMessage  = Win32::API->new('user32', 'TranslateMessage', 'P', 'N')             or die "TranslateMessage: $^E";
-my $GetMessageW       = Win32::API->new('user32', 'GetMessageW', 'PNNN', 'N')               or die "GetMessageW: $^E";
-my $PostQuitMessage   = Win32::API->new('user32', 'PostQuitMessage', 'N', 'N')              or die "PostQuitMessage: $^E";
-my $DestroyWindow     = Win32::API->new('user32', 'DestroyWindow', 'N', 'N')                or die "DestroyWindow: $^E";
-my $SendMessageW      = Win32::API->new('user32', 'SendMessageW', 'NNNN', 'N')              or die "SendMessageW: $^E";
-my $GetWindowTextW    = Win32::API->new('user32', 'GetWindowTextW', 'NPN', 'N')             or die "GetWindowTextW: $^E";
-my $SetWindowLongPtrW = Win32::API->new('user32', 'SetWindowLongPtrW', 'NNN', 'N')          or die "SetWindowLongPtrW: $^E";
-my $GetWindowLongPtrW = Win32::API->new('user32', 'GetWindowLongPtrW', 'NN', 'N')           or die "GetWindowLongPtrW: $^E";
-my $LoadCursorW       = Win32::API->new('user32', 'LoadCursorW', 'NP', 'N')                 or die "LoadCursorW: $^E";
-my $CreateWindowW   = sub { $CreateWindowExW->Call(0, @_); };
-my $GetLastError     = Win32::API->new('kernel32', 'GetLastError', '', 'I')                 or die "GetLastError: $^E";
+my $GetModuleHandleW        = Win32::API->new('kernel32', 'GetModuleHandleW', 'P', 'N')             or die "GetModuleHandleW: $^E";
+my $RegisterClassW          = Win32::API->new('user32', 'RegisterClassW', 'P', 'N')                 or die "RegisterClassW: $^E";
+my $RegisterClassExW        = Win32::API->new('user32', 'RegisterClassExW', 'P', 'N')               or die "RegisterClassExW: $^E";
+my $GetClassInfoW           = Win32::API->new('user32', 'GetClassInfoW', 'PPP', 'N')                or die "GetClassInfoW: $^E";
+my $GetClassInfoW_NPP       = Win32::API->new('user32', 'GetClassInfoW', 'NPP', 'N')                or die "GetClassInfoW: $^E";
+my $GetClassInfoW_atom      = Win32::API->new('user32', 'GetClassInfoW', 'NNP', 'N')                or die "GetClassInfoW: $^E";
+my $CreateWindowExW         = Win32::API->new('user32', 'CreateWindowExW', 'NPPNNNNNNNNP', 'N')     or die "CreateWindowExW: $^E";
+my $CreateWindowExW_atom    = Win32::API->new('user32', 'CreateWindowExW', 'NNPNNNNNNNNP', 'N')     or die "CreateWindowExW: $^E";
+my $ShowWindow              = Win32::API->new('user32', 'ShowWindow', 'NN', 'N')                    or die "ShowWindow: $^E";
+my $UpdateWindow            = Win32::API->new('user32', 'UpdateWindow', 'N', 'N')                   or die "UpdateWindow: $^E";
+my $SetWindowPos            = Win32::API->new('user32', 'SetWindowPos', 'NNNNNNN', 'N')             or die "SetWindowPos: $^E";
+my $GetSystemMetrics        = Win32::API->new('user32', 'GetSystemMetrics', 'N', 'N')               or die "GetSystemMetrics: $^E";
+my $DefWindowProcW          = Win32::API->new('user32', 'DefWindowProcW', 'NNNN', 'N')              or die "DefWindowProcW: $^E";
+my $DispatchMessageW        = Win32::API->new('user32', 'DispatchMessageW', 'P', 'N')               or die "DispatchMessageW: $^E";
+my $TranslateMessage        = Win32::API->new('user32', 'TranslateMessage', 'P', 'N')               or die "TranslateMessage: $^E";
+my $GetMessageW             = Win32::API->new('user32', 'GetMessageW', 'PNNN', 'N')                 or die "GetMessageW: $^E";
+my $PostQuitMessage         = Win32::API->new('user32', 'PostQuitMessage', 'N', 'N')                or die "PostQuitMessage: $^E";
+my $DestroyWindow           = Win32::API->new('user32', 'DestroyWindow', 'N', 'N')                  or die "DestroyWindow: $^E";
+my $SendMessageW            = Win32::API->new('user32', 'SendMessageW', 'NNNN', 'N')                or die "SendMessageW: $^E";
+my $GetWindowTextW          = Win32::API->new('user32', 'GetWindowTextW', 'NPN', 'N')               or die "GetWindowTextW: $^E";
+my $SetWindowLongPtrW       = Win32::API->new('user32', 'SetWindowLongPtrW', 'NNN', 'N')            or die "SetWindowLongPtrW: $^E";
+my $GetWindowLongPtrW       = Win32::API->new('user32', 'GetWindowLongPtrW', 'NN', 'N')             or die "GetWindowLongPtrW: $^E";
+my $LoadCursorW             = Win32::API->new('user32', 'LoadCursorW', 'NP', 'N')                   or die "LoadCursorW: $^E";
+my $GetLastError            = Win32::API->new('kernel32', 'GetLastError', '', 'I')                  or die "GetLastError: $^E";
 
 sub WindowProc_fn
 {
@@ -108,11 +106,39 @@ printf STDERR "hInstance = 0x%016lx\n", $hInstance;
 
 my $class_name = "PromptDialog";
 my $class_name_w = to_wide_bytes($class_name); # pack('v*', unpack('C*', $class_name));
-
+my $menu_name_w = to_wide_bytes("");
 my $is_64bit = (length(pack('P', 0)) == 8) ? 1 : 0;
 
+
+Win32::API::Struct->typedef( WNDCLASSW => qw{
+   UINT      style;
+   LPVOID    lpfnWndProc;
+   int       cbClsExtra;
+   int       cbWndExtra;
+   HINSTANCE hInstance;
+   HICON     hIcon;
+   HCURSOR   hCursor;
+   HBRUSH    hbrBackground;
+   LPCSTR    lpszMenuName;
+   LPCSTR    lpszClassName;
+});
+my $TryWC = Win32::API::Struct->new('WNDCLASSW');
+$TryWC->{style} = 0;
+$TryWC->{lpfnWndProc} = $WindowProc_cb;
+$TryWC->{cbClsExtra} = 3;
+$TryWC->{cbWndExtra} = 5;
+$TryWC->{hInstance} = $hInstance;
+$TryWC->{hIcon} = 0;
+$TryWC->{hCursor} = 0x10003;
+$TryWC->{hbrBackground} = 0x10;
+$TryWC->{lpszMenuName} = $menu_name_w; #to_wide_bytes("MyMenuName");
+$TryWC->{lpszClassName} = $class_name_w; #to_wide_bytes("MyClassName");
+$TryWC->align(64);
+$TryWC->Pack();
+use Data::Dump; dd $TryWC; printf STDERR "struct buf      = %s\n", unpack("H*",$TryWC->{buffer}), "\n";
+
 my $wc_packed = pack(
-    ($is_64bit) ? 'I x4 Q i i Q Q Q Q Q P' : 'I L i i L L L L L P',
+    ($is_64bit) ? 'I x4 Q i i Q Q Q Q P P' : 'I L i i L L L L P P',
     0,                          # style
     $WindowProc_cb,             # lpfnWndProc (callback pointer)
     3,                          # cbClsExtra
@@ -121,7 +147,7 @@ my $wc_packed = pack(
     0,                          # hIcon
     0x10003,                    # hCursor       = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);    IDC_ARROW=32512=0x7F00
     0x10,                       # hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1) = 15+1 = 16 = 0x10
-    0,                          # lpszMenuName  ## Use Q/L if lpszMenuName==0, else use P
+    $menu_name_w,               # lpszMenuName  ## Use Q/L if lpszMenuName==0, else use P
     $class_name_w               # lpszClassName (pointer to our string)
 );
 printf STDERR "wc_packed       = %s\n", unpack("H*", $wc_packed);
@@ -147,7 +173,6 @@ $readback_w = "\x00"x72;
 $got = $GetClassInfoW_NPP->Call($hInstance, $class_name_w, $readback_w);
 warn "GetClassInfoW_NPP failed: $got => $^E" unless $got;
 printf STDERR "readback NPP    = %s => got:%s\n", unpack("H*", $readback_w), $got;
-exit;
 
 =begin comments
 
@@ -187,29 +212,6 @@ printf STDERR "title_str=%-32s => packed_w='%s'\n", "'$title_str'", unpack("H*",
 my $dlgW = 320;
 my $dlgH = 150;
 
-# Create the main dialog window
-my $hwnd;
-if(1) {
-    $hwnd = $CreateWindowExW->Call(
-        WS_EX_DLGMODALFRAME,
-        to_wide_bytes("PromptDialog"), # $class_name_w, # to_wide_bytes("#32770"),
-        $title_str_w,
-        WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
-        0, 0, $dlgW, $dlgH,
-        0, 0, $hInstance, 0
-    );
-} else {
-    $hwnd = $CreateWindowExW_atom->Call(
-        WS_EX_DLGMODALFRAME,
-        $atom,
-        $title_str_w,
-        WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
-        0, 0, $dlgW, $dlgH,
-        0, 0, $hInstance, 0
-    );
-}
-
-warn "Failed to create dialog: $^E" unless $hwnd;
 
 =begin comments
 
@@ -260,4 +262,54 @@ With the GetClassInfo, I was able to discover:
             0000000000000000709347c65c02000003000000050000000000f278f67f00000000000000000000030001000000000010000000000000000000000000000000508245c65c020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
             ^style_^^x4____^^_proc ptr_____^^cls xt^^wnd xt^^hInstance_____^^hIcon_________^^hCursor_______^^hBkgrnd_______^^lpszMenuName__^^class name ptr^
 
+So, confirm that N should be used for hInstance, and N for atom or P for class_name_w
+-- so change CreateWindowExW and CreateWindowExW_atom to use NN for the last two args (the hInstance and the LPVOID which I always pass as 0, so should be an N not a P)
+    -> that caused either of those to crash
+    -> so did NP for the last two. :-(
+
 =cut
+
+# Create the main dialog window
+my $hwnd;
+if(0) {
+warn "here";
+eval {
+    $hwnd = $CreateWindowExW->Call(
+        WS_EX_DLGMODALFRAME,
+        to_wide_bytes("PromptDialog"), # $class_name_w, # to_wide_bytes("#32770"),
+        $title_str_w,
+        WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
+        0, 0, $dlgW, $dlgH,
+        0, 0, $hInstance, 0
+    );
+    1;
+} or do {
+    warn "eval failed:\n\t!: $!\n\t@: $@\n\tE: $^E";
+};
+warn "here";
+} elsif(0) {
+$got = $GetClassInfoW_atom->Call($hInstance, $atom, $readback_w);
+warn "GetClassInfoW_atom failed: $got => $^E" unless $got;
+printf STDERR "readback NNP    = %s\n\t=> got vs atom:%s vs %s\n", unpack("H*", $readback_w), $got, $atom;
+warn "here";
+eval {
+    $hwnd = $CreateWindowExW_atom->Call(
+        WS_EX_DLGMODALFRAME,
+        $atom,
+        $title_str_w,
+        WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
+        0, 0, $dlgW, $dlgH,
+        0, 0, $hInstance, 0
+    );
+    1;
+} or do {
+    warn "eval failed:\n\t!: $!\n\t@: $@\n\tE: $^E";
+};
+warn "here";
+}
+
+warn "Failed to create dialog: $^E" unless $hwnd;
+printf STDERR "hwnd=%032p\n", $hwnd;
+
+
+#---------------
