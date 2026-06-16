@@ -56,8 +56,13 @@ sub from_wide_bytes {
 
 # Load APIs (wide variants where applicable)
 my $GetModuleHandleW = Win32::API->new('kernel32', 'GetModuleHandleW', 'P', 'N')            or die "GetModuleHandleW: $^E";
-my $RegisterClassW    = Win32::API->new('user32', 'RegisterClassW', 'P', 'N')               or die "RegisterClassExW: $^E";
+my $RegisterClassW    = Win32::API->new('user32', 'RegisterClassW', 'P', 'N')               or die "RegisterClassW: $^E";
+my $RegisterClassExW  = Win32::API->new('user32', 'RegisterClassExW', 'P', 'N')             or die "RegisterClassExW: $^E";
+my $GetClassInfoW     = Win32::API->new('user32', 'GetClassInfoW', 'PPP', 'N')              or die "GetClassInfoW: $^E";
+my $GetClassInfoW_NPP = Win32::API->new('user32', 'GetClassInfoW', 'NPP', 'N')             or die "GetClassInfoW: $^E";
+my $GetClassInfoW_atom = Win32::API->new('user32', 'GetClassInfoW', 'NNP', 'N')             or die "GetClassInfoW: $^E";
 my $CreateWindowExW   = Win32::API->new('user32', 'CreateWindowExW', 'NPPNNNNNNNPP', 'N')   or die "CreateWindowExW: $^E";
+my $CreateWindowExW_atom = Win32::API->new('user32', 'CreateWindowExW', 'NNPNNNNNNNPP', 'N')   or die "CreateWindowExW: $^E";
 my $ShowWindow        = Win32::API->new('user32', 'ShowWindow', 'NN', 'N')                  or die "ShowWindow: $^E";
 my $UpdateWindow      = Win32::API->new('user32', 'UpdateWindow', 'N', 'N')                 or die "UpdateWindow: $^E";
 my $SetWindowPos      = Win32::API->new('user32', 'SetWindowPos', 'NNNNNNN', 'N')           or die "SetWindowPos: $^E";
@@ -119,13 +124,30 @@ my $wc_packed = pack(
     0,                          # lpszMenuName  ## Use Q/L if lpszMenuName==0, else use P
     $class_name_w               # lpszClassName (pointer to our string)
 );
-printf STDERR "wc_packed = %s\n", unpack("H*", $wc_packed);
-#              wc_packed = 00000000c8e85a3e1402000000000000000000000000b465f67f000000000000000000000000000000000000000000000000000000000000000000007039583e14020000
-printf STDERR "            ^style_^^x4____^^_proc ptr_____^^cls xt^^wnd xt^^hInstance_____^^hIcon_________^^hCursor_______^^hBkgrnd_______^^lpszMenuName__^^class name ptr^\n";
+printf STDERR "wc_packed       = %s\n", unpack("H*", $wc_packed);
+#              wc_packed       = 00000000c8e85a3e1402000000000000000000000000b465f67f000000000000000000000000000000000000000000000000000000000000000000007039583e14020000
+printf STDERR "                  ^style_^^x4____^^_proc ptr_____^^cls xt^^wnd xt^^hInstance_____^^hIcon_________^^hCursor_______^^hBkgrnd_______^^lpszMenuName__^^class name ptr^\n";
 
 my $atom = $RegisterClassW->Call($wc_packed);
 die "RegisterClassW failed: $^E" unless $atom;
 printf STDERR "RegisterClassW: atom=%d\n", $atom;
+
+my $readback_w = "\x00"x72;
+printf STDERR "readback before = %s\n", unpack("H*", $readback_w);
+my $got = $GetClassInfoW->Call($hInstance, $class_name_w, $readback_w);
+warn "GetClassInfoW failed: $got => $^E" unless $got;
+printf STDERR "readback PPP    = %s => got:%s\n", unpack("H*", $readback_w), $got;
+
+$got = $GetClassInfoW_atom->Call($hInstance, $atom, $readback_w);
+warn "GetClassInfoW_atom failed: $got => $^E" unless $got;
+printf STDERR "readback NNP    = %s => got:%s\n", unpack("H*", $readback_w), $got;
+
+
+$readback_w = "\x00"x72;
+$got = $GetClassInfoW_NPP->Call($hInstance, $class_name_w, $readback_w);
+warn "GetClassInfoW_NPP failed: $got => $^E" unless $got;
+printf STDERR "readback NPP    = %s => got:%s\n", unpack("H*", $readback_w), $got;
+exit;
 
 =begin comments
 
@@ -166,14 +188,26 @@ my $dlgW = 320;
 my $dlgH = 150;
 
 # Create the main dialog window
-my $hwnd = $CreateWindowExW->Call(
-    WS_EX_DLGMODALFRAME,
-    $class_name_w, # to_wide_bytes("#32770"),
-    $title_str_w,
-    WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
-    0, 0, $dlgW, $dlgH,
-    0, 0, $hInstance, 0
-);
+my $hwnd;
+if(1) {
+    $hwnd = $CreateWindowExW->Call(
+        WS_EX_DLGMODALFRAME,
+        to_wide_bytes("PromptDialog"), # $class_name_w, # to_wide_bytes("#32770"),
+        $title_str_w,
+        WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
+        0, 0, $dlgW, $dlgH,
+        0, 0, $hInstance, 0
+    );
+} else {
+    $hwnd = $CreateWindowExW_atom->Call(
+        WS_EX_DLGMODALFRAME,
+        $atom,
+        $title_str_w,
+        WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
+        0, 0, $dlgW, $dlgH,
+        0, 0, $hInstance, 0
+    );
+}
 
 warn "Failed to create dialog: $^E" unless $hwnd;
 
@@ -214,5 +248,16 @@ compare encodings: inp='#32770'                         =>
 Failed to create dialog: Cannot find window class at C:\usr\local\share\github\passThru\perl\w32prompt.pl line 178.
 
 Maybe it's not encoding things properly (ie, wrong Win32::API type characters).  I wish I had a way to see what it was doing inside the Win32::API calls
+
+============================
+
+With the GetClassInfo, I was able to discover:
+- using PPP gives the "cannot find window class"
+- using NNP and passing in the atom correctly interprets things.
+- I tried NPP and passing in the string,
+  - it gives "Win32::API::Call: parameter 3 had a buffer overflow"
+  - try giving it a longer buffer (150 bytes), and it gave
+            0000000000000000709347c65c02000003000000050000000000f278f67f00000000000000000000030001000000000010000000000000000000000000000000508245c65c020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+            ^style_^^x4____^^_proc ptr_____^^cls xt^^wnd xt^^hInstance_____^^hIcon_________^^hCursor_______^^hBkgrnd_______^^lpszMenuName__^^class name ptr^
 
 =cut
