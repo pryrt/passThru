@@ -80,8 +80,8 @@ int sizes(int input) {
     print_sizeof('a');
     print_sizeof(wchar_t);      // native "wide": for MS, it's 16bit (2byte) UTF16-LE (Windows internal native type)
     print_sizeof(L'a');         // the L prefix to a character or string makes it wchar_t
-    print_sizeof(u'a');         // the u prefix makes it char16_t
-    print_sizeof(U'a');         // the U prefix makes it char32_t
+    //print_sizeof(u'a');         // the u prefix makes it char16_t
+    //print_sizeof(U'a');         // the U prefix makes it char32_t
     //                          // wchar_t, char16_t, and char32_t are all "wide strings", though some people use "wide string" only for wchar_t
     //                          // char and char8_t are "narrow strings", even if they are used for storing utf8 sequences
     fflush(stdout);
