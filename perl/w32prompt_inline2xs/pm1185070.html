@@ -1,0 +1,448 @@
+<style>
+.code {
+	display: block;
+	border: 1px solid #666;
+	color: #000;
+	padding: 1em;
+}
+pre, tt {
+	font-family: "Bitstream Vera Sans Mono", monospace;
+}
+tt.inlinecode, .codetext { color: #a33; }
+</style>
+
+<p>So, I've been asked by a couple of people now if I would take some of the experience I've gained over the last half year or so, and put together some form of tutorial on wrapping a C library, and more generally, XS. This is the first cut of that tutorial.</p>
+
+<p>Relatively, I am still very new to all of this, as it's a pretty complex world. Before I started, I didn't have any real C experience, so I've been dealing with that learning curve at the same time, so I know there are better and more efficient ways of doing what I do, and would appreciate any feedback.</p>
+
+<p>I'll get right to it. Here's an overview:</p>
+
+<ul>
+<li>find something to wrap. In this case, I've written a shared C library called <tt class='inlinecode'><font size="-1">xswrap</font></tt> (I'll detail that whole procedure in the first reply to this node)</li>
+<li>create a shell distribution that'll allow us to load our eventual XS code, which in turn has wrapped the C library</li>
+<li>update relevant files to make things hang together</li>
+<li>run into a function that can't be returned to Perl as-is, so we learn how to write our own C/XS wrapper so we can get what we need</li>
+<li>package it all together into a distribution</li>
+</ul>
+
+<p>The actual C code is irrelevant at this point, but knowing the definitions in use is, so here they are for the <tt class='inlinecode'><font size="-1">xswrap</font></tt> library:</p>
+
+<pre class="code"><div class='codeblock'><tt class='codetext'><font size="-1">int mult (int x, int y);
+void speak (const char* str);
+unsigned char* arr (); // returns (0, 1, 2)
+</font></tt></div><font size='-1'><div class='embed-code-dl'><a href="?part=3;displaytype=displaycode;abspart=1;node_id=1185070">&#91;download&#93;</a></div></font></pre>
+
+
+<p><b>Create a new shell distribution</b></p>
+
+<p>I use <a href="https://metacpan.org/pod/Module%3A%3AStarter">Module::Starter</a>:</p>
+
+<pre class="code"><div class='codeblock'><tt class='codetext'><font size="-1">module-starter \
+    --module=XS::Wrap \
+    --author=&quot;Steve Bertrand&quot; \
+    --email=steveb@cpan.org \
+    --license=perl
+</font></tt></div><font size='-1'><div class='embed-code-dl'><a href="?abspart=1;node_id=1185070;part=4;displaytype=displaycode">&#91;download&#93;</a></div></font></pre>
+
+
+<p>Now change into the new <tt class='inlinecode'><font size="-1">XS-Wrap</font></tt> directory, which is the root directory of the new dist. The Perl module file is located at <tt class='inlinecode'><font size="-1">lib/XS/Wrap.pm</font></tt>. I've removed a bunch of stuff for brevity, but the shell looks something like this:</p>
+
+<pre class="code"><div class='codeblock'><tt class='codetext'><font size="-1">package XS::Wrap;
+
+use warnings;
+use strict;
+
+our $VERSION = &#39;0.01&#39;;
+</font></tt></div><font size='-1'><div class='embed-code-dl'><a href="?abspart=1;node_id=1185070;part=7;displaytype=displaycode">&#91;download&#93;</a></div></font></pre>
+
+
+<p><b>Create the base XS file</b></p>
+
+<p>I use <a href="https://metacpan.org/pod/Inline%3A%3AC">Inline::C</a> to do this for me, as like most Perl hackers, I'm often lazy. Note the flags in use. <tt class='inlinecode'><font size="-1">clean_after_build</font></tt> tells <tt class='inlinecode'><font size="-1">Inline</font></tt> to not clean up the build directory (<tt class='inlinecode'><font size="-1">_Inline</font></tt> after build). This allows us to fetch our new <tt class='inlinecode'><font size="-1">.xs</font></tt> file. <tt class='inlinecode'><font size="-1">name</font></tt> is the name of the module we're creating this XS file for.</p>
+
+<pre class="code"><div class='codeblock'><tt class='codetext'><font size="-1">use warnings;
+use strict;
+
+use Inline Config =&gt;
+           disable =&gt; clean_after_build =&gt;
+           name =&gt; &#39;XS::Wrap&#39;;
+use Inline &#39;C&#39;;
+
+__END__
+__C__
+
+#include &lt;stdio.h&gt;
+#include &lt;xswrap.h&gt;
+</font></tt></div><font size='-1'><div class='embed-code-dl'><a href="?node_id=1185070;abspart=1;displaytype=displaycode;part=13">&#91;download&#93;</a></div></font></pre>
+
+
+<p>The resulting XS file is located in <tt class='inlinecode'><font size="-1">_Inline/build/XS/Wrap/Wrap.xs</font></tt>. Copy it to the root directory of the dist:</p>
+
+<tt class='inlinecode'><font size="-1">cp _Inline/build/XS/Wrap/Wrap.xs .</font></tt>
+
+<p>Here's what our base XS file looks like. It doesn't do anything yet, but we'll get there:</p>
+
+<pre class="code"><div class='codeblock'><tt class='codetext'><font size="-1">#include &quot;EXTERN.h&quot;
+#include &quot;perl.h&quot;
+#include &quot;XSUB.h&quot;
+#include &quot;INLINE.h&quot;
+
+#include &lt;stdio.h&gt;
+#include &lt;xswrap.h&gt;
+
+MODULE = XS::Wrap  PACKAGE = main
+
+PROTOTYPES: DISABLE
+</font></tt></div><font size='-1'><div class='embed-code-dl'><a href="?abspart=1;node_id=1185070;part=16;displaytype=displaycode">&#91;download&#93;</a></div></font></pre>
+
+
+<p>See the <tt class='inlinecode'><font size="-1">PACKAGE = main</font></tt> there? Change main to the name of our dist, <tt class='inlinecode'><font size="-1">XS::Wrap</font></tt>.</p>
+
+<p><b>Adding the functions from the shared library to XS</b></p>
+
+<p>Now we need to define our C functions within the XS file. After I've done that using the C definitions for the functions above, my XS file now looks like this</p>
+
+<pre class="code"><div class='codeblock'><tt class='codetext'><font size="-1">#include &quot;EXTERN.h&quot;
+#include &quot;perl.h&quot;
+#include &quot;XSUB.h&quot;
+#include &quot;INLINE.h&quot;
+
+#include &lt;stdio.h&gt;
+#include &lt;xswrap.h&gt;
+
+MODULE = XS::Wrap  PACKAGE = XS::Wrap
+
+PROTOTYPES: DISABLE
+
+int mult (x, y)
+    int x
+    int y
+
+void speak (str)
+    const char* str
+
+unsigned char* arr ()
+</font></tt></div><font size='-1'><div class='embed-code-dl'><a href="?part=19;displaytype=displaycode;node_id=1185070;abspart=1">&#91;download&#93;</a></div></font></pre>
+
+
+<p>Note that at this point, because we're not using <tt class='inlinecode'><font size="-1">Inline</font></tt> anymore, you can remove the include for the <tt class='inlinecode'><font size="-1">INLINE.h</font></tt> header file. However, in our case, we're going to be using some <tt class='inlinecode'><font size="-1">Inline</font></tt> functionality a bit later on, so instead of removing that, copy the <tt class='inlinecode'><font size="-1">INLINE.h</font></tt> file to the same directory we copied our XS file into: <tt class='inlinecode'><font size="-1">cp _Inline/build/XS/Wrap/INLINE.h .</font></tt></p>
+
+<p><b>Readying the module file for use</b></p>
+
+<p>Now we have some work to do to pull in the XS, wrap the functions, and export them. Note that you do not *need* to wrap the functions with Perl, you can export them directly as depicted in the XS file if you wish, as long as you know you don't need to add any further validation or functionality before the XS imported C function is called. I'll wrap all three. The functions that each wrapped function calls is the literal C function, as advertised through the XS file we hacked above.</p>
+
+<pre class="code"><div class='codeblock'><tt class='codetext'><font size="-1">use warnings;
+use strict;
+
+our $VERSION = &#39;0.01&#39;;
+
+require XSLoader;
+XSLoader::load(&#39;XS::Wrap&#39;, $VERSION);
+
+use Exporter qw(import);
+
+our @EXPORT_OK = qw(
+    my_mult
+    my_speak
+    my_arr
+);
+
+our %EXPORT_TAGS;
+$EXPORT_TAGS{all} = &#91;@EXPORT_OK&#93;;
+
+sub my_mult {
+    my ($x, $y) = @_;
+    return mult($x, $y);
+}
+sub my_speak {
+    my ($str) = @_;
+    speak($str);
+}
+sub my_arr {
+    my @array = arr();
+    return @array;
+}
+</font></tt></div><font size='-1'><div class='embed-code-dl'><a href="?displaytype=displaycode;part=25;node_id=1185070;abspart=1">&#91;download&#93;</a></div></font></pre>
+
+
+<p><b>Telling the Makefile to load the external C library</b></p>
+
+<p>Because we're using an external shared library, we need to add a directive to the <tt class='inlinecode'><font size="-1">Makefile.PL</font></tt> file. Put the following line anywhere in the <tt class='inlinecode'><font size="-1">Makefile.PL</font></tt>'s <tt class='inlinecode'><font size="-1">WriteMakefile()</font></tt> routine:</p>
+
+<pre class="code"><div class='codeblock'><tt class='codetext'><font size="-1">LIBS =&gt; &#91;&#39;-lxswrap&#39;&#93;,
+</font></tt></div><font size='-1'><div class='embed-code-dl'><a href="?abspart=1;node_id=1185070;part=29;displaytype=displaycode">&#91;download&#93;</a></div></font></pre>
+
+
+<p><b>Building, installing and initial test</b></p>
+
+<p>Let's build, install and write a test script for our new distribution.</p>
+
+<pre class="code"><div class='codeblock'><tt class='codetext'><font size="-1">perl Makefile.PL
+make
+make install
+</font></tt></div><font size='-1'><div class='embed-code-dl'><a href="?displaytype=displaycode;part=30;abspart=1;node_id=1185070">&#91;download&#93;</a></div></font></pre>
+
+
+<p>At this point, if everything works as expected, you're pretty well done. However, in the case here, we're going to unexpectedly run into some issues, and we'll need to do other things before we finalize our distribution.</p>
+
+<p>Test script (<tt class='inlinecode'><font size="-1">example.pl</font></tt>). Very basic, it just tests all three wrapped functions:</p>
+
+<pre class="code"><div class='codeblock'><tt class='codetext'><font size="-1">use warnings;
+use strict;
+use feature &#39;say&#39;;
+
+use XS::Wrap qw(:all);
+
+say my_mult(5, 5);
+
+my_speak(&quot;hello, world!\n&quot;);
+
+my @arr = my_arr();
+
+say $_ for @arr;
+</font></tt></div><font size='-1'><div class='embed-code-dl'><a href="?part=32;displaytype=displaycode;abspart=1;node_id=1185070">&#91;download&#93;</a></div></font></pre>
+
+
+<p>Output:</p>
+
+<pre class="code"><div class='codeblock'><tt class='codetext'><font size="-1">25
+hello, world!
+</font></tt></div><font size='-1'><div class='embed-code-dl'><a href="?abspart=1;node_id=1185070;displaytype=displaycode;part=33">&#91;download&#93;</a></div></font></pre>
+
+
+<p>Hmmm, something is not right. The <tt class='inlinecode'><font size="-1">arr()</font></tt> C function was supposed to return an array of three elements, <tt class='inlinecode'><font size="-1">0, 1, 2</font></tt>, but we get no output.</p>
+
+<p>This is because <tt class='inlinecode'><font size="-1">arr()</font></tt> returns an <tt class='inlinecode'><font size="-1">unsigned char*</font></tt> which we can't handle correctly/directly in Perl.</p>
+
+<p>In this case, I will just wrap the <tt class='inlinecode'><font size="-1">arr()</font></tt> function with a new C function (I've called it simply <tt class='inlinecode'><font size="-1">_arr()</font></tt>) that returns a real Perl array based on the output from the original C <tt class='inlinecode'><font size="-1">arr()</font></tt> function. Technically, I won't be returning anything, I'm going to just use functionality from <tt class='inlinecode'><font size="-1">Inline</font></tt> to push the list onto the stack (one element at a time), where Perl will automatically pluck it back off of the stack.</p>
+
+<p>To do this, I'll be leveraging <tt class='inlinecode'><font size="-1">Inline</font></tt> again, but with a couple of changes. We change the <tt class='inlinecode'><font size="-1">name</font></tt>, and add also bring in our shared library because we need it directly now.</p>
+
+<p><b>Returning a Perl array from a C function</b></p>
+
+<pre class="code"><div class='codeblock'><tt class='codetext'><font size="-1">use warnings;
+use strict;
+
+use Inline config =&gt;
+           disable =&gt; clean_after_build =&gt;
+           name =&gt; &#39;Test&#39;;
+use Inline (&#39;C&#39; =&gt; &#39;DATA&#39;, libs =&gt; &#39;-lxswrap&#39;);
+
+print &quot;$_\n&quot; for _arr();
+
+ __END__
+ __C__
+
+#include &lt;stdio.h&gt;
+#include &lt;xswrap.h&gt;
+
+void _arr (){
+    unsigned char* c_array = arr();
+
+    inline_stack_vars;
+    inline_stack_reset;
+
+    int i;
+
+    for (i=0; i&lt;3; i++){
+        inline_stack_push(sv_2mortal(newSViv(c_array&#91;i&#93;)));
+    }
+
+    free(c_array);
+
+    inline_stack_done;
+}
+</font></tt></div><font size='-1'><div class='embed-code-dl'><a href="?abspart=1;node_id=1185070;displaytype=displaycode;part=44">&#91;download&#93;</a></div></font></pre>
+
+
+<p>After I execute that Perl script, I'm left with a new XS file within the <tt class='inlinecode'><font size="-1">_Inline/build/Test/Test.xs.</font></tt>. It looks like this:</p>
+
+<pre class="code"><div class='codeblock'><tt class='codetext'><font size="-1">#include &quot;EXTERN.h&quot;
+#include &quot;perl.h&quot;
+#include &quot;XSUB.h&quot;
+#include &quot;INLINE.h&quot;
+
+#include &lt;stdio.h&gt;
+#include &lt;xswrap.h&gt;
+
+void _arr (){
+    unsigned char* c_array = arr();
+
+    inline_stack_vars;
+    inline_stack_reset;
+
+    int i;
+
+    for (i=0; i&lt;3; i++){
+        inline_stack_push(sv_2mortal(newSViv(c_array&#91;i&#93;)));
+    }
+
+    free(c_array);
+
+    inline_stack_done;
+}
+
+
+MODULE = Test  PACKAGE = main
+
+PROTOTYPES: DISABLE
+
+
+void
+_arr ()
+        PREINIT:
+        I32* temp;
+        PPCODE:
+        temp = PL_markstack_ptr++;
+        _arr();
+        if (PL_markstack_ptr != temp) {
+          /* truly void, because dXSARGS not invoked */
+          PL_markstack_ptr = temp;
+          XSRETURN_EMPTY; /* return empty stack */
+        }
+        /* must have used dXSARGS; list context implied */
+        return; /* assume stack size is correct */
+</font></tt></div><font size='-1'><div class='embed-code-dl'><a href="?part=46;displaytype=displaycode;node_id=1185070;abspart=1">&#91;download&#93;</a></div></font></pre>
+
+
+<p>We only need a couple of pieces of it, so get out your CTRL-V and CTRL-C. Here are the sections (cleaned up a bit for brevity) that we need to copy into our real <tt class='inlinecode'><font size="-1">Wrap.xs</font></tt> file.</p>
+
+<p>The C portion:</p>
+
+<pre class="code"><div class='codeblock'><tt class='codetext'><font size="-1">void _arr (){
+    unsigned char* c_array = arr();
+
+    inline_stack_vars;
+    inline_stack_reset;
+
+    int i;
+
+    for (i=0; i&lt;3; i++){
+        inline_stack_push(sv_2mortal(newSViv(c_array&#91;i&#93;)));
+    }
+
+    free(c_array);
+
+    inline_stack_done;
+}
+</font></tt></div><font size='-1'><div class='embed-code-dl'><a href="?node_id=1185070;abspart=1;displaytype=displaycode;part=48">&#91;download&#93;</a></div></font></pre>
+
+
+<p>The XS portion:</p>
+
+<pre class="code"><div class='codeblock'><tt class='codetext'><font size="-1">void
+_arr ()
+        PREINIT:
+        I32* temp;
+        PPCODE:
+        temp = PL_markstack_ptr++;
+        _arr();
+        if (PL_markstack_ptr != temp) {
+          PL_markstack_ptr = temp;
+          XSRETURN_EMPTY;
+        }
+        return;
+</font></tt></div><font size='-1'><div class='embed-code-dl'><a href="?displaytype=displaycode;part=49;node_id=1185070;abspart=1">&#91;download&#93;</a></div></font></pre>
+
+
+<p>The C part goes near the top of the XS file, and the XS part goes in the XS section at the bottom. Here's our full XS file after I've merged in these changes.</p>
+
+<p><b>Finalized XS file</b></p>
+
+<pre class="code"><div class='codeblock'><tt class='codetext'><font size="-1">#include &quot;EXTERN.h&quot;
+#include &quot;perl.h&quot;
+#include &quot;XSUB.h&quot;
+#include &quot;INLINE.h&quot;
+
+#include &lt;stdio.h&gt;
+#include &lt;xswrap.h&gt;
+
+void _arr (){
+    unsigned char* c_array = arr();
+
+    inline_stack_vars;
+    inline_stack_reset;
+
+    int i;
+
+    for (i=0; i&lt;3; i++){
+        inline_stack_push(sv_2mortal(newSViv(c_array&#91;i&#93;)));
+    }
+
+    free(c_array);
+
+    inline_stack_done;
+}
+
+MODULE = XS::Wrap  PACKAGE = XS::Wrap
+
+PROTOTYPES: DISABLE
+
+int mult (x, y)
+    int x
+    int y
+
+void speak (str)
+    const char* str
+
+unsigned char* arr ()
+
+void
+_arr ()
+        PREINIT:
+        I32* temp;
+        PPCODE:
+        temp = PL_markstack_ptr++;
+        _arr();
+        if (PL_markstack_ptr != temp) {
+          PL_markstack_ptr = temp;
+          XSRETURN_EMPTY;
+        }
+        return;
+</font></tt></div><font size='-1'><div class='embed-code-dl'><a href="?part=50;displaytype=displaycode;abspart=1;node_id=1185070">&#91;download&#93;</a></div></font></pre>
+
+
+<p>So, in our XS, we have four functions. Three that are imported directly from the C shared lib (<tt class='inlinecode'><font size="-1">mult()</font></tt>, <tt class='inlinecode'><font size="-1">speak()</font></tt> and <tt class='inlinecode'><font size="-1">arr()</font></tt>) and one new one written in C locally that wraps an imported XS function (<tt class='inlinecode'><font size="-1">_arr()</font></tt>).</p>
+
+<p>We need to do a quick update to the wrapper in the module file. Change the call to <tt class='inlinecode'><font size="-1">arr()</font></tt> to <tt class='inlinecode'><font size="-1">_arr()</font></tt> in the <tt class='inlinecode'><font size="-1">.pm</font></tt> file within the <tt class='inlinecode'><font size="-1">my_arr()</font></tt> function:</p>
+
+<pre class="code"><div class='codeblock'><tt class='codetext'><font size="-1">sub my_arr {
+    my @array = _arr();
+    return @array;
+}
+</font></tt></div><font size='-1'><div class='embed-code-dl'><a href="?displaytype=displaycode;part=59;node_id=1185070;abspart=1">&#91;download&#93;</a></div></font></pre>
+
+
+<p>Repeat the build/install steps, then test again:</p>
+
+<pre class="code"><div class='codeblock'><tt class='codetext'><font size="-1">perl example.pl
+25
+hello, world!
+
+0
+1
+2
+</font></tt></div><font size='-1'><div class='embed-code-dl'><a href="?displaytype=displaycode;part=60;node_id=1185070;abspart=1">&#91;download&#93;</a></div></font></pre>
+
+
+<p>Cool! Our custom C wrapper for <tt class='inlinecode'><font size="-1">arr()</font></tt> works exactly how we want it to.</p> We're ready for release!
+
+<p><b>Creating a release of our distribution</b></p>
+
+<p>It's very trivial to do:</p>
+
+<pre class="code"><div class='codeblock'><tt class='codetext'><font size="-1">rm -rf _Inline
+perl Makefile.PL
+make
+make test
+make manifest
+make install
+make dist
+</font></tt></div><font size='-1'><div class='embed-code-dl'><a href="?part=62;displaytype=displaycode;abspart=1;node_id=1185070">&#91;download&#93;</a></div></font></pre>
+
+
+<p>Of course, you have written all of your POD and unit tests before reaching this point, but I digress :)</p>
+
+<p><small>I've also posted this at <a href="http://blogs.perl.org/users/steve_bertrand/2017/03/wrapping-a-c-shared-library-with-perl-and-c.html">blogs.perl.org</a>.</small></p>
+
+<p><b>update</b>: I want to thank all of the Monks here who have provided me help, feedback, advice and in a couple of cases, some ego-kicking. I will not name said Monks because I'm very afraid of leaving someone out, but you know who you are.</p>
