@@ -1,26 +1,7 @@
-#!perl
-
-use 5.014; # strict, //, s///r
-use warnings;
-$|=1;
-
-use Inline C => Config =>
-    CLEAN_AFTER_BUILD => 0,     # 1=cleanup, 0=keep the compiled version
-    name => 'Win32::Mechanize::NotepadPlusPlus::Prompt',
-    ;
-use Inline C => 'DATA';
-
-sub myPrompt($$;$$) { $_[2] //= ''; $_[3] //= 0; _c_prompt(@_) }
-
-my $r = myPrompt("multiple\nline\nprompt", "this is my title", "this is the default value", 1);
-printf "myPrompt() => result in perl: %s\n", $r//'<undef>';
-
-$r = myPrompt("single line prompt", "short title", "default value");
-printf "myPrompt() => result in perl: %s\n", $r//'<undef>';
-
-__DATA__
-
-__C__
+#include "EXTERN.h"
+#include "perl.h"
+#include "XSUB.h"
+#include "INLINE.h"
 
 #define DLGTITLE  L"Win32::Mechanize::NotepadPlusPlus::Prompt Title"
 #define DLGFONT   L"MS Sans Serif"
@@ -291,3 +272,28 @@ void _c_prompt(char* str_prompt, char* str_title, char* str_default, unsigned ch
     Inline_Stack_Done;
     return;
 }
+
+MODULE = Win32::Mechanize::NotepadPlusPlus::Prompt  PACKAGE = Win32::Mechanize::NotepadPlusPlus::Prompt
+
+PROTOTYPES: DISABLE
+
+
+void
+_c_prompt (str_prompt, str_title, str_default, isDlgMultiLine)
+	char *	str_prompt
+	char *	str_title
+	char *	str_default
+	unsigned char	isDlgMultiLine
+        PREINIT:
+        I32* temp;
+        PPCODE:
+        temp = PL_markstack_ptr++;
+        _c_prompt(str_prompt, str_title, str_default, isDlgMultiLine);
+        if (PL_markstack_ptr != temp) {
+          /* truly void, because dXSARGS not invoked */
+          PL_markstack_ptr = temp;
+          XSRETURN_EMPTY; /* return empty stack */
+        }
+        /* must have used dXSARGS; list context implied */
+        return; /* assume stack size is correct */
+
