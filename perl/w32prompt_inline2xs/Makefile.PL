@@ -13,10 +13,17 @@ WriteMakefile(
     AUTHOR          => 'me',
     LICENSE         => 'perl',
 
+    # XSMULTI: allows .xs to go alongside
+    BUILD_REQUIRES  => {
+        'ExtUtils::MakeMaker'   => '7.12',
+    },
+    XSMULTI         => 1,
+    INC             => '-I. -Isrc/include',
+
     # XS & C Compilation Configurations
     #LIBS              => ['-lm'],          # External libraries to link (e.g., math library '-lm')
     #DEFINE            => '-DHAVE_SOMETHING', # Preprocessor compiler flags
-    INC               => '-I.',            # Path to include directories containing C headers
+    #INC               => '-I.',            # Path to include directories containing C headers
     OBJECT            => '$(O_FILES)',     # Tells MakeMaker to compile and link all .c/.xs files
     OPTIMIZE          => '-O3',            # Optimizes C code compilation speed
 
