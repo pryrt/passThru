@@ -1,7 +1,9 @@
 #!perl
+package Win32::Mechanize::NotepadPlusPlus::Prompt;
 
 use 5.014; # strict, //, s///r
 use warnings;
+use Win32::GuiTest qw/GetActiveWindow GetForegroundWindow/;
 $|=1;
 
 use Inline C => Config =>
@@ -10,13 +12,23 @@ use Inline C => Config =>
     ;
 use Inline C => 'DATA';
 
-sub myPrompt($$;$$) { $_[2] //= ''; $_[3] //= 0; _c_prompt(@_) }
+sub prompt($$$;$) { $_[0] //= 0; $_[3] //= ''; $_[4] = 0; _c_prompt(@_) }
+sub prompt_multiline($$$;$) { $_[0] //= 0; $_[3] //= ''; $_[4] = 1; _c_prompt(@_) }
 
-my $r = myPrompt("multiple\nline\nprompt", "this is my title", "this is the default value", 1);
-printf "myPrompt() => result in perl: %s\n", $r//'<undef>';
+my $hw = GetForegroundWindow();
+my $txt = sprintf("hw:0x%08x", $hw);
 
-$r = myPrompt("single line prompt", "short title", "default value");
-printf "myPrompt() => result in perl: %s\n", $r//'<undef>';
+my $r = prompt_multiline(0, "multiple\nline\nprompt", "multiline(hw:0x00000000)", "this is the default value");
+printf "prompt_multiline() => result in perl: %s\n", $r//'<undef>';
+
+$r = prompt_multiline($hw, "multiple\nline\nprompt", "multiline($txt)", "this is the default value");
+printf "prompt_multiline($txt) => result in perl: %s\n", $r//'<undef>';
+
+$r = prompt(0, "with hwnd 0", "prompt(hw:0x00000000)", "another value");
+printf "prompt() => result in perl: %s\n", $r//'<undef>';
+
+$r = prompt($hw, "single line", "prompt($txt)", "last value");
+printf "prompt() => result in perl: %s\n", $r//'<undef>';
 
 __DATA__
 
@@ -261,6 +273,15 @@ void onCloseDlg(HWND hwnd, bool is_ok)
     }
 }
 
+// Helper to convert Perl SV/IV back to a C HWND
+HWND sv_to_hwnd(SV* sv) {
+    #if defined(USE_64_BIT_ALL) || defined(_WIN64)
+        return (HWND)(INT_PTR)SvIV(sv);
+    #else
+        return (HWND)(long)SvIV(sv);
+    #endif
+}
+
 // https://perldoc.perl.org/perlcall#EXAMPLES   -- this is the section where I figured out how to return a list,
 // specifically, in https://perldoc.perl.org/perlcall#Returning-a-List-of-Values
 //      actually, no it's not; I don't see the Inline_Stack in the perlapi or perlcall or perlguts; where did I get those?
@@ -271,13 +292,15 @@ void onCloseDlg(HWND hwnd, bool is_ok)
 // The `newSV*()` are in https://perldoc.perl.org/perlapi
 //
 
-void _c_prompt(char* str_prompt, char* str_title, char* str_default, unsigned char isDlgMultiLine)
+void _c_prompt(SV* hwnd_sv, char* str_prompt, char* str_title, char* str_default, unsigned char isDlgMultiLine)
 {
+    HWND hwnd = sv_to_hwnd(hwnd_sv);
+
     // printf("prompt='%s', title='%s', default='%s'\n", str_prompt, str_title, str_default);
     gs_dlgPrompt = str_prompt;
     gs_dlgTitle = str_title;
     gs_dlgDefault = str_default;
-    LRESULT r = DoPromptDialog(isDlgMultiLine, (HWND)0, NULL);
+    LRESULT r = DoPromptDialog(isDlgMultiLine, (HWND)hwnd, NULL);
     // printf("result = %d, string\n%s\n", r, gs_dlgRetval);
     // fflush(stdout);
     Inline_Stack_Vars;

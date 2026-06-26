@@ -9,4 +9,5 @@ $|=1;
 require XSLoader;
 XSLoader::load('Win32::Mechanize::NotepadPlusPlus::Prompt', $VERSION);
 
-sub myPrompt($$;$$) { $_[2] //= ''; $_[3] //= 0; _c_prompt(@_) }
+sub prompt($$$;$) { $_[0] //= 0; $_[3] //= ''; $_[4] = 0; _c_prompt(@_) }
+sub prompt_multiline($$$;$) { $_[0] //= 0; $_[3] //= ''; $_[4] = 1; _c_prompt(@_) }

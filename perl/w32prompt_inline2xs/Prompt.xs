@@ -242,6 +242,15 @@ void onCloseDlg(HWND hwnd, bool is_ok)
     }
 }
 
+// Helper to convert Perl SV/IV back to a C HWND
+HWND sv_to_hwnd(SV* sv) {
+    #if defined(USE_64_BIT_ALL) || defined(_WIN64)
+        return (HWND)(INT_PTR)SvIV(sv);
+    #else
+        return (HWND)(long)SvIV(sv);
+    #endif
+}
+
 // https://perldoc.perl.org/perlcall#EXAMPLES   -- this is the section where I figured out how to return a list,
 // specifically, in https://perldoc.perl.org/perlcall#Returning-a-List-of-Values
 //      actually, no it's not; I don't see the Inline_Stack in the perlapi or perlcall or perlguts; where did I get those?
@@ -252,13 +261,15 @@ void onCloseDlg(HWND hwnd, bool is_ok)
 // The `newSV*()` are in https://perldoc.perl.org/perlapi
 //
 
-void _c_prompt(char* str_prompt, char* str_title, char* str_default, unsigned char isDlgMultiLine)
+void _c_prompt(SV* hwnd_sv, char* str_prompt, char* str_title, char* str_default, unsigned char isDlgMultiLine)
 {
+    HWND hwnd = sv_to_hwnd(hwnd_sv);
+
     // printf("prompt='%s', title='%s', default='%s'\n", str_prompt, str_title, str_default);
     gs_dlgPrompt = str_prompt;
     gs_dlgTitle = str_title;
     gs_dlgDefault = str_default;
-    LRESULT r = DoPromptDialog(isDlgMultiLine, (HWND)0, NULL);
+    LRESULT r = DoPromptDialog(isDlgMultiLine, (HWND)hwnd, NULL);
     // printf("result = %d, string\n%s\n", r, gs_dlgRetval);
     // fflush(stdout);
     Inline_Stack_Vars;
@@ -279,7 +290,8 @@ PROTOTYPES: DISABLE
 
 
 void
-_c_prompt (str_prompt, str_title, str_default, isDlgMultiLine)
+_c_prompt (hwnd_sv, str_prompt, str_title, str_default, isDlgMultiLine)
+	SV *	hwnd_sv
 	char *	str_prompt
 	char *	str_title
 	char *	str_default
@@ -288,7 +300,7 @@ _c_prompt (str_prompt, str_title, str_default, isDlgMultiLine)
         I32* temp;
         PPCODE:
         temp = PL_markstack_ptr++;
-        _c_prompt(str_prompt, str_title, str_default, isDlgMultiLine);
+        _c_prompt(hwnd_sv, str_prompt, str_title, str_default, isDlgMultiLine);
         if (PL_markstack_ptr != temp) {
           /* truly void, because dXSARGS not invoked */
           PL_markstack_ptr = temp;
